@@ -1,0 +1,37 @@
+plugins {
+    id 'application'
+    id 'com.github.johnrengelman.shadow' version '5.2.0'
+    id 'java'
+}
+
+mainClassName = "me.zoemartin.rubie.Bot"
+compileJava.options.encoding = 'UTF-8'
+sourceCompatibility = 11
+targetCompatibility = 11
+
+group('me.zoemartin')
+version('0.3.0')
+
+tasks.withType(JavaCompile) {
+    options.encoding = 'UTF-8'
+}
+
+repositories {
+    mavenCentral()
+    jcenter()
+}
+
+dependencies {
+    testImplementation(group: 'junit', name: 'junit', version: '4.12')
+    implementation('net.dv8tion:JDA:4.2.0_203')
+    implementation('net.oneandone.reflections8:reflections8:0.11.7')
+    implementation('club.minnced:discord-webhooks:0.4.1')
+    implementation(group: 'org.slf4j', name: 'slf4j-simple', version: '1.7.30')
+    implementation(group: 'de.androidpit', name: 'color-thief', version: '1.1.2')
+    implementation(group: 'org.hibernate', name: 'hibernate-core', version: '5.4.10.Final')
+    implementation(group: 'org.postgresql', name: 'postgresql', version: '42.2.16')
+    implementation(group: 'com.vladmihalcea', name: 'hibernate-types-52', version: '2.9.13')
+    implementation("club.minnced:discord-webhooks:0.5.0")
+    implementation(group: 'net.jodah', name: 'expiringmap', version: '0.5.9')
+    implementation(group: 'org.json', name: 'json', version: '20200518')
+}
