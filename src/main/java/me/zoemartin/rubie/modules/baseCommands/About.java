@@ -38,7 +38,6 @@ public class About implements Command {
         eb.addField("Java Version", System.getProperty("java.version"), true);
         eb.addField("JDA Version", JDA_VERSION, true);
         eb.addField("Author", "<@!212591138945630213> / zowee#0001", true);
-        eb.addField("Source Code", "https://github.com/zoemartin01/Pirates-Bot", false);
         eb.setThumbnail(Bot.getJDA().getSelfUser().getAvatarUrl());
         eb.setFooter("Made with JDA",
             "https://raw.githubusercontent.com/DV8FromTheWorld/JDA/assets/assets/readme/logo.png");
