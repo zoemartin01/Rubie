@@ -17,7 +17,7 @@ public class MVC implements GuildCommand {
         g.loadMembers().get();
 
         int abstains = 0;
-        if (args.size() == 1) Parser.Int.parse(args.get(0));
+        if (!args.isEmpty()) abstains = Parser.Int.parse(args.get(0));
 
         Role role = g.getRolesByName("mvc", true).get(0);
 
