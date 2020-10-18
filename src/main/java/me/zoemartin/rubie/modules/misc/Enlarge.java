@@ -2,8 +2,7 @@ package me.zoemartin.rubie.modules.misc;
 
 import de.androidpit.colorthief.ColorThief;
 import me.zoemartin.rubie.core.CommandPerm;
-import me.zoemartin.rubie.core.exceptions.CommandArgumentException;
-import me.zoemartin.rubie.core.exceptions.UnexpectedError;
+import me.zoemartin.rubie.core.exceptions.*;
 import me.zoemartin.rubie.core.interfaces.Command;
 import me.zoemartin.rubie.core.util.Check;
 import me.zoemartin.rubie.core.util.Parser;
@@ -39,10 +38,10 @@ public class Enlarge implements Command {
             gifResponse = ((HttpURLConnection) gif.openConnection()).getResponseCode();
             pngResponse = ((HttpURLConnection) png.openConnection()).getResponseCode();
         } catch (IOException e) {
-            throw new UnexpectedError();
+            throw new ReplyError("Sorry, I could not find this emoji!");
         }
 
-        Check.check(pngResponse == 200, UnexpectedError::new);
+        Check.check(pngResponse == 200, () -> new ReplyError("Sorry, I could not find this emoji!"));
         EmbedBuilder eb = new EmbedBuilder();
         try {
             int[] color = ColorThief.getColor(ImageIO.read(png));
