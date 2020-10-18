@@ -64,7 +64,8 @@ public class CommandHandler implements CommandProcessor {
             Check.check(PermissionHandler.getMemberPerm(guild.getId(),
                 member.getId()).getPerm().raw() >= command.commandPerm().raw()
                             || member.getRoles().stream().anyMatch(
-                role -> PermissionHandler.getRolePerm(guild.getId(), role.getId()).getPerm().raw() >= command.commandPerm().raw()),
+                role -> PermissionHandler.getRolePerm(guild.getId(), role.getId()).getPerm().raw() >= command.commandPerm().raw())
+                            || member.getId().equals(Bot.getOWNER()),
                 () -> new ConsoleError("Member '%s' doesn't have the required permission rank for Command '%s'",
                     member.getId(), command.name()));
 
