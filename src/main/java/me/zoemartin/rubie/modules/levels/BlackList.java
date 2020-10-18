@@ -1,5 +1,6 @@
 package me.zoemartin.rubie.modules.levels;
 
+import me.zoemartin.rubie.Bot;
 import me.zoemartin.rubie.core.CommandPerm;
 import me.zoemartin.rubie.core.exceptions.CommandArgumentException;
 import me.zoemartin.rubie.core.interfaces.Command;
@@ -11,7 +12,10 @@ import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.*;
 import org.jetbrains.annotations.NotNull;
 
+import java.time.Duration;
+import java.time.Instant;
 import java.util.*;
+import java.util.function.ToIntFunction;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -117,16 +121,21 @@ class BlackList implements GuildCommand {
         @Override
         public void run(Member user, TextChannel channel, List<String> args, Message original, String invoked) {
             Check.check(!args.isEmpty(), CommandArgumentException::new);
-            String cRef = lastArg(0, args, original);
-            TextChannel c = Parser.Channel.getTextChannel(original.getGuild(), cRef);
+            Guild g = original.getGuild();
+            List<TextChannel> channels = args.stream().map(s -> Parser.Channel.getTextChannel(g, s))
+                                             .collect(Collectors.toList());
 
-            Check.entityReferenceNotNull(c, TextChannel.class, cRef);
             LevelConfig config = Levels.getConfig(original.getGuild());
-            config.addBlacklistedChannel(c.getId());
+            channels.forEach(c -> config.addBlacklistedChannel(c.getId()));
             DatabaseUtil.updateObject(config);
             addCheckmark(original);
-            embedReply(original, channel, "Level Blacklist", "Blacklisted %s",
-                c.getAsMention()).queue();
+
+            PagedEmbed p = new PagedEmbed(EmbedUtil.pagedDescription(
+                new EmbedBuilder().setTitle("Blacklisted the following channels: " + channels.size()).build(),
+                channels.stream().map(c -> String.format("%s\n", c.getAsMention())).collect(Collectors.toList())),
+                channel, user.getUser());
+
+            PageListener.add(p);
         }
 
         @Override
@@ -136,7 +145,7 @@ class BlackList implements GuildCommand {
 
         @Override
         public @NotNull String usage() {
-            return "<channel>";
+            return "<channel...>";
         }
 
         @Override

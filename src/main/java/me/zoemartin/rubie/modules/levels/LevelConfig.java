@@ -21,11 +21,11 @@ public class LevelConfig {
     @Column
     private boolean enabled;
 
-    @Column
+    @Column(columnDefinition="TEXT")
     @Convert(converter = DatabaseConverter.StringListConverter.class)
     private Collection<String> blacklisted_channels;
 
-    @Column
+    @Column(columnDefinition="TEXT")
     @Convert(converter = DatabaseConverter.StringListConverter.class)
     private Collection<String> blacklisted_roles;
 
