@@ -94,7 +94,8 @@ public class UserInfo implements GuildCommand {
                         + " UTC", true)
                 .addField("Joined Server Age", MessageUtils.dateAgo(member.getTimeJoined(), OffsetDateTime.now())
                                                    + "\n"
-                                                   + ChronoUnit.DAYS.between(member.getTimeJoined(), OffsetDateTime.now())
+                                                   + ChronoUnit.DAYS.between(original.getGuild().getTimeCreated(),
+                    member.getTimeJoined())
                                                    + " days after the server was created", true);
 
             String roles = member.getRoles().stream().map(Role::getAsMention).collect(Collectors.joining(", "));
