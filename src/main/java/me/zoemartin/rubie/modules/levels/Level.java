@@ -4,65 +4,70 @@ import me.zoemartin.rubie.Bot;
 import me.zoemartin.rubie.core.CommandPerm;
 import me.zoemartin.rubie.core.interfaces.Command;
 import me.zoemartin.rubie.core.interfaces.GuildCommand;
-import me.zoemartin.rubie.core.util.*;
 import me.zoemartin.rubie.modules.pagedEmbeds.PageListener;
 import me.zoemartin.rubie.modules.pagedEmbeds.PagedEmbed;
+import me.zoemartin.rubie.core.util.*;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.*;
+import org.jetbrains.annotations.NotNull;
 
+import java.time.Instant;
 import java.util.*;
 import java.util.stream.Collectors;
 
 public class Level implements GuildCommand {
     @Override
-    public String name() {
+    public @NotNull String name() {
         return "level";
     }
 
     @Override
-    public String regex() {
+    public @NotNull String regex() {
         return "level|lvl";
     }
 
     @Override
-    public Set<Command> subCommands() {
+    public @NotNull Set<Command> subCommands() {
         return Set.of(new Show(), new Config(), new Leaderboard());
     }
 
     @Override
-    public void run(User user, MessageChannel channel, List<String> args, Message original, String invoked) {
+    public void run(Member user, TextChannel channel, List<String> args, Message original, String invoked) {
         new Show().run(user, channel, args, original, invoked);
     }
 
     @Override
-    public CommandPerm commandPerm() {
+    public @NotNull CommandPerm commandPerm() {
         return CommandPerm.BOT_USER;
     }
 
     @Override
-    public String description() {
+    public @NotNull String description() {
         return "Shows Levels";
     }
 
     private static class Leaderboard implements GuildCommand {
 
         @Override
-        public String name() {
+        public @NotNull String name() {
             return "leaderboard";
         }
 
         @Override
-        public void run(User user, MessageChannel channel, List<String> args, Message original, String invoked) {
+        public void run(Member user, TextChannel channel, List<String> args, Message original, String invoked) {
             List<UserLevel> levels;
-            if (args.size() > 0 && args.get(0).equalsIgnoreCase("full")) {
+            int start;
+            if (!args.isEmpty() && args.get(0).equalsIgnoreCase("full")) {
                 levels = Levels.getLevels(original.getGuild()).stream()
                              .sorted(Comparator.comparingInt(UserLevel::getExp).reversed())
                              .collect(Collectors.toList());
+                start = args.size() > 1 && Parser.Int.isParsable(args.get(1)) ? Parser.Int.parse(args.get(1)) : 1;
             } else {
                 levels = Levels.getLevels(original.getGuild()).stream()
                              .filter(userLevel -> Bot.getJDA().getUserById(userLevel.getUser_id()) != null)
                              .sorted(Comparator.comparingInt(UserLevel::getExp).reversed())
                              .collect(Collectors.toList());
+                start = !args.isEmpty() && Parser.Int.isParsable(args.get(0)) ? Parser.Int.parse(args.get(0)) : 1;
             }
 
             PagedEmbed p = new PagedEmbed(EmbedUtil.pagedDescription(
@@ -76,18 +81,18 @@ public class Level implements GuildCommand {
                                 u.getAsMention(), Levels.calcLevel(ul.getExp()), ul.getExp());
                         }
                     ).collect(Collectors.toList())),
-                (TextChannel) channel, user);
+                channel, user.getUser(), start);
 
             PageListener.add(p);
         }
 
         @Override
-        public CommandPerm commandPerm() {
+        public @NotNull CommandPerm commandPerm() {
             return CommandPerm.BOT_MANAGER;
         }
 
         @Override
-        public String description() {
+        public @NotNull String description() {
             return "Shows the current leaderboard";
         }
     }
@@ -95,18 +100,18 @@ public class Level implements GuildCommand {
     private static class Show implements GuildCommand {
 
         @Override
-        public String name() {
+        public @NotNull String name() {
             return "show";
         }
 
         @Override
-        public void run(User user, MessageChannel channel, List<String> args, Message original, String invoked) {
+        public void run(Member user, TextChannel channel, List<String> args, Message original, String invoked) {
             User u = null;
             String arg;
-            if (args.isEmpty()) u = user;
+            if (args.isEmpty()) u = user.getUser();
             else if (Parser.User.isParsable(arg = lastArg(0, args, original))) u = CacheUtils.getUser(arg);
             else if (Parser.User.tagIsParsable(arg)) u = Bot.getJDA().getUserByTag(arg);
-            if (u == null) u = user;
+            if (u == null) u = user.getUser();
 
             Member member = CacheUtils.getMember(original.getGuild(), u.getId());
             UserLevel level = Levels.getUserLevel(original.getGuild(), u);
@@ -115,14 +120,16 @@ public class Level implements GuildCommand {
             double expToNext = Levels.calcExp(lvl + 1);
 
             List<UserLevel> levels = Levels.getLevels(original.getGuild()).stream()
-                         .filter(userLevel -> Bot.getJDA().getUserById(userLevel.getUser_id()) != null)
-                         .sorted(Comparator.comparingInt(UserLevel::getExp).reversed())
-                         .collect(Collectors.toList());
+                                         .filter(userLevel -> Bot.getJDA().getUserById(userLevel.getUser_id()) != null)
+                                         .sorted(Comparator.comparingInt(UserLevel::getExp).reversed())
+                                         .collect(Collectors.toList());
 
             EmbedBuilder eb = new EmbedBuilder()
                                   .setThumbnail(u.getEffectiveAvatarUrl())
                                   .setAuthor(u.getAsTag(), null, u.getEffectiveAvatarUrl())
-                                  .setTitle("Level " + lvl + " - #" + (levels.indexOf(level) + 1));
+                                  .setFooter(Bot.getJDA().getSelfUser().getName(), Bot.getJDA().getSelfUser().getEffectiveAvatarUrl())
+                                  .setTimestamp(Instant.now())
+                                  .setTitle("Level " + lvl + " - Rank #" + (levels.indexOf(level) + 1));
 
             if (member != null) eb.setColor(member.getColor());
 
@@ -134,12 +141,12 @@ public class Level implements GuildCommand {
         }
 
         @Override
-        public CommandPerm commandPerm() {
+        public @NotNull CommandPerm commandPerm() {
             return CommandPerm.BOT_USER;
         }
 
         @Override
-        public String description() {
+        public @NotNull String description() {
             return "Shows a users level";
         }
     }

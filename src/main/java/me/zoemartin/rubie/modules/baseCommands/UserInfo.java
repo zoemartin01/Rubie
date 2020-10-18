@@ -2,12 +2,12 @@ package me.zoemartin.rubie.modules.baseCommands;
 
 import me.zoemartin.rubie.Bot;
 import me.zoemartin.rubie.core.CommandPerm;
-import me.zoemartin.rubie.core.exceptions.CommandArgumentException;
 import me.zoemartin.rubie.core.interfaces.GuildCommand;
 import me.zoemartin.rubie.core.util.*;
 import me.zoemartin.rubie.modules.commandProcessing.*;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.*;
+import org.jetbrains.annotations.NotNull;
 
 import java.sql.Timestamp;
 import java.time.*;
@@ -17,23 +17,23 @@ import java.util.stream.Collectors;
 
 public class UserInfo implements GuildCommand {
     @Override
-    public String name() {
+    public @NotNull String name() {
         return "userinfo";
     }
 
     @Override
-    public String regex() {
+    public @NotNull String regex() {
         return "i|userinfo|info|profile";
     }
 
     @Override
-    public void run(User user, MessageChannel channel, List<String> args, Message original, String invoked) {
+    public void run(Member user, TextChannel channel, List<String> args, Message original, String invoked) {
         User u = null;
         String arg;
-        if (args.isEmpty()) u = user;
+        if (args.isEmpty()) u = user.getUser();
         else if (Parser.User.isParsable(arg = lastArg(0, args, original))) u = CacheUtils.getUser(arg);
         else if (Parser.User.tagIsParsable(arg)) u = Bot.getJDA().getUserByTag(arg);
-        if (u == null) u = user;
+        if (u == null) u = user.getUser();
         Member member = CacheUtils.getMember(original.getGuild(), u.getId());
 
         EmbedBuilder eb;
@@ -93,8 +93,8 @@ public class UserInfo implements GuildCommand {
                     Timestamp.valueOf(member.getTimeJoined().atZoneSameInstant(ZoneOffset.UTC).toLocalDateTime())
                         + " UTC", true)
                 .addField("Joined Server Age", MessageUtils.dateAgo(member.getTimeJoined(), OffsetDateTime.now())
-                                                   + " ago\n"
-                                                   + ChronoUnit.DAYS.between(original.getGuild().getTimeCreated(), member.getTimeJoined())
+                                                   + "\n"
+                                                   + ChronoUnit.DAYS.between(member.getTimeJoined(), OffsetDateTime.now())
                                                    + " days after the server was created", true);
 
             String roles = member.getRoles().stream().map(Role::getAsMention).collect(Collectors.joining(", "));
@@ -106,17 +106,17 @@ public class UserInfo implements GuildCommand {
     }
 
     @Override
-    public CommandPerm commandPerm() {
+    public @NotNull CommandPerm commandPerm() {
         return CommandPerm.EVERYONE;
     }
 
     @Override
-    public String usage() {
-        return "userinfo [user]";
+    public @NotNull String usage() {
+        return "[user]";
     }
 
     @Override
-    public String description() {
+    public @NotNull String description() {
         return "Gives Information about a user";
     }
 }

@@ -1,32 +1,35 @@
 package me.zoemartin.rubie.modules.funCommands;
 
 import me.zoemartin.rubie.Bot;
-import me.zoemartin.rubie.core.LoadModule;
 import me.zoemartin.rubie.core.CommandPerm;
+import me.zoemartin.rubie.core.LoadModule;
 import me.zoemartin.rubie.core.exceptions.CommandArgumentException;
 import me.zoemartin.rubie.core.interfaces.*;
 import me.zoemartin.rubie.core.interfaces.Module;
-import me.zoemartin.rubie.core.managers.CommandManager;
-import me.zoemartin.rubie.core.util.*;
+import me.zoemartin.rubie.core.util.Check;
+import me.zoemartin.rubie.core.util.Parser;
 import net.dv8tion.jda.api.entities.*;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
+
+import static me.zoemartin.rubie.core.managers.CommandManager.register;
 
 @LoadModule
 public class Status implements Module, GuildCommand {
     @Override
-    public Set<Command> subCommands() {
+    public @NotNull Set<Command> subCommands() {
         return Collections.emptySet();
     }
 
     @Override
-    public String name() {
+    public @NotNull String name() {
         return "status";
     }
 
     @SuppressWarnings("ConstantConditions")
     @Override
-    public void run(User user, MessageChannel channel, List<String> args, Message original, String invoked) {
+    public void run(Member user, TextChannel channel, List<String> args, Message original, String invoked) {
         Check.check(args.size() >= 2, CommandArgumentException::new);
 
         int id = Parser.Int.parse(args.get(0));
@@ -40,23 +43,23 @@ public class Status implements Module, GuildCommand {
     }
 
     @Override
-    public CommandPerm commandPerm() {
-        return CommandPerm.BOT_ADMIN;
+    public @NotNull CommandPerm commandPerm() {
+        return CommandPerm.OWNER;
     }
 
     @Override
-    public String usage() {
-        return "status <type id> <status...>";
+    public @NotNull String usage() {
+        return "<type id> <status...>";
     }
 
     @Override
-    public String description() {
+    public @NotNull String description() {
         return "Sets the bot's status";
     }
 
     @Override
     public void init() {
-        CommandManager.register(new Status());
-        CommandManager.register(new Echo());
+        register(new Status());
+        register(new Echo());
     }
 }

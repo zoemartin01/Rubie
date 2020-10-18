@@ -10,6 +10,7 @@ import me.zoemartin.rubie.modules.pagedEmbeds.PageListener;
 import me.zoemartin.rubie.modules.pagedEmbeds.PagedEmbed;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.*;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
 import java.util.regex.Pattern;
@@ -18,22 +19,22 @@ import java.util.stream.Collectors;
 
 public class TriggerCommand implements GuildCommand {
     @Override
-    public Set<Command> subCommands() {
+    public @NotNull Set<Command> subCommands() {
         return Set.of(new TList(), new Remove());
     }
 
     @Override
-    public String name() {
+    public @NotNull String name() {
         return "trigger";
     }
 
     @Override
-    public String regex() {
+    public @NotNull String regex() {
         return "trigger|autoresponse|ar";
     }
 
     @Override
-    public void run(User user, MessageChannel channel, List<String> args, Message original, String invoked) {
+    public void run(Member user, TextChannel channel, List<String> args, Message original, String invoked) {
         Check.check(args.size() > 1, CommandArgumentException::new);
 
         String regex = args.get(0);
@@ -51,28 +52,28 @@ public class TriggerCommand implements GuildCommand {
     }
 
     @Override
-    public CommandPerm commandPerm() {
+    public @NotNull CommandPerm commandPerm() {
         return CommandPerm.BOT_MANAGER;
     }
 
     @Override
-    public String usage() {
-        return "trigger <regex> <output...>";
+    public @NotNull String usage() {
+        return "<regex> <output...>";
     }
 
     @Override
-    public String description() {
+    public @NotNull String description() {
         return "Create/List/Remove a regex message trigger";
     }
 
     private static class TList implements GuildCommand {
         @Override
-        public String name() {
+        public @NotNull String name() {
             return "list";
         }
 
         @Override
-        public void run(User user, MessageChannel channel, List<String> args, Message original, String invoked) {
+        public void run(Member user, TextChannel channel, List<String> args, Message original, String invoked) {
             Check.check(args.isEmpty(), CommandArgumentException::new);
             Check.check(Triggers.hasTriggers(original.getGuild()),
                 () -> new EntityNotFoundException("No triggers found!"));
@@ -81,40 +82,35 @@ public class TriggerCommand implements GuildCommand {
                 new EmbedBuilder().setTitle("Available Triggers").build(), Triggers.getTriggers(
                     original.getGuild()).stream().map(t -> String.format("`%s` - `%s`\n",
                     t.getRegex(), t.getOutput())).collect(Collectors.toList())),
-                (TextChannel) channel, user);
+                channel, user.getUser());
 
             PageListener.add(p);
         }
 
         @Override
-        public CommandPerm commandPerm() {
+        public @NotNull CommandPerm commandPerm() {
             return CommandPerm.BOT_MODERATOR;
         }
 
         @Override
-        public String usage() {
-            return "trigger list";
-        }
-
-        @Override
-        public String description() {
+        public @NotNull String description() {
             return "Lists all triggers";
         }
     }
 
     private static class Remove implements GuildCommand {
         @Override
-        public String name() {
+        public @NotNull String name() {
             return "remove";
         }
 
         @Override
-        public String regex() {
+        public @NotNull String regex() {
             return "remove|delete|del|rem|rm";
         }
 
         @Override
-        public void run(User user, MessageChannel channel, List<String> args, Message original, String invoked) {
+        public void run(Member user, TextChannel channel, List<String> args, Message original, String invoked) {
             Check.check(args.size() == 1, CommandArgumentException::new);
             Check.check(Triggers.isTrigger(original.getGuild(), args.get(0)),
                 () -> new ReplyError("That trigger does not exist!"));
@@ -124,17 +120,17 @@ public class TriggerCommand implements GuildCommand {
         }
 
         @Override
-        public CommandPerm commandPerm() {
+        public @NotNull CommandPerm commandPerm() {
             return CommandPerm.BOT_MANAGER;
         }
 
         @Override
-        public String usage() {
-            return "trigger remove <regex>";
+        public @NotNull String usage() {
+            return "<regex>";
         }
 
         @Override
-        public String description() {
+        public @NotNull String description() {
             return "Deletes a trigger";
         }
     }

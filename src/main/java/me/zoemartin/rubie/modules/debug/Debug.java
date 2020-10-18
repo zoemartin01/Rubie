@@ -9,42 +9,45 @@ import me.zoemartin.rubie.core.interfaces.Module;
 import me.zoemartin.rubie.core.managers.CommandManager;
 import me.zoemartin.rubie.core.util.Check;
 import net.dv8tion.jda.api.entities.*;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
 
 @LoadModule
 public class Debug implements Module, GuildCommand {
     @Override
-    public Set<Command> subCommands() {
+    public @NotNull Set<Command> subCommands() {
         return Set.of(new Full());
     }
 
     @Override
     public void init() {
         CommandManager.register(new Shutdown());
+        CommandManager.register(new Purge());
         CommandManager.register(new Debug());
         CommandManager.register(new Dump());
         CommandManager.register(new ReadError());
+        CommandManager.register(new Transcript());
     }
 
     @Override
-    public String name() {
+    public @NotNull String name() {
         return "debug";
     }
 
     @Override
-    public String regex() {
+    public @NotNull String regex() {
         return "debug|dc";
     }
 
     @SuppressWarnings("unchecked")
     @Override
-    public void run(User user, MessageChannel channel, List<String> args, Message original, String invoked) {
+    public void run(Member user, TextChannel channel, List<String> args, Message original, String invoked) {
         List<Object> list = help(args);
         Command command = (Command) list.get(0);
 
         try {
-            command.run(user, channel, (List<String>) list.get(1), original, (String) list.get(2));
+            command.run(user.getUser(), channel, (List<String>) list.get(1), original, (String) list.get(2));
         } catch (Exception e) {
             channel.sendMessageFormat("Error while running command `%s`: `%s`", command.name(), e.getMessage()).queue();
         }
@@ -78,39 +81,39 @@ public class Debug implements Module, GuildCommand {
     }
 
     @Override
-    public CommandPerm commandPerm() {
+    public @NotNull CommandPerm commandPerm() {
         return CommandPerm.BOT_MANAGER;
     }
 
     @Override
-    public String usage() {
-        return "debug <command...>";
+    public @NotNull String usage() {
+        return "<command>";
     }
 
     @Override
-    public String description() {
+    public @NotNull String description() {
         return "Debugs a command";
     }
 
     private static class Full implements GuildCommand {
         @Override
-        public String name() {
+        public @NotNull String name() {
             return "-f";
         }
 
         @Override
-        public String regex() {
+        public @NotNull String regex() {
             return "-f|--full";
         }
 
         @SuppressWarnings("unchecked")
         @Override
-        public void run(User user, MessageChannel channel, List<String> args, Message original, String invoked) {
+        public void run(Member user, TextChannel channel, List<String> args, Message original, String invoked) {
             List<Object> list = Debug.help(args);
             Command command = (Command) list.get(0);
 
             try {
-                command.run(user, channel, (List<String>) list.get(1), original, (String) list.get(2));
+                command.run(user.getUser(), channel, (List<String>) list.get(1), original, (String) list.get(2));
             } catch (Exception e) {
                 StringBuilder error = new StringBuilder("Exception in thread \"" + Thread.currentThread().getName()
                                                             + "\" " + e.getClass().getCanonicalName()
@@ -126,17 +129,17 @@ public class Debug implements Module, GuildCommand {
         }
 
         @Override
-        public CommandPerm commandPerm() {
+        public @NotNull CommandPerm commandPerm() {
             return CommandPerm.BOT_ADMIN;
         }
 
         @Override
-        public String usage() {
-            return "debug -f <command...>";
+        public @NotNull String usage() {
+            return "-f <command>";
         }
 
         @Override
-        public String description() {
+        public @NotNull String description() {
             return "Debugs a command with the full error output";
         }
     }

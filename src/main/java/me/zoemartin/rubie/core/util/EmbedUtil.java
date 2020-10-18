@@ -5,6 +5,7 @@ import net.dv8tion.jda.api.entities.MessageEmbed;
 
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 public class EmbedUtil {
     public static List<MessageEmbed> pagedFieldEmbed(MessageEmbed eb, List<MessageEmbed.Field> fields) {

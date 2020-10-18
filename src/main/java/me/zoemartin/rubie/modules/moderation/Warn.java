@@ -5,12 +5,13 @@ import me.zoemartin.rubie.core.CommandPerm;
 import me.zoemartin.rubie.core.exceptions.*;
 import me.zoemartin.rubie.core.interfaces.Command;
 import me.zoemartin.rubie.core.interfaces.GuildCommand;
-import me.zoemartin.rubie.core.util.*;
 import me.zoemartin.rubie.modules.pagedEmbeds.PageListener;
 import me.zoemartin.rubie.modules.pagedEmbeds.PagedEmbed;
+import me.zoemartin.rubie.core.util.*;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.*;
 import org.hibernate.Session;
+import org.jetbrains.annotations.NotNull;
 
 import javax.persistence.criteria.*;
 import java.io.*;
@@ -23,17 +24,17 @@ import java.util.stream.Collectors;
 
 public class Warn implements GuildCommand {
     @Override
-    public Set<Command> subCommands() {
+    public @NotNull Set<Command> subCommands() {
         return Set.of(new list(), new Remove(), new BulkImport(), new BulkImportFile());
     }
 
     @Override
-    public String name() {
+    public @NotNull String name() {
         return "warn";
     }
 
     @Override
-    public void run(User user, MessageChannel channel, List<String> args, Message original, String invoked) {
+    public void run(Member user, TextChannel channel, List<String> args, Message original, String invoked) {
         Check.check(args.size() > 1 && Parser.User.isParsable(args.get(0)), CommandArgumentException::new);
         String userId = args.get(0);
 
@@ -60,29 +61,29 @@ public class Warn implements GuildCommand {
     }
 
     @Override
-    public CommandPerm commandPerm() {
+    public @NotNull CommandPerm commandPerm() {
         return CommandPerm.BOT_MODERATOR;
     }
 
     @Override
-    public String usage() {
-        return "warn <user> <reason>";
+    public @NotNull String usage() {
+        return "<user> <reason>";
     }
 
     @Override
-    public String description() {
+    public @NotNull String description() {
         return "Warn a user";
     }
 
     private static class list implements GuildCommand {
 
         @Override
-        public String name() {
+        public @NotNull String name() {
             return "list";
         }
 
         @Override
-        public void run(User user, MessageChannel channel, List<String> args, Message original, String invoked) {
+        public void run(Member user, TextChannel channel, List<String> args, Message original, String invoked) {
             String userId = args.get(0);
             Check.check(args.size() == 1 && Parser.User.isParsable(userId), CommandArgumentException::new);
 
@@ -115,33 +116,33 @@ public class Warn implements GuildCommand {
                 }).collect(Collectors.toList())
             );
 
-            PageListener.add(new PagedEmbed(pages, (TextChannel) channel, user));
+            PageListener.add(new PagedEmbed(pages, channel, user.getUser()));
         }
 
         @Override
-        public CommandPerm commandPerm() {
+        public @NotNull CommandPerm commandPerm() {
             return CommandPerm.BOT_MODERATOR;
         }
 
         @Override
-        public String usage() {
-            return "warn list <user>";
+        public @NotNull String usage() {
+            return "<user>";
         }
 
         @Override
-        public String description() {
+        public @NotNull String description() {
             return "Lists a users warns";
         }
     }
 
     private static class Remove implements GuildCommand {
         @Override
-        public String name() {
+        public @NotNull String name() {
             return "remove";
         }
 
         @Override
-        public void run(User user, MessageChannel channel, List<String> args, Message original, String invoked) {
+        public void run(Member user, TextChannel channel, List<String> args, Message original, String invoked) {
             Check.check(args.size() == 1, CommandArgumentException::new);
 
             UUID uuid = UUID.fromString(args.get(0));
@@ -173,17 +174,17 @@ public class Warn implements GuildCommand {
         }
 
         @Override
-        public CommandPerm commandPerm() {
+        public @NotNull CommandPerm commandPerm() {
             return CommandPerm.BOT_MANAGER;
         }
 
         @Override
-        public String usage() {
-            return "warn remove <uuid>";
+        public @NotNull String usage() {
+            return "<uuid>";
         }
 
         @Override
-        public String description() {
+        public @NotNull String description() {
             return "Remove a warning";
         }
     }
@@ -191,12 +192,12 @@ public class Warn implements GuildCommand {
     private static class BulkImport implements GuildCommand {
 
         @Override
-        public String name() {
+        public @NotNull String name() {
             return "import";
         }
 
         @Override
-        public void run(User user, MessageChannel channel, List<String> args, Message original, String invoked) {
+        public void run(Member user, TextChannel channel, List<String> args, Message original, String invoked) {
             Check.check(!args.isEmpty(), CommandArgumentException::new);
             String[] split = original.getContentRaw().split("\n");
             List<String> input = List.of(split).subList(1, split.length);
@@ -229,17 +230,17 @@ public class Warn implements GuildCommand {
         }
 
         @Override
-        public CommandPerm commandPerm() {
+        public @NotNull CommandPerm commandPerm() {
             return CommandPerm.BOT_ADMIN;
         }
 
         @Override
-        public String usage() {
-            return "warn import \n<user> <moderator> <reason>";
+        public @NotNull String usage() {
+            return "\n<user> <moderator> <reason>";
         }
 
         @Override
-        public String description() {
+        public @NotNull String description() {
             return "Bulk Import Warns. These warns are added silently. One Line for each Warn.";
         }
     }
@@ -247,12 +248,12 @@ public class Warn implements GuildCommand {
     private static class BulkImportFile implements GuildCommand {
 
         @Override
-        public String name() {
+        public @NotNull String name() {
             return "importfile";
         }
 
         @Override
-        public void run(User user, MessageChannel channel, List<String> args, Message original, String invoked) {
+        public void run(Member user, TextChannel channel, List<String> args, Message original, String invoked) {
             Check.check(args.isEmpty(), CommandArgumentException::new);
             Check.check(original.getAttachments().size() == 1, CommandArgumentException::new);
             Message m = channel.sendMessage("Okay... this might take a while").complete();
@@ -294,17 +295,12 @@ public class Warn implements GuildCommand {
         }
 
         @Override
-        public CommandPerm commandPerm() {
+        public @NotNull CommandPerm commandPerm() {
             return CommandPerm.BOT_ADMIN;
         }
 
         @Override
-        public String usage() {
-            return "warn importfile";
-        }
-
-        @Override
-        public String description() {
+        public @NotNull String description() {
             return "Bulk Import Warns. These warns are added silently. Attach a text file with one Line for each warn.";
         }
     }

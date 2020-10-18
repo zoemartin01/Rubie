@@ -3,11 +3,12 @@ package me.zoemartin.rubie.modules.misc;
 import de.androidpit.colorthief.ColorThief;
 import me.zoemartin.rubie.Bot;
 import me.zoemartin.rubie.core.CommandPerm;
-import me.zoemartin.rubie.core.exceptions.CommandArgumentException;
 import me.zoemartin.rubie.core.interfaces.GuildCommand;
-import me.zoemartin.rubie.core.util.*;
+import me.zoemartin.rubie.core.util.CacheUtils;
+import me.zoemartin.rubie.core.util.Parser;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.*;
+import org.jetbrains.annotations.NotNull;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
@@ -17,19 +18,18 @@ import java.util.List;
 
 public class Avatar implements GuildCommand {
     @Override
-    public String name() {
+    public @NotNull String name() {
         return "avatar";
     }
 
     @Override
-    public void run(User user, MessageChannel channel, List<String> args, Message original, String invoked) {
-        Check.check(args.isEmpty() || args.size() == 1, CommandArgumentException::new);
-
-        User u;
-        if (args.isEmpty()) u = user;
-        else u = Parser.User.isParsable(args.get(0)) ? CacheUtils.getUser(args.get(0))
-                     : Bot.getJDA().getUserByTag(args.get(0));
-        if (u == null) u = user;
+    public void run(Member user, TextChannel channel, List<String> args, Message original, String invoked) {
+        User u = null;
+        String arg;
+        if (args.isEmpty()) u = user.getUser();
+        else if (Parser.User.isParsable(arg = lastArg(0, args, original))) u = CacheUtils.getUser(arg);
+        else if (Parser.User.tagIsParsable(arg)) u = Bot.getJDA().getUserByTag(arg);
+        if (u == null) u = user.getUser();
 
         String avatarId = u.getAvatarId();
         String id = u.getId();
@@ -57,17 +57,17 @@ public class Avatar implements GuildCommand {
     }
 
     @Override
-    public CommandPerm commandPerm() {
+    public @NotNull CommandPerm commandPerm() {
         return CommandPerm.EVERYONE;
     }
 
     @Override
-    public String usage() {
-        return "avatar [user]";
+    public @NotNull String usage() {
+        return "[user]";
     }
 
     @Override
-    public String description() {
+    public @NotNull String description() {
         return "Shows the avatar for a user";
     }
 }

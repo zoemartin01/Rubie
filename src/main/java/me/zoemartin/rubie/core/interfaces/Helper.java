@@ -1,6 +1,7 @@
 package me.zoemartin.rubie.core.interfaces;
 
 import net.dv8tion.jda.api.entities.*;
+import net.dv8tion.jda.api.requests.restaction.MessageAction;
 
 import java.util.List;
 

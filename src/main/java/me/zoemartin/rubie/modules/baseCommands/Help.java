@@ -1,15 +1,19 @@
 package me.zoemartin.rubie.modules.baseCommands;
 
 import me.zoemartin.rubie.core.CommandPerm;
-import me.zoemartin.rubie.core.exceptions.*;
-import me.zoemartin.rubie.core.interfaces.*;
+import me.zoemartin.rubie.core.exceptions.ConsoleError;
+import me.zoemartin.rubie.core.exceptions.ReplyError;
+import me.zoemartin.rubie.core.interfaces.Command;
+import me.zoemartin.rubie.core.interfaces.GuildCommand;
 import me.zoemartin.rubie.core.managers.CommandManager;
-import me.zoemartin.rubie.core.util.*;
 import me.zoemartin.rubie.modules.commandProcessing.PermissionHandler;
 import me.zoemartin.rubie.modules.pagedEmbeds.PageListener;
 import me.zoemartin.rubie.modules.pagedEmbeds.PagedEmbed;
+import me.zoemartin.rubie.core.util.Check;
+import me.zoemartin.rubie.core.util.EmbedUtil;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.*;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
@@ -17,18 +21,18 @@ import java.util.stream.Collectors;
 
 public class Help implements GuildCommand {
     @Override
-    public String name() {
+    public @NotNull String name() {
         return "help";
     }
 
     @Override
-    public Set<Command> subCommands() {
+    public @NotNull Set<Command> subCommands() {
         return Set.of(new Cmd());
     }
 
     @SuppressWarnings("ConstantConditions")
     @Override
-    public void run(User user, MessageChannel channel, List<String> args, Message original, String invoked) {
+    public void run(Member user, TextChannel channel, List<String> args, Message original, String invoked) {
         Guild guild = original.getGuild();
         Member member = original.getMember();
 
@@ -45,35 +49,30 @@ public class Help implements GuildCommand {
                 .sorted(Comparator.comparing(Command::name))
                 .map(command -> String.format("`%s` | %s\n\n", command.name(), command.description()))
                 .collect(Collectors.toList())),
-            (TextChannel) channel, user);
+            channel, user.getUser());
 
         PageListener.add(p);
     }
 
     @Override
-    public CommandPerm commandPerm() {
+    public @NotNull CommandPerm commandPerm() {
         return CommandPerm.EVERYONE;
     }
 
     @Override
-    public String usage() {
-        return "help";
-    }
-
-    @Override
-    public String description() {
+    public @NotNull String description() {
         return "Sending help :3";
     }
 
     private static class Cmd implements GuildCommand {
 
         @Override
-        public String name() {
-            return "command";
+        public @NotNull String name() {
+            return "<command>";
         }
 
         @Override
-        public String regex() {
+        public @NotNull String regex() {
             StringBuilder sb = new StringBuilder();
             CommandManager.getCommands().forEach(command -> sb.append(command.regex()).append("|"));
             sb.deleteCharAt(sb.lastIndexOf("|"));
@@ -81,7 +80,7 @@ public class Help implements GuildCommand {
         }
 
         @Override
-        public void run(User user, MessageChannel channel, List<String> args, Message original, String invoked) {
+        public void run(Member user, TextChannel channel, List<String> args, Message original, String invoked) {
             AtomicReference<Command> command = new AtomicReference<>(
                 CommandManager.getCommands().stream()
                     .filter(c -> invoked.matches(c.regex().toLowerCase()))
@@ -102,13 +101,17 @@ public class Help implements GuildCommand {
                 }
             });
 
-
+            String name = hierarchy.stream().map(Command::name)
+                              .collect(Collectors.joining(" "));
+            Command cmd = command.get();
             EmbedBuilder eb = new EmbedBuilder();
-            eb.setTitle("`" + hierarchy.stream().map(Command::name)
-                                  .collect(Collectors.joining(" ")).toUpperCase() + "`")
+            eb.setTitle("`" + name.toUpperCase() + "`")
                 .setColor(0xdf136c);
-            eb.addField("Description:", command.get().description(), false);
-            eb.addField("Usage: ", "`" + command.get().usage() + "`", false);
+            eb.addField("Description:", cmd.description(), false);
+            if (!cmd.detailedHelp().isEmpty()) eb.addField("Detailed Help:", cmd.detailedHelp(), false);
+            eb.addField("Usage: ", cmd.name().equals(cmd.usage()) ?
+                                       String.format("`%s`", name) : String.format("`%s %s`", name, cmd.usage()),
+                false);
 
 
             CommandPerm perm = command.get().commandPerm();
@@ -142,17 +145,12 @@ public class Help implements GuildCommand {
         }
 
         @Override
-        public CommandPerm commandPerm() {
+        public @NotNull CommandPerm commandPerm() {
             return CommandPerm.EVERYONE;
         }
 
         @Override
-        public String usage() {
-            return "help <command>";
-        }
-
-        @Override
-        public String description() {
+        public @NotNull String description() {
             return "Shows a command help page";
         }
     }
@@ -160,9 +158,5 @@ public class Help implements GuildCommand {
     public static void helper() {
         me.zoemartin.rubie.core.util.Help.setHelper(
             (user, channel, args, original, invoked) -> new Cmd().run(user, channel, args, original, invoked));
-    }
-
-    public static void commandHelp(User user, MessageChannel channel, List<String> args, Message original, String invoked) {
-        new Cmd().run(user, channel, args, original, invoked);
     }
 }

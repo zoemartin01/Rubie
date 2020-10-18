@@ -11,6 +11,7 @@ import me.zoemartin.rubie.modules.commandProcessing.LoggedError;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.*;
 import org.hibernate.Session;
+import org.jetbrains.annotations.NotNull;
 
 import javax.persistence.criteria.*;
 import java.util.List;
@@ -18,12 +19,12 @@ import java.util.UUID;
 
 public class ReadError implements GuildCommand {
     @Override
-    public String name() {
+    public @NotNull String name() {
         return "readerror";
     }
 
     @Override
-    public void run(User user, MessageChannel channel, List<String> args, Message original, String invoked) {
+    public void run(Member user, TextChannel channel, List<String> args, Message original, String invoked) {
         Check.check(args.size() == 1, CommandArgumentException::new);
 
         UUID uuid = UUID.fromString(args.get(0));
@@ -51,17 +52,17 @@ public class ReadError implements GuildCommand {
     }
 
     @Override
-    public CommandPerm commandPerm() {
+    public @NotNull CommandPerm commandPerm() {
         return CommandPerm.OWNER;
     }
 
     @Override
-    public String usage() {
-        return "readerror <uuid>";
+    public @NotNull String usage() {
+        return "<uuid>";
     }
 
     @Override
-    public String description() {
+    public @NotNull String description() {
         return "read an error";
     }
 }

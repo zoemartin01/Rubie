@@ -1,5 +1,8 @@
 package me.zoemartin.rubie.modules.commandProcessing;
 
+import net.dv8tion.jda.api.entities.Message;
+import org.hibernate.annotations.Type;
+
 import javax.persistence.*;
 import java.util.Arrays;
 import java.util.UUID;

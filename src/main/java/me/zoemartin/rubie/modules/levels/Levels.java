@@ -176,6 +176,11 @@ public class Levels extends ListenerAdapter implements Module {
         return config;
     }
 
+    public static void clearGuildCache(Guild g) {
+        if (!levels.containsKey(g.getId())) return;
+        levels.get(g.getId()).clear();
+    }
+
     public static int calcLevel(int exp) {
         double x = exp + 1;
         double pow = Math.cbrt(
@@ -190,3 +195,4 @@ public class Levels extends ListenerAdapter implements Module {
     }
 
 }
+

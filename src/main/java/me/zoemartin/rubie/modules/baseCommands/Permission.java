@@ -10,90 +10,86 @@ import me.zoemartin.rubie.core.util.*;
 import me.zoemartin.rubie.modules.commandProcessing.*;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.*;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
 public class Permission implements GuildCommand {
     @Override
-    public Set<Command> subCommands() {
+    public @NotNull Set<Command> subCommands() {
         return Set.of(new MemberPerm(), new RolePerm());
     }
 
     @Override
-    public String name() {
+    public @NotNull String name() {
         return "permission";
     }
 
     @Override
-    public String regex() {
+    public @NotNull String regex() {
         return "permission|perm";
     }
 
     @Override
-    public void run(User user, MessageChannel channel, List<String> args, Message original, String invoked) {
-        Help.commandHelp(user, channel, args, original, name());
+    public void run(Member user, TextChannel channel, List<String> args, Message original, String invoked) {
+        help(user, channel, List.of(name()), original);
     }
 
     @Override
-    public CommandPerm commandPerm() {
+    public @NotNull CommandPerm commandPerm() {
         return CommandPerm.BOT_ADMIN;
     }
 
     @Override
-    public String usage() {
-        return "perm help";
+    public @NotNull String usage() {
+        return "help";
     }
 
     @Override
-    public String description() {
+    public @NotNull String description() {
         return "Bot Permission Management";
     }
 
     private static class MemberPerm implements GuildCommand {
         @Override
-        public Set<Command> subCommands() {
+        public @NotNull Set<Command> subCommands() {
             return Set.of(new set(), new Remove(), new list());
         }
 
         @Override
-        public String name() {
+        public @NotNull String name() {
             return "member";
         }
 
         @Override
-        public String regex() {
+        public @NotNull String regex() {
             return "member|m";
         }
 
         @Override
-        public void run(User user, MessageChannel channel, List<String> args, Message original, String invoked) {
-            Help.commandHelp(user, channel, List.of("perm", name()), original, "perm");
+        public void run(Member user, TextChannel channel, List<String> args, Message original, String invoked) {
+            help(user, channel, List.of("perm", name()), original);
         }
 
         @Override
-        public CommandPerm commandPerm() {
+        public @NotNull CommandPerm commandPerm() {
             return CommandPerm.BOT_ADMIN;
         }
 
         @Override
-        public String usage() {
-            return "permission m";
-        }
-
-        @Override
-        public String description() {
+        public @NotNull String description() {
             return "Member Permission Management";
         }
 
         private static class set implements GuildCommand {
             @Override
-            public String name() {
+            public @NotNull String name() {
                 return "set";
             }
 
             @Override
-            public void run(User user, MessageChannel channel, List<String> args, Message original, String invoked) {
+            public void run(Member user, TextChannel channel, List<String> args, Message original, String invoked) {
                 Check.check(args.size() == 2 && Parser.User.isParsable(args.get(0))
                                 && Parser.Int.isParsable(args.get(1)), CommandArgumentException::new);
 
@@ -112,29 +108,29 @@ public class Permission implements GuildCommand {
             }
 
             @Override
-            public CommandPerm commandPerm() {
+            public @NotNull CommandPerm commandPerm() {
                 return CommandPerm.BOT_ADMIN;
             }
 
             @Override
-            public String usage() {
-                return "permission m set <user> <level>";
+            public @NotNull String usage() {
+                return "<user> <level>";
             }
 
             @Override
-            public String description() {
+            public @NotNull String description() {
                 return "Adds Bot Permissions to a Member";
             }
         }
 
         private static class Remove implements GuildCommand {
             @Override
-            public String name() {
+            public @NotNull String name() {
                 return "remove";
             }
 
             @Override
-            public void run(User user, MessageChannel channel, List<String> args, Message original, String invoked) {
+            public void run(Member user, TextChannel channel, List<String> args, Message original, String invoked) {
                 Check.check(args.size() == 1 && Parser.User.isParsable(args.get(0)),
                     CommandArgumentException::new);
 
@@ -147,29 +143,29 @@ public class Permission implements GuildCommand {
             }
 
             @Override
-            public CommandPerm commandPerm() {
+            public @NotNull CommandPerm commandPerm() {
                 return CommandPerm.BOT_ADMIN;
             }
 
             @Override
-            public String usage() {
-                return "permission m remove <user>";
+            public @NotNull String usage() {
+                return "<user>";
             }
 
             @Override
-            public String description() {
+            public @NotNull String description() {
                 return "Removes Bot Permissions from a Member";
             }
         }
 
         private static class list implements GuildCommand {
             @Override
-            public String name() {
+            public @NotNull String name() {
                 return "list";
             }
 
             @Override
-            public void run(User user, MessageChannel channel, List<String> args, Message original, String invoked) {
+            public void run(Member user, TextChannel channel, List<String> args, Message original, String invoked) {
                 Check.check(args.isEmpty(), CommandArgumentException::new);
 
                 EmbedBuilder eb = new EmbedBuilder();
@@ -192,17 +188,12 @@ public class Permission implements GuildCommand {
             }
 
             @Override
-            public CommandPerm commandPerm() {
+            public @NotNull CommandPerm commandPerm() {
                 return CommandPerm.BOT_ADMIN;
             }
 
             @Override
-            public String usage() {
-                return "permission m list";
-            }
-
-            @Override
-            public String description() {
+            public @NotNull String description() {
                 return "Lists all members with special bot member permissions";
             }
         }
@@ -210,55 +201,50 @@ public class Permission implements GuildCommand {
 
     private static class RolePerm implements GuildCommand {
         @Override
-        public Set<Command> subCommands() {
+        public @NotNull Set<Command> subCommands() {
             return Set.of(new set(), new Remove(), new list());
         }
 
         @Override
-        public String name() {
+        public @NotNull String name() {
             return "role";
         }
 
         @Override
-        public String regex() {
+        public @NotNull String regex() {
             return "role|r";
         }
 
         @Override
-        public void run(User user, MessageChannel channel, List<String> args, Message original, String invoked) {
-            Help.commandHelp(user, channel, List.of("perm", name()), original, "perm");
+        public void run(Member user, TextChannel channel, List<String> args, Message original, String invoked) {
+            help(user, channel, List.of("perm", name()), original);
         }
 
         @Override
-        public CommandPerm commandPerm() {
+        public @NotNull CommandPerm commandPerm() {
             return CommandPerm.BOT_ADMIN;
         }
 
         @Override
-        public String usage() {
-            return "permission r";
-        }
-
-        @Override
-        public String description() {
+        public @NotNull String description() {
             return "Role Permission Management";
         }
 
         private static class set implements GuildCommand {
             @Override
-            public String name() {
+            public @NotNull String name() {
                 return "set";
             }
 
             @Override
-            public void run(User user, MessageChannel channel, List<String> args, Message original, String invoked) {
+            public void run(Member user, TextChannel channel, List<String> args, Message original, String invoked) {
                 Check.check(args.size() == 2 && Parser.Int.isParsable(args.get(1)),
                     CommandArgumentException::new);
 
                 Role r = Parser.Role.getRole(original.getGuild(), args.get(0));
                 CommandPerm cp = CommandPerm.fromNum(Parser.Int.parse(args.get(1)));
                 Check.notNull(cp, CommandArgumentException::new);
-                Check.entityNotNull(r, Role.class);
+                Check.entityReferenceNotNull(r, Role.class, args.get(0));
                 Check.check(!cp.equals(CommandPerm.OWNER) || user.getId().equals(Bot.getOWNER()),
                     CommandArgumentException::new);
 
@@ -271,33 +257,34 @@ public class Permission implements GuildCommand {
             }
 
             @Override
-            public CommandPerm commandPerm() {
+            public @NotNull CommandPerm commandPerm() {
                 return CommandPerm.BOT_ADMIN;
             }
 
             @Override
-            public String usage() {
-                return "permission r set <role> <level>";
+            public @NotNull String usage() {
+                return "<role> <level>";
             }
 
             @Override
-            public String description() {
+            public @NotNull String description() {
                 return "Adds Bot Permissions to a Role";
             }
         }
 
         private static class Remove implements GuildCommand {
             @Override
-            public String name() {
+            public @NotNull String name() {
                 return "remove";
             }
 
             @Override
-            public void run(User user, MessageChannel channel, List<String> args, Message original, String invoked) {
+            public void run(Member user, TextChannel channel, List<String> args, Message original, String invoked) {
                 Check.check(!args.isEmpty(), CommandArgumentException::new);
 
-                Role r = Parser.Role.getRole(original.getGuild(), lastArg(0, args, original));
-                Check.entityNotNull(r, Role.class);
+                String rRef = lastArg(0, args, original);
+                Role r = Parser.Role.getRole(original.getGuild(), rRef);
+                Check.entityReferenceNotNull(r, Role.class, rRef);
 
                 Check.check(PermissionHandler.removeRolePerm(original.getGuild().getId(), r.getId()),
                     () -> new ReplyError("Error, Role does not have an assigned Role Permission"));
@@ -306,29 +293,29 @@ public class Permission implements GuildCommand {
             }
 
             @Override
-            public CommandPerm commandPerm() {
+            public @NotNull CommandPerm commandPerm() {
                 return CommandPerm.BOT_ADMIN;
             }
 
             @Override
-            public String usage() {
-                return "permission r remove <role>";
+            public @NotNull String usage() {
+                return "<role>";
             }
 
             @Override
-            public String description() {
+            public @NotNull String description() {
                 return "Remove Bot Permissions from a Role";
             }
         }
 
         private static class list implements GuildCommand {
             @Override
-            public String name() {
+            public @NotNull String name() {
                 return "list";
             }
 
             @Override
-            public void run(User user, MessageChannel channel, List<String> args, Message original, String invoked) {
+            public void run(Member user, TextChannel channel, List<String> args, Message original, String invoked) {
                 Check.check(args.isEmpty(), CommandArgumentException::new);
 
                 EmbedBuilder eb = new EmbedBuilder();
@@ -353,17 +340,12 @@ public class Permission implements GuildCommand {
             }
 
             @Override
-            public CommandPerm commandPerm() {
+            public @NotNull CommandPerm commandPerm() {
                 return CommandPerm.BOT_ADMIN;
             }
 
             @Override
-            public String usage() {
-                return "permission r list";
-            }
-
-            @Override
-            public String description() {
+            public @NotNull String description() {
                 return "Lists all roles with special bot role permissions";
             }
         }

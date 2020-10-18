@@ -5,14 +5,10 @@ import me.zoemartin.rubie.core.LoadModule;
 import me.zoemartin.rubie.core.interfaces.Module;
 import net.dv8tion.jda.api.events.message.guild.react.GuildMessageReactionAddEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
-import net.jodah.expiringmap.ExpiringMap;
 
 import javax.annotation.Nonnull;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.TimeUnit;
-
-import static me.zoemartin.rubie.modules.pagedEmbeds.PagedEmbed.*;
 
 @LoadModule
 public class PageListener extends ListenerAdapter implements Module {
@@ -31,17 +27,17 @@ public class PageListener extends ListenerAdapter implements Module {
         if (!event.getReactionEmote().isEmoji()) return;
 
         switch (event.getReactionEmote().getAsCodepoints().toUpperCase()) {
-            case BACK:
+            case PagedEmbed.BACK:
                 p.last();
                 event.getReaction().removeReaction(event.getUser()).queue();
                 break;
 
-            case FORWARD:
+            case PagedEmbed.FORWARD:
                 p.next();
                 event.getReaction().removeReaction(event.getUser()).queue();
                 break;
 
-            case STOP:
+            case PagedEmbed.STOP:
                 p.stop();
                 pages.get(event.getGuild().getId()).remove(p);
         }
@@ -49,8 +45,7 @@ public class PageListener extends ListenerAdapter implements Module {
 
     public static void add(PagedEmbed e) {
         if (e.getPages() > 1)
-            pages.computeIfAbsent(e.getGuildId(), k -> Collections.newSetFromMap(ExpiringMap.builder().expiration(
-                15, TimeUnit.MINUTES).build()))
+            pages.computeIfAbsent(e.getGuildId(), k -> Collections.newSetFromMap(new ConcurrentHashMap<>()))
                 .add(e);
     }
 

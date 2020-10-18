@@ -8,6 +8,7 @@ import me.zoemartin.rubie.core.util.Check;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.*;
+import org.jetbrains.annotations.NotNull;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
@@ -18,13 +19,13 @@ import java.util.List;
 
 public class ServerInfo implements GuildCommand {
     @Override
-    public String name() {
+    public @NotNull String name() {
         return "serverinfo";
     }
 
     @SuppressWarnings("ConstantConditions")
     @Override
-    public void run(User user, MessageChannel channel, List<String> args, Message original, String invoked) {
+    public void run(Member user, TextChannel channel, List<String> args, Message original, String invoked) {
         Check.check(args.isEmpty(), CommandArgumentException::new);
 
         Guild guild = original.getGuild();
@@ -78,17 +79,12 @@ public class ServerInfo implements GuildCommand {
     }
 
     @Override
-    public CommandPerm commandPerm() {
+    public @NotNull CommandPerm commandPerm() {
         return CommandPerm.EVERYONE;
     }
 
     @Override
-    public String usage() {
-        return "serverinfo";
-    }
-
-    @Override
-    public String description() {
+    public @NotNull String description() {
         return "Shows info about the server";
     }
 }

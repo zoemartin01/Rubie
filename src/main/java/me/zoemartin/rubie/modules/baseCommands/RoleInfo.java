@@ -6,6 +6,7 @@ import me.zoemartin.rubie.core.interfaces.GuildCommand;
 import me.zoemartin.rubie.core.util.*;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.*;
+import org.jetbrains.annotations.NotNull;
 
 import java.time.Instant;
 import java.time.OffsetDateTime;
@@ -13,16 +14,17 @@ import java.util.List;
 
 public class RoleInfo implements GuildCommand {
     @Override
-    public String name() {
+    public @NotNull String name() {
         return "roleinfo";
     }
 
     @Override
-    public void run(User user, MessageChannel channel, List<String> args, Message original, String invoked) {
+    public void run(Member user, TextChannel channel, List<String> args, Message original, String invoked) {
         Check.check(!args.isEmpty(), CommandArgumentException::new);
 
-        Role role = Parser.Role.getRole(original.getGuild(), lastArg(0, args, original));
-        Check.entityNotNull(role, Role.class);
+        String roleRef = lastArg(0, args, original);
+        Role role = Parser.Role.getRole(original.getGuild(), roleRef);
+        Check.entityReferenceNotNull(role, Role.class, roleRef);
 
         EmbedBuilder eb =
             new EmbedBuilder()
@@ -45,17 +47,17 @@ public class RoleInfo implements GuildCommand {
     }
 
     @Override
-    public CommandPerm commandPerm() {
+    public @NotNull CommandPerm commandPerm() {
         return CommandPerm.BOT_MODERATOR;
     }
 
     @Override
-    public String usage() {
-        return "roleinfo <@role>";
+    public @NotNull String usage() {
+        return "<@role>";
     }
 
     @Override
-    public String description() {
+    public @NotNull String description() {
         return "Gives information about a role";
     }
 }
