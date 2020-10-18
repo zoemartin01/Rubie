@@ -1,5 +1,6 @@
 package me.zoemartin.rubie.modules.commandProcessing;
 
+import me.zoemartin.rubie.Bot;
 import me.zoemartin.rubie.core.CommandPerm;
 import me.zoemartin.rubie.core.exceptions.*;
 import me.zoemartin.rubie.core.interfaces.Command;
@@ -54,7 +55,8 @@ public class CommandHandler implements CommandProcessor {
         Check.notNull(member, () -> new ConsoleError("member is null"));
         Check.check(command.required().contains(Permission.UNKNOWN)
                         || member.hasPermission(Permission.ADMINISTRATOR)
-                        || command.required().stream().allMatch(member::hasPermission),
+                        || command.required().stream().allMatch(member::hasPermission)
+                        || member.getId().equals(Bot.getOWNER()),
             () -> new ConsoleError("Member '%s' doesn't have the required permission for Command '%s'",
                 member.getId(), command.name()));
 
