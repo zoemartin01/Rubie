@@ -9,6 +9,10 @@ import java.util.stream.IntStream;
 
 public class EmbedUtil {
     public static List<MessageEmbed> pagedFieldEmbed(MessageEmbed eb, List<MessageEmbed.Field> fields) {
+        return pagedFieldEmbed(eb, fields, 2500);
+    }
+
+    public static List<MessageEmbed> pagedFieldEmbed(MessageEmbed eb, List<MessageEmbed.Field> fields, int max) {
         LinkedList<List<MessageEmbed.Field>> fList = new LinkedList<>();
         fList.add(new LinkedList<>());
 
@@ -21,7 +25,7 @@ public class EmbedUtil {
             int lenW = len + (field.getValue() != null ? field.getValue().length() : 0)
                            + (field.getName() != null ? field.getName().length() : 0);
 
-            if (lenW >= 2500) fList.add(new LinkedList<>());
+            if (lenW >= max) fList.add(new LinkedList<>());
             fList.getLast().add(field);
         });
 

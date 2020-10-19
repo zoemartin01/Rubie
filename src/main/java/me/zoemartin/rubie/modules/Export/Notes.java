@@ -45,17 +45,9 @@ public class Notes implements GuildCommand {
                                                          || message.getAuthor().getId().equals(AUTTAJA_ID))
                                   .forEach(message -> {
                                       switch (message.getAuthor().getId()) {
-                                          case CARL_ID:
-                                              message.getEmbeds().forEach(embed -> notes.addAll(parseCarl(embed)));
-                                              break;
-
-                                          case DYNO_ID:
-                                              message.getEmbeds().forEach(embed -> notes.addAll(parseDyno(embed)));
-                                              break;
-
-                                          case AUTTAJA_ID:
-                                              message.getEmbeds().forEach(embed -> notes.addAll(parseAuttaja(embed)));
-                                              break;
+                                          case CARL_ID -> message.getEmbeds().forEach(embed -> notes.addAll(parseCarl(embed)));
+                                          case DYNO_ID -> message.getEmbeds().forEach(embed -> notes.addAll(parseDyno(embed)));
+                                          case AUTTAJA_ID -> message.getEmbeds().forEach(embed -> notes.addAll(parseAuttaja(embed)));
                                       }
                                   }));
 
@@ -169,7 +161,7 @@ public class Notes implements GuildCommand {
         }).filter(Objects::nonNull).collect(Collectors.toList());
     }
 
-    private static class NoteEntry implements Serializable {
+    public static class NoteEntry implements Serializable {
         private final String user_id;
         private final String moderator_id;
         // fallback only
@@ -191,6 +183,26 @@ public class Notes implements GuildCommand {
             this.moderator_tag = moderator_tag;
             this.note = note;
             this.timestamp = timestamp;
+        }
+
+        public String getUser_id() {
+            return user_id;
+        }
+
+        public String getModerator_id() {
+            return moderator_id;
+        }
+
+        public String getModerator_tag() {
+            return moderator_tag;
+        }
+
+        public String getNote() {
+            return note;
+        }
+
+        public String getTimestamp() {
+            return timestamp;
         }
     }
 }

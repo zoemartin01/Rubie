@@ -1,5 +1,7 @@
 package me.zoemartin.rubie.modules.moderation;
 
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 import me.zoemartin.rubie.Bot;
 import me.zoemartin.rubie.core.CommandPerm;
 import me.zoemartin.rubie.core.exceptions.*;
@@ -12,9 +14,13 @@ import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.*;
 import org.hibernate.Session;
 import org.jetbrains.annotations.NotNull;
+import org.joda.time.DateTime;
+import org.joda.time.format.DateTimeFormat;
+import org.joda.time.format.DateTimeFormatter;
 
 import javax.persistence.criteria.*;
 import java.io.*;
+import java.lang.reflect.Type;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.time.ZoneOffset;
@@ -25,7 +31,7 @@ import java.util.stream.Collectors;
 public class Warn implements GuildCommand {
     @Override
     public @NotNull Set<Command> subCommands() {
-        return Set.of(new list(), new Remove(), new BulkImport(), new BulkImportFile());
+        return Set.of(new list(), new Remove(), new BulkImportFile());
     }
 
     @Override
@@ -43,8 +49,9 @@ public class Warn implements GuildCommand {
 
         String reason = lastArg(1, args, original);
 
-        WarnEntity warnEntity = new WarnEntity(
-            original.getGuild().getId(), u.getId(), user.getId(), reason, original.getTimeCreated().toEpochSecond());
+        ModLogEntity warnEntity = new ModLogEntity(
+            original.getGuild().getId(), u.getId(), user.getId(), reason, original.getTimeCreated().toEpochSecond(),
+            ModLogEntity.ModLogType.WARN);
 
         DatabaseUtil.saveObject(warnEntity);
         EmbedBuilder eb = new EmbedBuilder()
@@ -93,9 +100,10 @@ public class Warn implements GuildCommand {
             Session s = DatabaseUtil.getSessionFactory().openSession();
             CriteriaBuilder cb = s.getCriteriaBuilder();
 
-            CriteriaQuery<WarnEntity> q = cb.createQuery(WarnEntity.class);
-            Root<WarnEntity> r = q.from(WarnEntity.class);
-            List<WarnEntity> warns = s.createQuery(q.select(r).where(
+            CriteriaQuery<ModLogEntity> q = cb.createQuery(ModLogEntity.class);
+            Root<ModLogEntity> r = q.from(ModLogEntity.class);
+            List<ModLogEntity> warns = s.createQuery(q.select(r).where(
+                cb.equal(r.get("type"), ModLogEntity.ModLogType.WARN.raw()),
                 cb.equal(r.get("guild_id"), original.getGuild().getId()),
                 cb.equal(r.get("user_id"), userId))).getResultList();
 
@@ -150,13 +158,14 @@ public class Warn implements GuildCommand {
             Session s = DatabaseUtil.getSessionFactory().openSession();
             CriteriaBuilder cb = s.getCriteriaBuilder();
 
-            CriteriaQuery<WarnEntity> q = cb.createQuery(WarnEntity.class);
-            Root<WarnEntity> r = q.from(WarnEntity.class);
-            List<WarnEntity> warns = s.createQuery(q.select(r).where(
+            CriteriaQuery<ModLogEntity> q = cb.createQuery(ModLogEntity.class);
+            Root<ModLogEntity> r = q.from(ModLogEntity.class);
+            List<ModLogEntity> warns = s.createQuery(q.select(r).where(
+                cb.equal(r.get("type"), ModLogEntity.ModLogType.WARN.raw()),
                 cb.equal(r.get("guild_id"), original.getGuild().getId()),
                 cb.equal(r.get("uuid"), uuid))).getResultList();
 
-            WarnEntity warn = warns.isEmpty() ? null : warns.get(0);
+            ModLogEntity warn = warns.isEmpty() ? null : warns.get(0);
             Check.notNull(warn, () -> new ReplyError("No warning with the ID `%s`", uuid));
 
             User u = Bot.getJDA().getUserById(warn.getUser_id());
@@ -189,67 +198,12 @@ public class Warn implements GuildCommand {
         }
     }
 
-    private static class BulkImport implements GuildCommand {
+    private static class BulkImportFile implements GuildCommand {
+        private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormat.forPattern("yyyy-MM-dd'T'HH:mm:ss.SSSSSS");
 
         @Override
         public @NotNull String name() {
             return "import";
-        }
-
-        @Override
-        public void run(Member user, TextChannel channel, List<String> args, Message original, String invoked) {
-            Check.check(!args.isEmpty(), CommandArgumentException::new);
-            String[] split = original.getContentRaw().split("\n");
-            List<String> input = List.of(split).subList(1, split.length);
-
-            List<WarnEntity> warns = input.stream().map(s -> {
-                List<String> keys = List.of(s.split("\\s+", 3));
-                Check.check(keys.size() == 3, CommandArgumentException::new);
-
-                Check.check(Parser.User.isParsable(keys.get(0)), CommandArgumentException::new);
-                User u = Bot.getJDA().getUserById(keys.get(0));
-                Check.notNull(u, UserNotFoundException::new);
-
-                User mod;
-                if (Parser.User.isParsable(keys.get(1))) mod = Bot.getJDA().getUserById(keys.get(1));
-                else mod = Bot.getJDA().getUserByTag(keys.get(1));
-                Check.notNull(mod, UserNotFoundException::new);
-
-                return new WarnEntity(original.getGuild().getId(), u.getId(), mod.getId(), keys.get(2),
-                    original.getTimeCreated().toEpochSecond());
-            }).collect(Collectors.toList());
-
-            Message m = channel.sendMessage("Okay... this might take a while").complete();
-            warns.forEach(DatabaseUtil::saveObject);
-            Set<String> users = warns.stream().map(WarnEntity::getUser_id).collect(Collectors.toCollection(HashSet::new));
-
-            EmbedBuilder eb = new EmbedBuilder().setTitle("Bulk Warn Import");
-            eb.setDescription("Imported warns:\n" + String.join("\n", users));
-            m.delete().complete();
-            channel.sendMessage(eb.build()).queue();
-        }
-
-        @Override
-        public @NotNull CommandPerm commandPerm() {
-            return CommandPerm.BOT_ADMIN;
-        }
-
-        @Override
-        public @NotNull String usage() {
-            return "\n<user> <moderator> <reason>";
-        }
-
-        @Override
-        public @NotNull String description() {
-            return "Bulk Import Warns. These warns are added silently. One Line for each Warn.";
-        }
-    }
-
-    private static class BulkImportFile implements GuildCommand {
-
-        @Override
-        public @NotNull String name() {
-            return "importfile";
         }
 
         @Override
@@ -260,7 +214,6 @@ public class Warn implements GuildCommand {
 
             InputStreamReader ir;
             BufferedReader br;
-            BufferedInputStream bi;
             try {
                 ir = new InputStreamReader(original.getAttachments().get(0).retrieveInputStream().get(1, TimeUnit.MINUTES));
                 br = new BufferedReader(ir);
@@ -268,25 +221,30 @@ public class Warn implements GuildCommand {
                 throw new UnexpectedError(e);
             }
 
-            List<String> input = br.lines().collect(Collectors.toList());
-            List<WarnEntity> warns = input.stream().map(s -> {
-                List<String> keys = List.of(s.split("\\s+", 3));
-                Check.check(keys.size() == 3, CommandArgumentException::new);
+            Session s = DatabaseUtil.getSessionFactory().openSession();
+            CriteriaBuilder cb = s.getCriteriaBuilder();
 
-                Check.check(Parser.User.isParsable(keys.get(0)), CommandArgumentException::new);
-                User u = Bot.getJDA().getUserById(keys.get(0));
-                Check.notNull(u, UserNotFoundException::new);
+            CriteriaQuery<ModLogEntity> q = cb.createQuery(ModLogEntity.class);
+            Root<ModLogEntity> r = q.from(ModLogEntity.class);
+            List<ModLogEntity> existing = s.createQuery(q.select(r).where(
+                cb.equal(r.get("guild_id"), original.getGuild().getId()))).getResultList();
 
-                User mod;
-                if (Parser.User.isParsable(keys.get(1))) mod = Bot.getJDA().getUserById(keys.get(1));
-                else mod = Bot.getJDA().getUserByTag(keys.get(1));
-                Check.notNull(mod, UserNotFoundException::new);
+            Type listType = new TypeToken<ArrayList<ModLogs.ModLogEntry>>() {
+            }.getType();
+            List<ModLogs.ModLogEntry> toImport = new Gson().fromJson(br, listType);
 
-                return new WarnEntity(original.getGuild().getId(), u.getId(), mod.getId(), keys.get(2),
-                    original.getTimeCreated().toEpochSecond());
-            }).collect(Collectors.toList());
-            warns.forEach(DatabaseUtil::saveObject);
-            Set<String> users = warns.stream().map(WarnEntity::getUser_id).collect(Collectors.toCollection(HashSet::new));
+            String guildId = original.getGuild().getId();
+            List<ModLogEntity> modlogs = toImport.stream().filter(e -> e.getAction().equals("warn"))
+                                             .map(e ->
+                                                     new ModLogEntity(guildId, e.getOffender_id(), e.getModerator_id(), e.getReason(),
+                                                         DateTime.parse(e.getTimestamp(), TIME_FORMATTER).getMillis(), ModLogEntity.ModLogType.WARN)
+
+                                             ).filter(e -> existing.stream().noneMatch(e::equals))
+                                             .collect(Collectors.toList());
+
+            modlogs.forEach(DatabaseUtil::saveObject);
+            Set<String> users = modlogs.stream().map(ModLogEntity::getUser_id)
+                                    .collect(Collectors.toCollection(HashSet::new));
 
             EmbedBuilder eb = new EmbedBuilder().setTitle("Bulk Warn Import");
             eb.setDescription("Imported warns:\n" + String.join("\n", users));
