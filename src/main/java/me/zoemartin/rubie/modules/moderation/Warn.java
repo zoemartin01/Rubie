@@ -50,7 +50,7 @@ public class Warn implements GuildCommand {
         String reason = lastArg(1, args, original);
 
         ModLogEntity warnEntity = new ModLogEntity(
-            original.getGuild().getId(), u.getId(), user.getId(), reason, original.getTimeCreated().toEpochSecond(),
+            original.getGuild().getId(), u.getId(), user.getId(), reason, original.getTimeCreated().toInstant().toEpochMilli(),
             ModLogEntity.ModLogType.WARN);
 
         DatabaseUtil.saveObject(warnEntity);
