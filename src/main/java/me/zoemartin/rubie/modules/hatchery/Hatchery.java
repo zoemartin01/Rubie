@@ -7,15 +7,9 @@ import net.dv8tion.jda.api.entities.Guild;
 
 @LoadModule
 public class Hatchery implements Module {
-    private static final String GUILD_ID = "531790991586361344";
-
     @Override
     public void init() {
         CommandManager.register(new MVC());
-    }
-
-
-    public static boolean isHatchery(Guild g) {
-        return g.getId().equals(GUILD_ID);
+        CommandManager.register(new MVCRefresh());
     }
 }
