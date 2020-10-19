@@ -7,23 +7,22 @@ import me.zoemartin.rubie.core.CommandPerm;
 import me.zoemartin.rubie.core.exceptions.*;
 import me.zoemartin.rubie.core.interfaces.Command;
 import me.zoemartin.rubie.core.interfaces.GuildCommand;
+import me.zoemartin.rubie.core.util.*;
 import me.zoemartin.rubie.modules.pagedEmbeds.PageListener;
 import me.zoemartin.rubie.modules.pagedEmbeds.PagedEmbed;
-import me.zoemartin.rubie.core.util.*;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.*;
 import org.hibernate.Session;
 import org.jetbrains.annotations.NotNull;
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 
 import javax.persistence.criteria.*;
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
 import java.lang.reflect.Type;
-import java.sql.Timestamp;
-import java.time.Instant;
-import java.time.ZoneOffset;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.stream.Collectors;
@@ -118,8 +117,8 @@ public class Warn implements GuildCommand {
                                           "**On**: %s\n\n" +
                                           "**Reason**: %s",
                             moderator != null ? moderator.getAsMention() : e.getModerator_id(),
-                            Timestamp.valueOf(Instant.ofEpochSecond(e.getTimestamp())
-                                                  .atOffset(ZoneOffset.UTC).toLocalDateTime()),
+                            new DateTime(e.getTimestamp(), DateTimeZone.UTC)
+                                .toString("yyyy-MM-dd HH:mm:ss"),
                             e.getReason()), true);
                 }).collect(Collectors.toList())
             );
