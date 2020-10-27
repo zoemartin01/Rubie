@@ -40,10 +40,11 @@ public class UserInfo implements GuildCommand {
         if (member == null) {
             eb = new EmbedBuilder()
                      .setAuthor(u.getAsTag(), null, u.getEffectiveAvatarUrl())
-                     .setDescription(u.getAsMention())
+                     .setDescription(u.getId())
                      .setThumbnail(u.getAvatarUrl())
                      .setFooter("ID: " + u.getId())
                      .setTimestamp(Instant.now())
+                     .addField("Mention", u.getAsMention(), true)
                      .addField("Username", u.getAsTag(), true)
                      .addField("Avatar",
                          String.format("[Link](%s)", u.getEffectiveAvatarUrl()), true)
@@ -58,10 +59,11 @@ public class UserInfo implements GuildCommand {
             eb = new EmbedBuilder()
                      .setAuthor(u.getAsTag(), null, u.getEffectiveAvatarUrl())
                      .setColor(member.getColor())
-                     .setDescription(u.getAsMention())
+                     .setDescription(u.getId())
                      .setThumbnail(u.getAvatarUrl())
                      .setFooter("ID: " + u.getId())
                      .setTimestamp(Instant.now())
+                     .addField("Mention", u.getAsMention(), true)
                      .addField("Username", u.getAsTag(), true)
                      .addField("Nickname", member.getEffectiveName(), true)
                      .addField("Avatar", String.format("[Link](%s)", u.getEffectiveAvatarUrl()), true)
@@ -91,12 +93,12 @@ public class UserInfo implements GuildCommand {
                 .addField("Account Age", MessageUtils.dateAgo(u.getTimeCreated(), OffsetDateTime.now()), true)
                 .addField("Joined at",
                     Timestamp.valueOf(member.getTimeJoined().atZoneSameInstant(ZoneOffset.UTC).toLocalDateTime())
-                        + " UTC", true)
-                .addField("Joined Server Age", MessageUtils.dateAgo(member.getTimeJoined(), OffsetDateTime.now())
-                                                   + "\n"
-                                                   + ChronoUnit.DAYS.between(original.getGuild().getTimeCreated(),
-                    member.getTimeJoined())
-                                                   + " days after the server was created", true);
+                        + " UTC", true);
+                //.addField("Joined Server Age", MessageUtils.dateAgo(member.getTimeJoined(), OffsetDateTime.now())
+                //                                   + "\n"
+                //                                   + ChronoUnit.DAYS.between(original.getGuild().getTimeCreated(),
+                //    member.getTimeJoined())
+                //                                   + " days after the server was created", true);
 
             String roles = member.getRoles().stream().map(Role::getAsMention).collect(Collectors.joining(", "));
             eb.addField(String.format("Roles (%s)", member.getRoles().size()),
