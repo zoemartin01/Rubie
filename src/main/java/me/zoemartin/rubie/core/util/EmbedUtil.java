@@ -66,4 +66,32 @@ public class EmbedUtil {
             return b.build();
         }).collect(Collectors.toList());
     }
+
+    public static List<MessageEmbed> pagedCommentedDescription(MessageEmbed eb, List<String> input) {
+        LinkedList<List<String>> fList = new LinkedList<>();
+        fList.add(new LinkedList<>());
+
+        input.forEach(s -> {
+            int len = fList.getLast().stream()
+                          .map(String::length)
+                          .reduce(0, Integer::sum) + s.length() + 1;
+
+            if (len >= 1016 || String.join("", fList.getLast()).chars().filter(c -> c == '\n').count() > 25)
+                fList.add(new LinkedList<>());
+            fList.getLast().add(s);
+        });
+
+        return fList.stream().map(f -> {
+            EmbedBuilder b = new EmbedBuilder()
+                                 .setTitle(eb.getTitle())
+                                 .setColor(eb.getColor());
+
+            b.setFooter(String.format("Page %s out of %s", fList.indexOf(f) + 1, fList.size()));
+            b.appendDescription("```");
+            f.forEach(b::appendDescription);
+            b.appendDescription("```");
+
+            return b.build();
+        }).collect(Collectors.toList());
+    }
 }
