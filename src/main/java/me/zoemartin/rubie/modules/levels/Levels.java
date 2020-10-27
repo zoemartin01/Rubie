@@ -27,6 +27,7 @@ public class Levels extends ListenerAdapter implements Module {
         DatabaseUtil.setMapped(UserLevel.class);
         DatabaseUtil.setMapped(LevelConfig.class);
         CommandManager.register(new Level());
+        CommandManager.register(new Level.Leaderboard());
     }
 
     @Override

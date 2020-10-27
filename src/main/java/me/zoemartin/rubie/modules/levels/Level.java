@@ -46,7 +46,7 @@ public class Level implements GuildCommand {
         return "Shows Levels";
     }
 
-    private static class Leaderboard implements GuildCommand {
+    static class Leaderboard implements GuildCommand {
 
         @Override
         public @NotNull String name() {
