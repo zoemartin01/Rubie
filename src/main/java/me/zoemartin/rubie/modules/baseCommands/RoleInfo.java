@@ -37,7 +37,7 @@ public class RoleInfo implements GuildCommand {
                 .addField("Position", String.valueOf(role.getPositionRaw()), true)
                 .addField("Hoisted", String.valueOf(role.isHoisted()), true)
                 .addField("Mentionable", String.valueOf(role.isMentionable()), true)
-                .addField("Created ago", MessageUtils.dateAgo(role.getTimeCreated(), OffsetDateTime.now()), false)
+                .addField("Created ago", TimeUtils.dateAgo(role.getTimeCreated(), OffsetDateTime.now()), false)
 
                 .setFooter("ID: " + role.getId())
                 .setTimestamp(Instant.now())

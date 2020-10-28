@@ -52,7 +52,7 @@ public class UserInfo implements GuildCommand {
                          Timestamp.valueOf(u.getTimeCreated().atZoneSameInstant(ZoneOffset.UTC)
                                                .toLocalDateTime()) + " UTC",
                          true)
-                     .addField("Account Age", MessageUtils.dateAgo(u.getTimeCreated(),
+                     .addField("Account Age", TimeUtils.dateAgo(u.getTimeCreated(),
                          OffsetDateTime.now()), true);
 
         } else {
@@ -90,15 +90,15 @@ public class UserInfo implements GuildCommand {
             eb.addField("Registered at",
                 Timestamp.valueOf(u.getTimeCreated().atZoneSameInstant(ZoneOffset.UTC).toLocalDateTime()) + " UTC",
                 true)
-                .addField("Account Age", MessageUtils.dateAgo(u.getTimeCreated(), OffsetDateTime.now()), true)
+                .addField("Account Age", TimeUtils.dateAgo(u.getTimeCreated(), OffsetDateTime.now()), true)
                 .addField("Joined at",
                     Timestamp.valueOf(member.getTimeJoined().atZoneSameInstant(ZoneOffset.UTC).toLocalDateTime())
-                        + " UTC", true);
-                //.addField("Joined Server Age", MessageUtils.dateAgo(member.getTimeJoined(), OffsetDateTime.now())
-                //                                   + "\n"
-                //                                   + ChronoUnit.DAYS.between(original.getGuild().getTimeCreated(),
-                //    member.getTimeJoined())
-                //                                   + " days after the server was created", true);
+                        + " UTC", true)
+                .addField("Joined Server", TimeUtils.dateAgo(member.getTimeJoined(), OffsetDateTime.now())
+                                                   + " ago\n"
+                                                   + ChronoUnit.DAYS.between(original.getGuild().getTimeCreated(),
+                    member.getTimeJoined())
+                                                   + " days after the server was created", false);
 
             String roles = member.getRoles().stream().map(Role::getAsMention).collect(Collectors.joining(", "));
             eb.addField(String.format("Roles (%s)", member.getRoles().size()),
