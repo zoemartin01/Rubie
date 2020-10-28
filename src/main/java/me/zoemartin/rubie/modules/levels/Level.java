@@ -126,13 +126,14 @@ public class Level implements GuildCommand {
 
             EmbedBuilder eb = new EmbedBuilder()
                                   .setThumbnail(u.getEffectiveAvatarUrl())
-                                  .setFooter(user.getUser().getAsTag())
-                                  .setTimestamp(Instant.now())
-                                  .setTitle("Level " + lvl + " - Rank #" + (levels.indexOf(level) + 1));
+                                  .setFooter(u.getAsTag())
+                                  .setTimestamp(Instant.now());
 
-            if (member != null) eb.setColor(member.getColor());
+            if (member != null) eb.setColor(member.getColor())
+                                    .setTitle("Level " + lvl + " - Rank #" + (levels.indexOf(level) + 1));
+            else eb.setTitle("Level " + lvl);
 
-            eb.addField( (int) ((exp - Levels.calcExp(lvl)) / (expToNext - Levels.calcExp(lvl)) * 100) + "%",
+            eb.addField((int) ((exp - Levels.calcExp(lvl)) / (expToNext - Levels.calcExp(lvl)) * 100) + "%",
                 String.format("%d/%dxp", exp, Levels.calcExp(lvl + 1)), true);
 
             channel.sendMessage(eb.build()).queue();
