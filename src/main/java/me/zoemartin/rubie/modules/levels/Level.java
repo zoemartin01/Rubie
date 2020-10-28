@@ -126,8 +126,7 @@ public class Level implements GuildCommand {
 
             EmbedBuilder eb = new EmbedBuilder()
                                   .setThumbnail(u.getEffectiveAvatarUrl())
-                                  .setAuthor(u.getAsTag(), null, u.getEffectiveAvatarUrl())
-                                  .setFooter(Bot.getJDA().getSelfUser().getName(), Bot.getJDA().getSelfUser().getEffectiveAvatarUrl())
+                                  .setFooter(user.getUser().getAsTag())
                                   .setTimestamp(Instant.now())
                                   .setTitle("Level " + lvl + " - Rank #" + (levels.indexOf(level) + 1));
 
