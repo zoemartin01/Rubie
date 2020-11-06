@@ -24,11 +24,11 @@ public class Debug implements Module, GuildCommand {
     public void init() {
         CommandManager.register(new Shutdown());
         CommandManager.register(new Purge());
-        CommandManager.register(new Debug());
         CommandManager.register(new Dump());
         CommandManager.register(new ReadError());
         CommandManager.register(new Transcript());
         CommandManager.register(new Output());
+        CommandManager.register(new Stats());
     }
 
     @Override
