@@ -6,8 +6,7 @@ import me.zoemartin.rubie.core.exceptions.*;
 import me.zoemartin.rubie.core.interfaces.Command;
 import me.zoemartin.rubie.core.interfaces.CommandProcessor;
 import me.zoemartin.rubie.core.managers.CommandManager;
-import me.zoemartin.rubie.core.util.Check;
-import me.zoemartin.rubie.core.util.DatabaseUtil;
+import me.zoemartin.rubie.core.util.*;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.*;
@@ -74,7 +73,9 @@ public class CommandHandler implements CommandProcessor {
         try {
             command.run(user, channel, Collections.unmodifiableList(arguments), event.getMessage(), inputs.get(commands.size() - 1));
         } catch (CommandArgumentException e) {
-            sendUsage(channel, commands);
+            Help.getHelper().send(user, channel,
+                commands.stream().map(Command::name).collect(Collectors.toList()),
+                event.getMessage(), commands.getFirst().name());
         } catch (ReplyError e) {
             channel.sendMessage(e.getMessage()).queue(message -> message.delete().queueAfter(10, TimeUnit.SECONDS));
         } catch (ConsoleError e) {
@@ -100,25 +101,5 @@ public class CommandHandler implements CommandProcessor {
 
         System.out.printf("[Command used] %s used command %s in %s\n", user.getId(), command.getClass().getCanonicalName(),
             event.getGuild().getId());
-    }
-
-    private static void sendUsage(MessageChannel channel, LinkedList<Command> commands) {
-        String name = commands.stream().map(Command::name).collect(Collectors.joining(" "));
-        EmbedBuilder eb = new EmbedBuilder()
-                              .setTitle("`" + name.toUpperCase() + "` usage")
-                              .setDescription(Stream.concat(
-                                  Stream.of(commands.getLast()), commands.getLast().subCommands().stream())
-                                                  .map(c -> {
-                                                      if (commands.getLast().equals(c))
-                                                          return c.name().equals(c.usage()) ?
-                                                                     String.format("`%s`", name) : String.format("`%s %s`", name, c.usage());
-                                                      if (c.usage().equals(c.name()))
-                                                          return String.format("`%s %s`", name, c.usage());
-                                                      return String.format("`%s %s %s`", name, c.name(), c.usage());
-                                                  })
-                                                  .collect(Collectors.joining(" or\n")))
-                              .setColor(0xdf136c);
-
-        channel.sendMessage(eb.build()).queue(message -> message.delete().queueAfter(10, TimeUnit.SECONDS));
     }
 }
