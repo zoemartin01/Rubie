@@ -9,7 +9,9 @@ import net.dv8tion.jda.api.requests.restaction.MessageAction;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public interface GuildCommand extends Command {
     default MessageAction embedReply(@NotNull Message original, @NotNull MessageChannel channel,
@@ -22,9 +24,13 @@ public interface GuildCommand extends Command {
     }
 
     default String lastArg(int expectedIndex, List<String> args, Message original) {
-        return args.size() == expectedIndex + 1
-                   ? args.get(expectedIndex) : MessageUtils.getArgsFrom(
-            original.getContentRaw(), args.get(expectedIndex));
+        if (args.size() == expectedIndex + 1) return args.get(expectedIndex);
+
+        String orig = original.getContentRaw();
+        if (expectedIndex > 0) for (String s : new ArrayList<>(args.subList(0, expectedIndex)))
+            orig = orig.replace(s, "");
+
+        return MessageUtils.getArgsFrom(orig, args.get(expectedIndex));
     }
 
     void run(Member user, TextChannel channel, List<String> args, Message original, String invoked);
