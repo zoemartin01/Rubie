@@ -76,7 +76,7 @@ public class CommandHandler implements CommandProcessor {
         } catch (CommandArgumentException e) {
             sendUsage(channel, commands);
         } catch (ReplyError e) {
-            channel.sendMessage(e.getMessage()).queue(message -> message.delete().queueAfter(5, TimeUnit.SECONDS));
+            channel.sendMessage(e.getMessage()).queue(message -> message.delete().queueAfter(10, TimeUnit.SECONDS));
         } catch (ConsoleError e) {
             throw new ConsoleError(String.format("[Command Error] %s: %s", command.getClass().getName(), e.getMessage()));
         } catch (Exception e) {
