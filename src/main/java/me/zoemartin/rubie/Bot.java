@@ -5,9 +5,11 @@ import me.zoemartin.rubie.core.util.DatabaseUtil;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.entities.Activity;
+import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.events.ShutdownEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.requests.GatewayIntent;
+import net.dv8tion.jda.api.requests.restaction.MessageAction;
 import net.dv8tion.jda.api.utils.Compression;
 import net.dv8tion.jda.api.utils.MemberCachePolicy;
 import org.hibernate.cfg.Configuration;
@@ -15,7 +17,7 @@ import org.hibernate.cfg.Environment;
 
 import javax.annotation.Nonnull;
 import javax.security.auth.login.LoginException;
-import java.util.Properties;
+import java.util.*;
 
 public class Bot extends ListenerAdapter {
     private static JDABuilder builder;
@@ -52,6 +54,10 @@ public class Bot extends ListenerAdapter {
         builder.setCompression(Compression.NONE);
         builder.setActivity(Activity.playing("n'yaa"));
         builder.addEventListeners(new Bot());
+
+        EnumSet<Message.MentionType> deny = EnumSet.of(Message.MentionType.EVERYONE, Message.MentionType.HERE,
+            Message.MentionType.ROLE);
+        MessageAction.setDefaultMentions(EnumSet.complementOf(deny));
 
         jda = builder.build();
     }

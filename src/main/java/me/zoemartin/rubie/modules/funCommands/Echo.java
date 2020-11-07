@@ -6,8 +6,10 @@ import me.zoemartin.rubie.core.exceptions.*;
 import me.zoemartin.rubie.core.interfaces.Command;
 import me.zoemartin.rubie.core.interfaces.GuildCommand;
 import me.zoemartin.rubie.core.util.*;
+import me.zoemartin.rubie.modules.embeds.EmbedUtil;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.*;
+import net.dv8tion.jda.api.exceptions.ErrorResponseException;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
@@ -23,15 +25,16 @@ public class Echo implements GuildCommand {
         return "echo";
     }
 
-    @SuppressWarnings("ConstantConditions")
     @Override
     public void run(Member user, TextChannel channel, List<String> args, Message original, String invoked) {
         Check.check(!args.isEmpty(), CommandArgumentException::new);
 
         String echo = lastArg(0, args, original);
 
-        channel.sendMessageFormat(MessageUtils.cleanMessage(original.getMember(), echo)).queue();
-        original.addReaction("U+2705").queue();
+        if (user.hasPermission(channel, Permission.MESSAGE_MENTION_EVERYONE))
+            channel.sendMessageFormat(echo).allowedMentions(EnumSet.allOf(Message.MentionType.class)).queue();
+        else channel.sendMessageFormat(echo).queue();
+        addCheckmark(original);
     }
 
     @Override
@@ -67,17 +70,16 @@ public class Echo implements GuildCommand {
 
             TextChannel c = Parser.Channel.getTextChannel(original.getGuild(), args.get(0));
             Check.entityReferenceNotNull(c, TextChannel.class, args.get(0));
-            Check.check(original.getMember().hasPermission(c, Permission.MESSAGE_WRITE),
+            Check.check(user.hasPermission(c, Permission.MESSAGE_WRITE),
                 () -> new ConsoleError("Member '%s' doesn't have write permissions in channel '%s'",
                     original.getMember().getId(), c.getId()));
 
-            StringBuilder sb = new StringBuilder();
-            Check.notNull(c, () -> new ReplyError("Channel '%s' does not exist", args.get(1)));
+            String echo = lastArg(1, args, original);
 
-            args.subList(1, args.size()).forEach(s -> sb.append(s).append(" "));
-
-            c.sendMessageFormat(MessageUtils.cleanMessage(original.getMember(), sb.toString())).queue();
-            original.addReaction("U+2705").queue();
+            if (user.hasPermission(c, Permission.MESSAGE_MENTION_EVERYONE))
+                c.sendMessageFormat(echo).allowedMentions(EnumSet.allOf(Message.MentionType.class)).queue();
+            else c.sendMessageFormat(echo).queue();
+            addCheckmark(original);
         }
 
         @Override
@@ -105,34 +107,49 @@ public class Echo implements GuildCommand {
     private static class Edit implements GuildCommand {
         @Override
         public @NotNull String name() {
-            return "--edit";
+            return "edit";
         }
 
         @Override
         public @NotNull String regex() {
-            return "-e|--edit";
+            return "edit";
         }
 
         @Override
         public void run(Member user, TextChannel channel, List<String> args, Message original, String invoked) {
-            Check.check(args.size() > 1 && Parser.Message.isParsable(args.get(0)), CommandArgumentException::new);
+            Check.check(args.size() > 1, CommandArgumentException::new);
 
-            String message, channelId;
-            channelId = Parser.Message.parse(args.get(0)).getLeft();
-            message = Parser.Message.parse(args.get(0)).getRight();
+            TextChannel c;
+            String mRef = args.get(0);
+            TextChannel tc = null;
 
-            TextChannel c = original.getGuild().getTextChannelById(channelId);
-            Check.entityNotNull(c, TextChannel.class);
-            Message m = c.retrieveMessageById(message).complete();
-            Check.entityNotNull(m, Message.class);
+            if (args.size() > 2) {
+                String cRef = args.get(1);
+                tc = Parser.Channel.getTextChannel(original.getGuild(), cRef);
+            }
+            c = tc == null ? channel : tc;
 
-            Check.check(m.getAuthor().getId().equals(Bot.getJDA().getSelfUser().getId()), UnexpectedError::new);
+            Check.check(user.hasPermission(c, Permission.MESSAGE_MANAGE),
+                () -> new ConsoleError("Member '%s' doesn't have edit permissions in channel '%s'",
+                    user.getId(), c.getId()));
 
-            StringBuilder sb = new StringBuilder();
-            args.subList(1, args.size()).forEach(s -> sb.append(s).append(" "));
+            Message message;
+            try {
+                message = c.retrieveMessageById(mRef).complete();
+            } catch (ErrorResponseException e) {
+                if (e.getErrorResponse().getCode() == 10008)
+                    throw new EntityNotFoundException("Error, message `%s` not found in %s!", mRef, c.getAsMention());
+                else
+                    throw e;
+            }
 
-            m.editMessage(sb.toString()).queue();
-            original.addReaction("U+2705").queue();
+            String echo = lastArg(tc == null ? 1 : 2, args, original);
+
+            Check.check(message.getAuthor().getId().equals(Bot.getJDA().getSelfUser().getId()),
+                () -> new ReplyError("Mhhh looks like that message wasn't sent by me!"));
+
+            message.editMessage(echo).queue();
+            addCheckmark(original);
         }
 
         @Override
@@ -142,7 +159,7 @@ public class Echo implements GuildCommand {
 
         @Override
         public @NotNull String usage() {
-            return "<message_link> <message...>";
+            return "<message id> [channel] <message...>";
         }
 
         @Override
