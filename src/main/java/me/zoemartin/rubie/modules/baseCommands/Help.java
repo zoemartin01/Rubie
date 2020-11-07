@@ -40,12 +40,7 @@ public class Help implements GuildCommand {
                                                                      .setTitle("Help").setColor(0xdf136c).build(),
             CommandManager.getCommands().stream()
                 .filter(
-                    command -> PermissionHandler.getMemberPerm(guild.getId(), member.getId()).getPerm().raw()
-                                   >= command.commandPerm().raw()
-                                   || member.getRoles().stream().anyMatch(
-                        role -> PermissionHandler.getRolePerm(guild.getId(), role.getId()).getPerm().raw()
-                                    >= command.commandPerm().raw()))
-
+                    command -> PermissionHandler.getHighestFromUser(guild, member).raw() >= command.commandPerm().raw())
                 .sorted(Comparator.comparing(Command::name))
                 .map(command -> String.format("`%s` | %s\n\n", command.name(), command.description()))
                 .collect(Collectors.toList())),

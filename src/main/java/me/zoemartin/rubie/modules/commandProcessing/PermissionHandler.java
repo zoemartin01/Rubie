@@ -2,6 +2,9 @@ package me.zoemartin.rubie.modules.commandProcessing;
 
 import me.zoemartin.rubie.core.CommandPerm;
 import me.zoemartin.rubie.core.util.DatabaseUtil;
+import net.dv8tion.jda.api.Permission;
+import net.dv8tion.jda.api.entities.Guild;
+import net.dv8tion.jda.api.entities.Member;
 import org.hibernate.Session;
 
 import java.util.*;
@@ -41,6 +44,17 @@ public class PermissionHandler {
         return rolePerms.getOrDefault(guildId, Collections.emptySet())
                    .stream().filter(memberPermission -> memberPermission.getRole_id().equals(roleId))
                    .findAny().orElse(new RolePermission(guildId, roleId, CommandPerm.EVERYONE));
+    }
+
+    public static CommandPerm getHighestFromUser(Guild g, Member m) {
+        int perm = Integer.max(getMemberPerm(g.getId(), m.getId()).getPerm().raw(),
+            m.getRoles().stream()
+                .map(role -> getRolePerm(g.getId(), role.getId()).getPerm())
+                .max(Comparator.comparingInt(CommandPerm::raw)).orElse(CommandPerm.EVERYONE).raw());
+
+        if (m.hasPermission(Permission.ADMINISTRATOR))
+            return CommandPerm.fromNum(Integer.max(perm, CommandPerm.BOT_ADMIN.raw()));
+        else return CommandPerm.fromNum(perm);
     }
 
     public static void addRolePerm(String guildId, String roleId, CommandPerm perm) {

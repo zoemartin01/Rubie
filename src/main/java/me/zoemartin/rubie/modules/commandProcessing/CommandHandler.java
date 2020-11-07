@@ -53,21 +53,18 @@ public class CommandHandler implements CommandProcessor {
         Guild guild = event.getGuild();
         Member member = guild.getMember(user);
         Check.notNull(member, () -> new ConsoleError("member is null"));
-        Check.check(command.required().contains(Permission.UNKNOWN)
+
+        if (command.commandPerm() != CommandPerm.EVERYONE) {
+            Check.check(PermissionHandler.getHighestFromUser(guild, member).raw() >= command.commandPerm().raw(),
+                () -> new ConsoleError("Member '%s' doesn't have the required permission rank for Command '%s'",
+                member.getId(), command.name()));
+        }
+
+        Check.check((command.required().size() == 1 && command.required().contains(Permission.UNKNOWN))
                         || member.hasPermission(Permission.ADMINISTRATOR)
-                        || command.required().stream().allMatch(member::hasPermission)
-                        || member.getId().equals(Bot.getOWNER()),
+                        || command.required().stream().allMatch(member::hasPermission),
             () -> new ConsoleError("Member '%s' doesn't have the required permission for Command '%s'",
                 member.getId(), command.name()));
-
-        if (command.commandPerm().equals(CommandPerm.OWNER) || !member.hasPermission(Permission.ADMINISTRATOR))
-            Check.check(PermissionHandler.getMemberPerm(guild.getId(),
-                member.getId()).getPerm().raw() >= command.commandPerm().raw()
-                            || member.getRoles().stream().anyMatch(
-                role -> PermissionHandler.getRolePerm(guild.getId(), role.getId()).getPerm().raw() >= command.commandPerm().raw())
-                            || member.getId().equals(Bot.getOWNER()),
-                () -> new ConsoleError("Member '%s' doesn't have the required permission rank for Command '%s'",
-                    member.getId(), command.name()));
 
         List<String> arguments;
 

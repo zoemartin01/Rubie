@@ -2,8 +2,7 @@ package me.zoemartin.rubie.core;
 
 import javax.persistence.AttributeConverter;
 import javax.persistence.Converter;
-import java.util.Collection;
-import java.util.Set;
+import java.util.*;
 
 @Converter
 public enum CommandPerm  {
@@ -26,14 +25,17 @@ public enum CommandPerm  {
         return num;
     }
 
-    public static Collection<CommandPerm> valueCollection() {
-        return Set.of(CommandPerm.values());
-    }
-
     public static CommandPerm fromNum(Integer num) {
         if (num == null) return null;
 
-        return Set.of(CommandPerm.values()).stream().filter(perm -> num.equals(perm.raw())).findAny()
+        return EnumSet.allOf(CommandPerm.class).stream().filter(perm -> num.equals(perm.raw())).findAny()
+                   .orElse(null);
+    }
+
+    public static CommandPerm fromString(String name) {
+        if (name == null) return null;
+
+        return EnumSet.allOf(CommandPerm.class).stream().filter(perm -> name.equals(perm.name())).findAny()
                    .orElse(null);
     }
 
