@@ -35,7 +35,7 @@ public class Output implements GuildCommand {
         List<String> arguments = args.subList(1 + commands.size(), args.size());
         Command command = commands.getLast();
 
-        command.run(new GuildCommandEvent(event.getMember(), event.getChannel(), event.getContent(), event.getJDA(),
+        command.run(new GuildCommandEvent(event.getMember(), outputChannel, event.getContent(), event.getJDA(),
             arguments, event.getInvoked()));
         event.addCheckmark();
     }
