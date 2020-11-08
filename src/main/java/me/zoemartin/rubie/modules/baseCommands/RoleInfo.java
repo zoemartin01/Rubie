@@ -1,6 +1,7 @@
 package me.zoemartin.rubie.modules.baseCommands;
 
 import me.zoemartin.rubie.core.CommandPerm;
+import me.zoemartin.rubie.core.GuildCommandEvent;
 import me.zoemartin.rubie.core.exceptions.CommandArgumentException;
 import me.zoemartin.rubie.core.interfaces.GuildCommand;
 import me.zoemartin.rubie.core.util.*;
@@ -19,11 +20,11 @@ public class RoleInfo implements GuildCommand {
     }
 
     @Override
-    public void run(Member user, TextChannel channel, List<String> args, Message original, String invoked) {
-        Check.check(!args.isEmpty(), CommandArgumentException::new);
+    public void run(GuildCommandEvent event) {
+        Check.check(!event.getArgs().isEmpty(), CommandArgumentException::new);
 
-        String roleRef = lastArg(0, args, original);
-        Role role = Parser.Role.getRole(original.getGuild(), roleRef);
+        String roleRef = lastArg(0, event);
+        Role role = Parser.Role.getRole(event.getGuild(), roleRef);
         Check.entityReferenceNotNull(role, Role.class, roleRef);
 
         EmbedBuilder eb =
@@ -43,7 +44,7 @@ public class RoleInfo implements GuildCommand {
                 .setTimestamp(Instant.now())
                 .setColor(role.getColor());
 
-        channel.sendMessage(eb.build()).queue();
+        event.getChannel().sendMessage(eb.build()).queue();
     }
 
     @Override

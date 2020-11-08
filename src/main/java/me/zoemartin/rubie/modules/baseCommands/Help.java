@@ -1,6 +1,6 @@
 package me.zoemartin.rubie.modules.baseCommands;
 
-import me.zoemartin.rubie.core.CommandPerm;
+import me.zoemartin.rubie.core.*;
 import me.zoemartin.rubie.core.exceptions.ConsoleError;
 import me.zoemartin.rubie.core.exceptions.ReplyError;
 import me.zoemartin.rubie.core.interfaces.Command;
@@ -30,11 +30,10 @@ public class Help implements GuildCommand {
         return Set.of(new Cmd());
     }
 
-    @SuppressWarnings("ConstantConditions")
     @Override
-    public void run(Member user, TextChannel channel, List<String> args, Message original, String invoked) {
-        Guild guild = original.getGuild();
-        Member member = original.getMember();
+    public void run(GuildCommandEvent event) {
+        Guild guild = event.getGuild();
+        Member member = event.getMember();
 
         PagedEmbed p = new PagedEmbed(EmbedUtil.pagedDescription(new EmbedBuilder()
                                                                      .setTitle("Help").setColor(0xdf136c).build(),
@@ -44,7 +43,7 @@ public class Help implements GuildCommand {
                 .sorted(Comparator.comparing(Command::name))
                 .map(command -> String.format("`%s` | %s\n\n", command.name(), command.description()))
                 .collect(Collectors.toList())),
-            channel, user.getUser());
+            event.getChannel(), event.getUser());
 
         PageListener.add(p);
     }
@@ -75,7 +74,8 @@ public class Help implements GuildCommand {
         }
 
         @Override
-        public void run(Member user, TextChannel channel, List<String> args, Message original, String invoked) {
+        public void run(GuildCommandEvent event) {
+            String invoked = event.getInvoked().getLast();
             AtomicReference<Command> command = new AtomicReference<>(
                 CommandManager.getCommands().stream()
                     .filter(c -> invoked.matches(c.regex().toLowerCase()))
@@ -85,7 +85,7 @@ public class Help implements GuildCommand {
             List<Command> hierarchy = new LinkedList<>();
             hierarchy.add(command.get());
 
-            args.forEach(s -> {
+            event.getArgs().forEach(s -> {
                 Command subCommand = command.get().subCommands().stream()
                                          .filter(sc -> s.matches(sc.regex().toLowerCase()))
                                          .findFirst().orElse(null);
@@ -136,7 +136,7 @@ public class Help implements GuildCommand {
             if (sub.length() > 0)
                 eb.addField("Subcommand(s)", sub.toString(), false);
 
-            channel.sendMessage(eb.build()).queue();
+            event.getChannel().sendMessage(eb.build()).queue();
         }
 
         @Override
@@ -152,6 +152,6 @@ public class Help implements GuildCommand {
 
     public static void helper() {
         me.zoemartin.rubie.core.util.Help.setHelper(
-            (user, channel, args, original, invoked) -> new Cmd().run(user, channel, args, original, invoked));
+            (event) -> new Cmd().run(event));
     }
 }

@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import me.zoemartin.rubie.Bot;
 import me.zoemartin.rubie.core.CommandPerm;
+import me.zoemartin.rubie.core.GuildCommandEvent;
 import me.zoemartin.rubie.core.exceptions.*;
 import me.zoemartin.rubie.core.interfaces.Command;
 import me.zoemartin.rubie.core.interfaces.GuildCommand;
@@ -41,8 +42,8 @@ public class Note implements GuildCommand {
     }
 
     @Override
-    public void run(Member user, TextChannel channel, List<String> args, Message original, String invoked) {
-        new list().run(user, channel, args, original, "list");
+    public void run(GuildCommandEvent event) {
+        new list().run(event);
     }
 
     @Override
@@ -64,12 +65,12 @@ public class Note implements GuildCommand {
     private static class Add implements GuildCommand {
 
         @Override
-        public void run(Member user, TextChannel channel, List<String> args, Message original, String invoked) {
-            Check.check(args.size() > 1, CommandArgumentException::new);
+        public void run(GuildCommandEvent event) {
+            Check.check(event.getArgs().size() > 1, CommandArgumentException::new);
             String userId = null;
             User u = null;
             String arg;
-            if (Parser.User.isParsable(arg = args.get(0))) {
+            if (Parser.User.isParsable(arg = event.getArgs().get(0))) {
                 u = CacheUtils.getUser(arg);
                 userId = u == null ? Parser.User.parse(arg) : u.getId();
             } else if (Parser.User.tagIsParsable(arg)) {
@@ -79,11 +80,11 @@ public class Note implements GuildCommand {
 
             Check.notNull(userId, () -> new EntityNotFoundException("Can't find user `%s`", arg));
 
-            String note = lastArg(1, args, original);
+            String note = lastArg(1, event);
 
             NoteEntity noteEntity = new NoteEntity(
-                original.getGuild().getId(), userId, user.getId(), note,
-                original.getTimeCreated().toInstant().toEpochMilli());
+                event.getGuild().getId(), userId, event.getUser().getId(), note,
+                Instant.now().toEpochMilli());
 
             DatabaseUtil.saveObject(noteEntity);
             EmbedBuilder eb = new EmbedBuilder()
@@ -94,7 +95,7 @@ public class Note implements GuildCommand {
                                       u == null ? userId : u.getAsMention(),
                                       noteEntity.getNote()));
 
-            channel.sendMessage(eb.build()).queue();
+            event.getChannel().sendMessage(eb.build()).queue();
         }
 
         @NotNull
@@ -131,12 +132,12 @@ public class Note implements GuildCommand {
         }
 
         @Override
-        public void run(Member user, TextChannel channel, List<String> args, Message original, String invoked) {
-            Check.check(!args.isEmpty(), CommandArgumentException::new);
+        public void run(GuildCommandEvent event) {
+            Check.check(!event.getArgs().isEmpty(), CommandArgumentException::new);
             String userId = null;
             User u = null;
             String arg;
-            if (Parser.User.isParsable(arg = args.get(0))) {
+            if (Parser.User.isParsable(arg = event.getArgs().get(0))) {
                 u = CacheUtils.getUser(arg);
                 userId = u == null ? Parser.User.parse(arg) : u.getId();
             } else if (Parser.User.tagIsParsable(arg)) {
@@ -152,7 +153,7 @@ public class Note implements GuildCommand {
             CriteriaQuery<NoteEntity> q = cb.createQuery(NoteEntity.class);
             Root<NoteEntity> r = q.from(NoteEntity.class);
             List<NoteEntity> notes = s.createQuery(q.select(r).where(
-                cb.equal(r.get("guild_id"), original.getGuild().getId()),
+                cb.equal(r.get("guild_id"), event.getGuild().getId()),
                 cb.equal(r.get("user_id"), userId))).getResultList();
 
             List<MessageEmbed> pages = EmbedUtil.pagedFieldEmbed(
@@ -173,7 +174,7 @@ public class Note implements GuildCommand {
                 }).collect(Collectors.toList()), 1000
             );
 
-            PageListener.add(new PagedEmbed(pages, channel, user.getUser()));
+            PageListener.add(new PagedEmbed(pages, event.getChannel(), event.getUser()));
         }
 
         @Override
@@ -199,10 +200,10 @@ public class Note implements GuildCommand {
         }
 
         @Override
-        public void run(Member user, TextChannel channel, List<String> args, Message original, String invoked) {
-            Check.check(args.size() == 1, CommandArgumentException::new);
+        public void run(GuildCommandEvent event) {
+            Check.check(event.getArgs().size() == 1, CommandArgumentException::new);
 
-            UUID uuid = UUID.fromString(args.get(0));
+            UUID uuid = UUID.fromString(event.getArgs().get(0));
 
             Session s = DatabaseUtil.getSessionFactory().openSession();
             CriteriaBuilder cb = s.getCriteriaBuilder();
@@ -210,7 +211,7 @@ public class Note implements GuildCommand {
             CriteriaQuery<NoteEntity> q = cb.createQuery(NoteEntity.class);
             Root<NoteEntity> r = q.from(NoteEntity.class);
             List<NoteEntity> notes = s.createQuery(q.select(r).where(
-                cb.equal(r.get("guild_id"), original.getGuild().getId()),
+                cb.equal(r.get("guild_id"), event.getGuild().getId()),
                 cb.equal(r.get("uuid"), uuid))).getResultList();
 
             NoteEntity note = notes.isEmpty() ? null : notes.get(0);
@@ -227,7 +228,7 @@ public class Note implements GuildCommand {
             if (u != null)
                 eb.setAuthor(String.format("%s / %s", u.getAsTag(), u.getId()), null, u.getEffectiveAvatarUrl());
 
-            channel.sendMessage(eb.build()).queue();
+            event.getChannel().sendMessage(eb.build()).queue();
         }
 
         @Override
@@ -249,12 +250,12 @@ public class Note implements GuildCommand {
     private static class Clear implements GuildCommand {
 
         @Override
-        public void run(Member user, TextChannel channel, List<String> args, Message original, String invoked) {
-            Check.check(!args.isEmpty(), CommandArgumentException::new);
+        public void run(GuildCommandEvent event) {
+            Check.check(!event.getArgs().isEmpty(), CommandArgumentException::new);
             String userId = null;
             User u = null;
             String arg;
-            if (Parser.User.isParsable(arg = args.get(0))) {
+            if (Parser.User.isParsable(arg = event.getArgs().get(0))) {
                 u = CacheUtils.getUser(arg);
                 userId = u == null ? Parser.User.parse(arg) : u.getId();
             } else if (Parser.User.tagIsParsable(arg)) {
@@ -270,11 +271,11 @@ public class Note implements GuildCommand {
             CriteriaQuery<NoteEntity> q = cb.createQuery(NoteEntity.class);
             Root<NoteEntity> r = q.from(NoteEntity.class);
             List<NoteEntity> notes = s.createQuery(q.select(r).where(
-                cb.equal(r.get("guild_id"), original.getGuild().getId()),
+                cb.equal(r.get("guild_id"), event.getGuild().getId()),
                 cb.equal(r.get("user_id"), userId))).getResultList();
 
             notes.forEach(DatabaseUtil::deleteObject);
-            embedReply(original, channel, "Notes", "Cleared all notes for %s",
+            embedReply(event, "Notes", "Cleared all notes for %s",
                 u == null ? userId : u.getAsMention()).queue();
         }
 
@@ -305,15 +306,15 @@ public class Note implements GuildCommand {
         }
 
         @Override
-        public void run(Member user, TextChannel channel, List<String> args, Message original, String invoked) {
-            Check.check(args.isEmpty(), CommandArgumentException::new);
-            Check.check(original.getAttachments().size() == 1, CommandArgumentException::new);
-            Message m = channel.sendMessage("Okay... this might take a while").complete();
+        public void run(GuildCommandEvent event) {
+            Check.check(event.getArgs().isEmpty(), CommandArgumentException::new);
+            Check.check(event.getAttachments().size() == 1, CommandArgumentException::new);
+            Message m = event.getChannel().sendMessage("Okay... this might take a while").complete();
 
             InputStreamReader ir;
             BufferedReader br;
             try {
-                ir = new InputStreamReader(original.getAttachments().get(0).retrieveInputStream().get(1, TimeUnit.MINUTES));
+                ir = new InputStreamReader(event.getAttachments().get(0).retrieveInputStream().get(1, TimeUnit.MINUTES));
                 br = new BufferedReader(ir);
             } catch (InterruptedException | ExecutionException | TimeoutException e) {
                 throw new UnexpectedError(e);
@@ -325,12 +326,12 @@ public class Note implements GuildCommand {
             CriteriaQuery<NoteEntity> q = cb.createQuery(NoteEntity.class);
             Root<NoteEntity> r = q.from(NoteEntity.class);
             List<NoteEntity> existing = s.createQuery(q.select(r).where(
-                cb.equal(r.get("guild_id"), original.getGuild().getId()))).getResultList();
+                cb.equal(r.get("guild_id"), event.getGuild().getId()))).getResultList();
 
             Type listType = new TypeToken<ArrayList<Notes.NoteEntry>>(){}.getType();
             List<Notes.NoteEntry> toImport = new Gson().fromJson(br, listType);
 
-            String guildId = original.getGuild().getId();
+            String guildId = event.getGuild().getId();
             List<NoteEntity> notes = toImport.stream()
                                          .map(e -> new NoteEntity(
                                              guildId, e.getUser_id(), e.getModerator_id(), e.getNote(),
@@ -344,7 +345,7 @@ public class Note implements GuildCommand {
             EmbedBuilder eb = new EmbedBuilder().setTitle("Bulk Note Import");
             eb.setDescription("Imported Notes:\n" + String.join("\n", users));
             m.delete().complete();
-            channel.sendMessage(eb.build()).queue();
+            event.getChannel().sendMessage(eb.build()).queue();
         }
 
         @Override

@@ -1,7 +1,6 @@
 package me.zoemartin.rubie.modules.embeds;
 
-import me.zoemartin.rubie.core.CommandPerm;
-import me.zoemartin.rubie.core.Embed;
+import me.zoemartin.rubie.core.*;
 import me.zoemartin.rubie.core.exceptions.*;
 import me.zoemartin.rubie.core.interfaces.GuildCommand;
 import me.zoemartin.rubie.core.util.Check;
@@ -19,7 +18,8 @@ import java.util.List;
 
 public class EmbedSource implements GuildCommand {
     @Override
-    public void run(Member user, TextChannel channel, List<String> args, Message original, String invoked) {
+    public void run(GuildCommandEvent event) {
+        List<String> args = event.getArgs();
         Check.check(!args.isEmpty(), CommandArgumentException::new);
 
         String messageId = args.get(0);
@@ -29,16 +29,16 @@ public class EmbedSource implements GuildCommand {
         TextChannel c;
 
         if (args.size() == 1) {
-            c = channel;
+            c = event.getChannel();
         } else {
             String cRef = args.get(1);
-            c = Parser.Channel.getTextChannel(original.getGuild(), cRef);
+            c = Parser.Channel.getTextChannel(event.getGuild(), cRef);
             Check.entityReferenceNotNull(c, TextChannel.class, cRef);
         }
 
-        Check.check(user.hasPermission(c, Permission.MESSAGE_READ),
+        Check.check(event.getMember().hasPermission(c, Permission.MESSAGE_READ),
             () -> new ConsoleError("Member '%s' doesn't have read permissions in channel '%s'",
-                user.getId(), c.getId()));
+                event.getMember().getId(), c.getId()));
 
         Message message;
         try {
@@ -51,13 +51,13 @@ public class EmbedSource implements GuildCommand {
         }
 
         message.getEmbeds().stream().map(Embed::new).forEach(embed -> {
-            if (embed.toJson().length() >= 2000) {
+            if (embed.toJson().length() >= 1990) {
                 try {
-                    channel.sendMessageFormat("Embed source over 2k characters: %s", haste(embed.toJson())).queue();
+                    event.getChannel().sendMessageFormat("Embed source over 2k characters: %s", haste(embed.toJson())).queue();
                 } catch (IOException | InterruptedException e) {
                     throw new UnexpectedError();
                 }
-            } else channel.sendMessageFormat("```%s```", embed.toJson()).queue();
+            } else embedReply(event, "Embed Source", embed.toJson().isEmpty() ? "%s" : "```%s```", embed.toJson()).queue();
         });
     }
 

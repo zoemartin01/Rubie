@@ -1,21 +1,26 @@
 package me.zoemartin.rubie.core;
 
+import club.minnced.discord.webhook.send.WebhookEmbed;
+import club.minnced.discord.webhook.send.WebhookEmbedBuilder;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.MessageEmbed;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.joda.time.DateTime;
 
 import java.io.Serializable;
 import java.time.OffsetDateTime;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
 /**
  * Serializable Wrapper for {@link MessageEmbed}
- *
- * Q: Why does this exist and not just use {@link MessageEmbed} which is theoretically also serializable?
- * A: Because the use of {@link OffsetDateTime} makes {@link Gson} go crazy :(
+ * <p>
+ * Q: Why does this exist and not just use {@link MessageEmbed} which is theoretically also serializable? A: Because the
+ * use of {@link OffsetDateTime} makes {@link Gson} go crazy :(
  */
 public class Embed implements Serializable {
     private final String title;
@@ -97,8 +102,29 @@ public class Embed implements Serializable {
         if (image != null && image.url != null) eb.setImage(image.url);
         if (thumbnail != null && thumbnail.url != null) eb.setThumbnail(thumbnail.url);
         if (fields != null && !fields.isEmpty())
-            fields.forEach(field -> eb.addField(field.name, field.value, field.inline));
+            fields.forEach(field -> {
+                if (field != null)
+                    eb.addField(field.name, field.value, field.inline);
+            });
 
+        return eb.build();
+    }
+
+    public WebhookEmbed toWebhookEmbed() {
+        WebhookEmbedBuilder eb = new WebhookEmbedBuilder()
+                                     .setTitle(new WebhookEmbed.EmbedTitle(title, url))
+                                     .setDescription(description);
+        if (color != null) eb.setColor(color);
+        if (timestamp != null) eb.setTimestamp(OffsetDateTime.parse(timestamp));
+        if (footer != null) eb.setFooter(new WebhookEmbed.EmbedFooter(footer.text, footer.icon_url));
+        if (author != null) eb.setAuthor(new WebhookEmbed.EmbedAuthor(author.name, author.icon_url, author.url));
+        if (image != null && image.url != null) eb.setImageUrl(image.url);
+        if (thumbnail != null && thumbnail.url != null) eb.setThumbnailUrl(thumbnail.url);
+        if (fields != null && !fields.isEmpty())
+            fields.forEach(field -> {
+                if (field != null)
+                    eb.addField(new WebhookEmbed.EmbedField(field.inline, field.name, field.value));
+            });
         return eb.build();
     }
 

@@ -1,13 +1,13 @@
 package me.zoemartin.rubie.modules.debug;
 
 import me.zoemartin.rubie.core.CommandPerm;
+import me.zoemartin.rubie.core.GuildCommandEvent;
 import me.zoemartin.rubie.core.exceptions.CommandArgumentException;
 import me.zoemartin.rubie.core.interfaces.Command;
 import me.zoemartin.rubie.core.interfaces.GuildCommand;
 import me.zoemartin.rubie.core.util.Check;
 import me.zoemartin.rubie.core.util.Parser;
 import net.dv8tion.jda.api.EmbedBuilder;
-import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.*;
 import org.jetbrains.annotations.NotNull;
 
@@ -31,7 +31,8 @@ public class Purge implements GuildCommand {
     }
 
     @Override
-    public void run(Member user, TextChannel channel, List<String> args, Message original, String invoked) {
+    public void run(GuildCommandEvent event) {
+        List<String> args = event.getArgs();
         Check.check(args.size() == 1 && Parser.Int.isParsable(args.get(0)), CommandArgumentException::new);
         int amount = Parser.Int.parse(args.get(0));
 
@@ -44,13 +45,16 @@ public class Purge implements GuildCommand {
 
 
         Set<List<Message>> msgs = new HashSet<>();
-        Message last = original;
+        Message last = null;
         for (int i = 0; i < x; i++) {
-            List<Message> m = new ArrayList<>(channel.getHistoryBefore(last.getId(), 100).complete().getRetrievedHistory());
+            List<Message> m = new ArrayList<>(event.getChannel().getHistoryBefore(event.getChannel().getLatestMessageId(),
+                100).complete().getRetrievedHistory());
             msgs.add(m);
             last = m.get(m.size() - 1);
         }
-        msgs.add(new ArrayList<>(channel.getHistoryBefore(last.getId(), y).complete().getRetrievedHistory()));
+        msgs.add(new ArrayList<>(event.getChannel()
+                                     .getHistoryBefore(last == null ? event.getChannel().getLatestMessageId() : last.getId(), y)
+                                     .complete().getRetrievedHistory()));
 
 
         Map<String, Long> count = new ConcurrentHashMap<>();
@@ -67,9 +71,9 @@ public class Purge implements GuildCommand {
 
         msgs.removeIf(List::isEmpty);
 
-        original.delete().queue();
+        event.deleteInvoking();
         Instant start = Instant.now();
-        msgs.forEach(messages -> channel.deleteMessages(messages).complete());
+        msgs.forEach(messages -> event.getChannel().deleteMessages(messages).complete());
         Instant end = Instant.now();
 
 
@@ -83,7 +87,7 @@ public class Purge implements GuildCommand {
         sb.append("\nTime: ").append(Duration.between(start, end).toMillis()).append("ms");
         eb.setDescription(sb.toString());
 
-        channel.sendMessage(eb.build()).complete().delete().queueAfter(5, TimeUnit.SECONDS);
+        event.getChannel().sendMessage(eb.build()).complete().delete().queueAfter(5, TimeUnit.SECONDS);
     }
 
     @Override

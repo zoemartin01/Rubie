@@ -1,6 +1,7 @@
 package me.zoemartin.rubie.modules.debug;
 
 import me.zoemartin.rubie.Bot;
+import me.zoemartin.rubie.core.CommandEvent;
 import me.zoemartin.rubie.core.CommandPerm;
 import me.zoemartin.rubie.core.interfaces.Command;
 import net.dv8tion.jda.api.entities.*;
@@ -24,8 +25,8 @@ public class Shutdown implements Command {
     }
 
     @Override
-    public void run(User user, MessageChannel channel, List<String> args, Message original, String invoked) {
-        channel.sendMessageFormat("Shutting down soon! :)").complete();
+    public void run(CommandEvent event) {
+        event.getChannel().sendMessageFormat("Shutting down soon! :)").complete();
         Bot.shutdownWithCode(EXIT_CODE_PROPER_SHUTDOWN, false);
     }
 
@@ -52,8 +53,8 @@ public class Shutdown implements Command {
         }
 
         @Override
-        public void run(User user, MessageChannel channel, List<String> args, Message original, String invoked) {
-            channel.sendMessageFormat("Shutting down now!").complete();
+        public void run(CommandEvent event) {
+            event.getChannel().sendMessageFormat("Shutting down now!").complete();
             Bot.shutdownWithCode(EXIT_CODE_PROPER_SHUTDOWN, true);
         }
 
@@ -81,8 +82,8 @@ public class Shutdown implements Command {
         }
 
         @Override
-        public void run(User user, MessageChannel channel, List<String> args, Message original, String invoked) {
-            channel.sendMessageFormat("Upgrading the bot and rebooting!").complete();
+        public void run(CommandEvent event) {
+            event.getChannel().sendMessageFormat("Upgrading the bot and rebooting!").complete();
             Bot.shutdownWithCode(EXIT_CODE_UPGRADE, true);
         }
 
@@ -110,8 +111,8 @@ public class Shutdown implements Command {
         }
 
         @Override
-        public void run(User user, MessageChannel channel, List<String> args, Message original, String invoked) {
-            channel.sendMessageFormat("Restarting the bot!").complete();
+        public void run(CommandEvent event) {
+            event.getChannel().sendMessageFormat("Restarting the bot!").complete();
             Bot.shutdownWithCode(EXIT_CODE_RESTART, true);
         }
 

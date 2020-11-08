@@ -1,8 +1,10 @@
 package me.zoemartin.rubie.core.interfaces;
 
-import me.zoemartin.rubie.core.CommandPerm;
+import me.zoemartin.rubie.core.*;
+import me.zoemartin.rubie.core.util.MessageUtils;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.*;
+import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.Nonnull;
 import java.util.*;
@@ -47,7 +49,16 @@ public interface Command {
      * @param original the original message
      * @param invoked the string that invoked the command
      */
-    void run(User user, MessageChannel channel, List<String> args, Message original, String invoked);
+    @Deprecated
+    default void run(User user, MessageChannel channel, List<String> args, Message original, String invoked) {
+        run(new CommandEvent(user, channel, original.getContentRaw(), original.getJDA(), args, List.of(invoked)));
+    }
+
+    /**
+     * The main functionality of the command
+     * @param event the command event containing all important parameters
+     */
+    void run(CommandEvent event);
 
     /**
      * Returns the {@link CommandPerm} needed to execute the command
@@ -94,5 +105,17 @@ public interface Command {
     @Nonnull
     default String detailedHelp() {
         return "";
+    }
+
+    default String lastArg(int expectedIndex, CommandEvent event) {
+        if (event.getArgs().isEmpty()) return "";
+        if (event.getArgs().size() == expectedIndex + 1) return event.getArgs().get(expectedIndex);
+
+        String orig = event.getContent();
+        for (String s : event.getInvoked()) {
+            orig = orig.replaceFirst(s, "");
+        }
+
+        return MessageUtils.getArgsFrom(orig, event.getArgs().get(expectedIndex));
     }
 }

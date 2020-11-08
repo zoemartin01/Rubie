@@ -2,6 +2,7 @@ package me.zoemartin.rubie.modules.funCommands;
 
 import me.zoemartin.rubie.Bot;
 import me.zoemartin.rubie.core.CommandPerm;
+import me.zoemartin.rubie.core.GuildCommandEvent;
 import me.zoemartin.rubie.core.exceptions.ReplyError;
 import me.zoemartin.rubie.core.exceptions.UnexpectedError;
 import me.zoemartin.rubie.core.interfaces.GuildCommand;
@@ -18,8 +19,8 @@ public class RGB implements GuildCommand {
     private static final Map<String, GuildSetting> guilds = new ConcurrentHashMap<>();
 
     @Override
-    public void run(Member user, TextChannel channel, List<String> args, Message original, String invoked) {
-        Guild g = original.getGuild();
+    public void run(GuildCommandEvent event) {
+        Guild g = event.getGuild();
         GuildSetting gs = guilds.computeIfAbsent(g.getId(),
             k -> new GuildSetting(false, null));
 
@@ -48,7 +49,7 @@ public class RGB implements GuildCommand {
             gs.service = null;
         }
 
-        addCheckmark(original);
+        event.addCheckmark();
     }
 
     @NotNull

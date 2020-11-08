@@ -1,6 +1,7 @@
 package me.zoemartin.rubie.modules.debug;
 
 import me.zoemartin.rubie.core.CommandPerm;
+import me.zoemartin.rubie.core.GuildCommandEvent;
 import me.zoemartin.rubie.core.exceptions.CommandArgumentException;
 import me.zoemartin.rubie.core.interfaces.Command;
 import me.zoemartin.rubie.core.interfaces.GuildCommand;
@@ -14,9 +15,10 @@ import java.util.*;
 
 public class Output implements GuildCommand {
     @Override
-    public void run(Member user, TextChannel channel, List<String> args, Message original, String invoked) {
+    public void run(GuildCommandEvent event) {
+        List<String> args = event.getArgs();
         Check.check(!args.isEmpty(), CommandArgumentException::new);
-        TextChannel outputChannel = Parser.Channel.getTextChannel(original.getGuild(), args.get(0));
+        TextChannel outputChannel = Parser.Channel.getTextChannel(event.getGuild(), args.get(0));
         Check.entityReferenceNotNull(outputChannel, TextChannel.class, args.get(0));
 
         LinkedList<Command> commands = new LinkedList<>();
@@ -33,14 +35,9 @@ public class Output implements GuildCommand {
         List<String> arguments = args.subList(1 + commands.size(), args.size());
         Command command = commands.getLast();
 
-        if (command instanceof GuildCommand) {
-            System.out.println(1);
-            ((GuildCommand) command).run(user, outputChannel, arguments, original, args.get(commands.size()));
-        } else {
-            System.out.println(2);
-            commands.getLast().run(user.getUser(), outputChannel, arguments, original, args.get(commands.size()));
-        }
-        addCheckmark(original);
+        command.run(new GuildCommandEvent(event.getMember(), event.getChannel(), event.getContent(), event.getJDA(),
+            arguments, event.getInvoked()));
+        event.addCheckmark();
     }
 
     @NotNull

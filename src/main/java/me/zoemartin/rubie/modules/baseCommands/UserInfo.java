@@ -2,6 +2,7 @@ package me.zoemartin.rubie.modules.baseCommands;
 
 import me.zoemartin.rubie.Bot;
 import me.zoemartin.rubie.core.CommandPerm;
+import me.zoemartin.rubie.core.GuildCommandEvent;
 import me.zoemartin.rubie.core.interfaces.GuildCommand;
 import me.zoemartin.rubie.core.util.*;
 import me.zoemartin.rubie.modules.commandProcessing.*;
@@ -27,14 +28,14 @@ public class UserInfo implements GuildCommand {
     }
 
     @Override
-    public void run(Member user, TextChannel channel, List<String> args, Message original, String invoked) {
+    public void run(GuildCommandEvent event) {
         User u = null;
         String arg;
-        if (args.isEmpty()) u = user.getUser();
-        else if (Parser.User.isParsable(arg = lastArg(0, args, original))) u = CacheUtils.getUser(arg);
+        if (event.getArgs().isEmpty()) u = event.getUser();
+        else if (Parser.User.isParsable(arg = lastArg(0, event))) u = CacheUtils.getUser(arg);
         else if (Parser.User.tagIsParsable(arg)) u = Bot.getJDA().getUserByTag(arg);
-        if (u == null) u = user.getUser();
-        Member member = CacheUtils.getMember(original.getGuild(), u.getId());
+        if (u == null) u = event.getUser();
+        Member member = CacheUtils.getMember(event.getGuild(), u.getId());
 
         EmbedBuilder eb;
         if (member == null) {
@@ -70,12 +71,12 @@ public class UserInfo implements GuildCommand {
                      .addField("Highest Role",
                          member.getRoles().isEmpty() ? "n/a" : member.getRoles().get(0).getAsMention(), true);
 
-            MemberPermission mp = PermissionHandler.getMemberPerm(original.getGuild().getId(), member.getId());
+            MemberPermission mp = PermissionHandler.getMemberPerm(event.getGuild().getId(), member.getId());
             CommandPerm mcp = mp.getPerm();
 
             CommandPerm rp = CommandPerm.fromNum(
                 PermissionHandler.getRolePerms(
-                    original.getGuild().getId()).stream().filter(
+                    event.getGuild().getId()).stream().filter(
                     rolePermission -> member.getRoles().stream()
                                           .anyMatch(role -> role.getId().equals(rolePermission.getRole_id()))
                 ).map(RolePermission::getPerm)
@@ -96,7 +97,7 @@ public class UserInfo implements GuildCommand {
                         + " UTC", true)
                 .addField("Joined Server", TimeUtils.dateAgo(member.getTimeJoined(), OffsetDateTime.now())
                                                    + " ago\n"
-                                                   + ChronoUnit.DAYS.between(original.getGuild().getTimeCreated(),
+                                                   + ChronoUnit.DAYS.between(event.getGuild().getTimeCreated(),
                     member.getTimeJoined())
                                                    + " days after the server was created", false);
 
@@ -105,7 +106,7 @@ public class UserInfo implements GuildCommand {
                 roles.length() <= 1024 ? roles : "Too many to list", false);
 
         }
-        channel.sendMessage(eb.build()).queue();
+        event.getChannel().sendMessage(eb.build()).queue();
     }
 
     @Override

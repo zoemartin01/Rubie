@@ -1,6 +1,8 @@
 package me.zoemartin.rubie.core.interfaces;
 
 import me.zoemartin.rubie.Bot;
+import me.zoemartin.rubie.core.CommandEvent;
+import me.zoemartin.rubie.core.GuildCommandEvent;
 import me.zoemartin.rubie.core.util.Help;
 import me.zoemartin.rubie.core.util.MessageUtils;
 import net.dv8tion.jda.api.EmbedBuilder;
@@ -9,11 +11,12 @@ import net.dv8tion.jda.api.requests.restaction.MessageAction;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public interface GuildCommand extends Command {
+    @Deprecated
     default MessageAction embedReply(@NotNull Message original, @NotNull MessageChannel channel,
                                      @Nullable String title, @NotNull String replyFormat, @Nullable Object... args) {
         EmbedBuilder eb = new EmbedBuilder();
@@ -23,6 +26,25 @@ public interface GuildCommand extends Command {
         return channel.sendMessage(eb.build());
     }
 
+    default MessageAction embedReply(GuildCommandEvent event, @NotNull MessageChannel channel,
+                                     @Nullable String title, @NotNull String replyFormat, @Nullable Object... args) {
+        EmbedBuilder eb = new EmbedBuilder();
+        eb.setColor(event.getGuild().getSelfMember().getColor());
+        if (title != null) eb.setTitle(title);
+        eb.setDescription(String.format(replyFormat, args));
+        return channel.sendMessage(eb.build());
+    }
+
+    default MessageAction embedReply(GuildCommandEvent event, @Nullable String title, @NotNull String replyFormat,
+                                     @Nullable Object... args) {
+        EmbedBuilder eb = new EmbedBuilder();
+        eb.setColor(event.getGuild().getSelfMember().getColor());
+        if (title != null) eb.setTitle(title);
+        eb.setDescription(String.format(replyFormat, args));
+        return event.getChannel().sendMessage(eb.build());
+    }
+
+    @Deprecated
     default String lastArg(int expectedIndex, List<String> args, Message original) {
         if (args.size() == expectedIndex + 1) return args.get(expectedIndex);
 
@@ -33,18 +55,38 @@ public interface GuildCommand extends Command {
         return MessageUtils.getArgsFrom(orig, args.get(expectedIndex));
     }
 
-    void run(Member user, TextChannel channel, List<String> args, Message original, String invoked);
+    void run(GuildCommandEvent event);
+
+    @Override
+    default void run(CommandEvent event) {
+        if (event instanceof GuildCommandEvent) {
+            run((GuildCommandEvent) event);
+        } else {
+            throw new IllegalStateException("Command Event not from a Guild!");
+        }
+    }
+
+    @Deprecated
+    default void run(Member user, TextChannel channel, List<String> args, Message original, String invoked) {
+        run(new GuildCommandEvent(user, channel, original.getContentRaw(), original.getJDA(), args, List.of(invoked)));
+    }
 
     default void run(User user, MessageChannel channel, List<String> args, Message original, String invoked) {
         run(original.getMember(), original.getTextChannel(), args, original, invoked);
     }
 
     @SuppressWarnings("ConstantConditions")
+    @Deprecated
     default void addCheckmark(Message message) {
         message.addReaction(Bot.getJDA().getEmoteById("762424762412040192")).queue();
     }
 
+    @Deprecated
     default void help(Member user, MessageChannel channel, List<String> args, Message original) {
-        if (Help.getHelper() != null) Help.getHelper().send(user.getUser(), channel, args, original, args.get(0));
+        throw new IllegalAccessError("Deprecated");
+    }
+
+    default void help(GuildCommandEvent event) {
+        if (Help.getHelper() != null) Help.getHelper().send(event);
     }
 }

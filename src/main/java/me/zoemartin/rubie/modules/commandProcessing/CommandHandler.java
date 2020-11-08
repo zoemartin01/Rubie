@@ -1,10 +1,9 @@
 package me.zoemartin.rubie.modules.commandProcessing;
 
 import me.zoemartin.rubie.Bot;
-import me.zoemartin.rubie.core.CommandPerm;
+import me.zoemartin.rubie.core.*;
 import me.zoemartin.rubie.core.exceptions.*;
-import me.zoemartin.rubie.core.interfaces.Command;
-import me.zoemartin.rubie.core.interfaces.CommandProcessor;
+import me.zoemartin.rubie.core.interfaces.*;
 import me.zoemartin.rubie.core.managers.CommandManager;
 import me.zoemartin.rubie.core.util.*;
 import net.dv8tion.jda.api.EmbedBuilder;
@@ -34,13 +33,23 @@ public class CommandHandler implements CommandProcessor {
             inputs.add(m.group(1).replace("\"", ""));
 
         LinkedList<Command> commands = new LinkedList<>();
+        LinkedList<String> invoked = new LinkedList<>();
         inputs.forEach(s -> {
-            if (commands.isEmpty()) commands.add(CommandManager.getCommands().stream()
-                                                     .filter(c -> s.matches(c.regex().toLowerCase()))
-                                                     .findFirst().orElse(null));
-            else if (commands.getLast() != null) commands.getLast().subCommands().stream()
-                                                     .filter(sc -> s.matches(sc.regex().toLowerCase()))
-                                                     .findFirst().ifPresent(commands::add);
+            if (commands.isEmpty()) {
+                Command cmd = CommandManager.getCommands().stream()
+                                  .filter(c -> s.matches(c.regex().toLowerCase()))
+                                  .findFirst().orElse(null);
+                commands.add(cmd);
+                if (cmd != null) invoked.add(s);
+            } else if (commands.getLast() != null) {
+                Command cmd = commands.getLast().subCommands().stream()
+                                  .filter(sc -> s.matches(sc.regex().toLowerCase()))
+                                  .findFirst().orElse(null);
+                if (cmd != null) {
+                    commands.add(cmd);
+                    invoked.add(s);
+                }
+            }
 
         });
 
@@ -56,7 +65,7 @@ public class CommandHandler implements CommandProcessor {
         if (command.commandPerm() != CommandPerm.EVERYONE) {
             Check.check(PermissionHandler.getHighestFromUser(guild, member).raw() >= command.commandPerm().raw(),
                 () -> new ConsoleError("Member '%s' doesn't have the required permission rank for Command '%s'",
-                member.getId(), command.name()));
+                    member.getId(), command.name()));
         }
 
         Check.check((command.required().size() == 1 && command.required().contains(Permission.UNKNOWN))
@@ -69,13 +78,20 @@ public class CommandHandler implements CommandProcessor {
 
         arguments = inputs.subList(commandLevel, inputs.size());
 
-
+        GuildCommandEvent ce = null;
         try {
-            command.run(user, channel, Collections.unmodifiableList(arguments), event.getMessage(), inputs.get(commands.size() - 1));
+            //command.run(user, channel, Collections.unmodifiableList(arguments), event.getMessage(), inputs.get(commands.size() - 1));
+            if (command instanceof GuildCommand) {
+                GuildCommandEvent e = new GuildCommandEvent(event.getMessage(), Collections.unmodifiableList(arguments), invoked);
+                ce = e;
+                ((GuildCommand) command).run(e);
+            } else {
+                CommandEvent e = new CommandEvent(event.getMessage(), Collections.unmodifiableList(arguments), invoked);
+                command.run(e);
+            }
         } catch (CommandArgumentException e) {
-            Help.getHelper().send(user, channel,
-                commands.stream().map(Command::name).collect(Collectors.toList()),
-                event.getMessage(), commands.getFirst().name());
+            if (ce != null) Help.getHelper().send(ce);
+            else channel.sendMessageFormat("Sorry, I had an error trying to understand that command.").queue();
         } catch (ReplyError e) {
             channel.sendMessage(e.getMessage()).queue(message -> message.delete().queueAfter(10, TimeUnit.SECONDS));
         } catch (ConsoleError e) {
@@ -101,5 +117,9 @@ public class CommandHandler implements CommandProcessor {
 
         System.out.printf("[Command used] %s used command %s in %s\n", user.getId(), command.getClass().getCanonicalName(),
             event.getGuild().getId());
+    }
+
+    private boolean isGuildCommand(Command c) {
+        return Arrays.asList(c.getClass().getClasses()).contains(GuildCommand.class);
     }
 }

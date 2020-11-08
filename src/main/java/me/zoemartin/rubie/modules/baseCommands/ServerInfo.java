@@ -2,6 +2,7 @@ package me.zoemartin.rubie.modules.baseCommands;
 
 import de.androidpit.colorthief.ColorThief;
 import me.zoemartin.rubie.core.CommandPerm;
+import me.zoemartin.rubie.core.GuildCommandEvent;
 import me.zoemartin.rubie.core.exceptions.CommandArgumentException;
 import me.zoemartin.rubie.core.interfaces.GuildCommand;
 import me.zoemartin.rubie.core.util.Check;
@@ -25,10 +26,10 @@ public class ServerInfo implements GuildCommand {
 
     @SuppressWarnings("ConstantConditions")
     @Override
-    public void run(Member user, TextChannel channel, List<String> args, Message original, String invoked) {
-        Check.check(args.isEmpty(), CommandArgumentException::new);
+    public void run(GuildCommandEvent event) {
+        Check.check(event.getArgs().isEmpty(), CommandArgumentException::new);
 
-        Guild guild = original.getGuild();
+        Guild guild = event.getGuild();
 
         EmbedBuilder eb = new EmbedBuilder()
                               .setAuthor(guild.getName(), null, guild.getIconUrl())
@@ -75,7 +76,7 @@ public class ServerInfo implements GuildCommand {
             .setFooter("ID: " + guild.getId() + " | Created")
             .setTimestamp(guild.getTimeCreated());
 
-        channel.sendMessage(eb.build()).queue();
+        event.getChannel().sendMessage(eb.build()).queue();
     }
 
     @Override

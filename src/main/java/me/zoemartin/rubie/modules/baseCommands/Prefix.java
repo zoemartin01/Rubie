@@ -1,6 +1,7 @@
 package me.zoemartin.rubie.modules.baseCommands;
 
 import me.zoemartin.rubie.core.CommandPerm;
+import me.zoemartin.rubie.core.GuildCommandEvent;
 import me.zoemartin.rubie.core.exceptions.CommandArgumentException;
 import me.zoemartin.rubie.core.exceptions.ReplyError;
 import me.zoemartin.rubie.core.interfaces.Command;
@@ -26,8 +27,8 @@ public class Prefix implements GuildCommand {
     }
 
     @Override
-    public void run(Member user, TextChannel channel, List<String> args, Message original, String invoked) {
-        help(user, channel, Collections.singletonList(name()), original);
+    public void run(GuildCommandEvent event) {
+        throw new CommandArgumentException();
     }
 
     @Override
@@ -47,12 +48,12 @@ public class Prefix implements GuildCommand {
         }
 
         @Override
-        public void run(Member user, TextChannel channel, List<String> args, Message original, String invoked) {
-            Check.check(!args.isEmpty(), CommandArgumentException::new);
+        public void run(GuildCommandEvent event) {
+            Check.check(!event.getArgs().isEmpty(), CommandArgumentException::new);
 
-            String prefix = lastArg(0, args, original);
-            Prefixes.addPrefix(original.getGuild().getId(), prefix);
-            embedReply(original, channel, null, "Added `%s` as a prefix", prefix).queue();
+            String prefix = lastArg(0, event);
+            Prefixes.addPrefix(event.getGuild().getId(), prefix);
+            embedReply(event, (String) null, "Added `%s` as a prefix", prefix).queue();
         }
 
         @Override
@@ -78,13 +79,13 @@ public class Prefix implements GuildCommand {
         }
 
         @Override
-        public void run(Member user, TextChannel channel, List<String> args, Message original, String invoked) {
-            Check.check(args.size() == 1, CommandArgumentException::new);
+        public void run(GuildCommandEvent event) {
+            Check.check(event.getArgs().size() == 1, CommandArgumentException::new);
 
-            String prefix = args.get(0);
-            Check.check(Prefixes.removePrefix(original.getGuild().getId(), prefix),
+            String prefix = event.getArgs().get(0);
+            Check.check(Prefixes.removePrefix(event.getGuild().getId(), prefix),
                 () -> new ReplyError("Error, `%s` was not a bot prefix", prefix));
-            embedReply(original, channel, null, "Removed `%s` as a prefix", prefix).queue();
+            embedReply(event, (String) null, "Removed `%s` as a prefix", prefix).queue();
         }
 
         @Override
@@ -110,19 +111,19 @@ public class Prefix implements GuildCommand {
         }
 
         @Override
-        public void run(Member user, TextChannel channel, List<String> args, Message original, String invoked) {
-            Check.check(args.isEmpty(), CommandArgumentException::new);
+        public void run(GuildCommandEvent event) {
+            Check.check(event.getArgs().isEmpty(), CommandArgumentException::new);
 
             EmbedBuilder eb = new EmbedBuilder();
-            eb.setColor(original.getGuild().getSelfMember().getColor());
+            eb.setColor(event.getGuild().getSelfMember().getColor());
             eb.setTitle("Bot Prefixes");
 
-            String prefixes = Prefixes.getPrefixes(original.getGuild().getId()).stream()
+            String prefixes = Prefixes.getPrefixes(event.getGuild().getId()).stream()
                                   .map(s -> s.matches("<@!?\\d{17,19}>\\s*") ? s : "`" + s + "`")
                                   .collect(Collectors.joining(", "));
 
             eb.setDescription(prefixes);
-            channel.sendMessage(eb.build()).queue();
+            event.getChannel().sendMessage(eb.build()).queue();
         }
 
         @Override

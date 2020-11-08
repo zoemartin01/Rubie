@@ -1,8 +1,11 @@
 package me.zoemartin.rubie.modules.embeds;
 
+import club.minnced.discord.webhook.WebhookClient;
+import club.minnced.discord.webhook.WebhookClientBuilder;
+import club.minnced.discord.webhook.send.WebhookEmbed;
+import club.minnced.discord.webhook.send.WebhookMessageBuilder;
 import com.google.gson.JsonSyntaxException;
-import me.zoemartin.rubie.core.CommandPerm;
-import me.zoemartin.rubie.core.Embed;
+import me.zoemartin.rubie.core.*;
 import me.zoemartin.rubie.core.exceptions.*;
 import me.zoemartin.rubie.core.interfaces.Command;
 import me.zoemartin.rubie.core.interfaces.GuildCommand;
@@ -23,42 +26,43 @@ public class CustomEmbed implements GuildCommand {
     }
 
     @Override
-    public void run(Member user, TextChannel channel, List<String> args, Message original, String invoked) {
+    public void run(GuildCommandEvent event) {
+        List<String> args = event.getArgs();
         Check.check(!args.isEmpty(), CommandArgumentException::new);
 
         TextChannel c;
         String json;
         if (args.size() > 1) {
             String cRef = args.get(0);
-            c = Parser.Channel.getTextChannel(original.getGuild(), cRef);
+            c = Parser.Channel.getTextChannel(event.getGuild(), cRef);
             Check.entityReferenceNotNull(c, TextChannel.class, cRef);
 
             if (args.get(1).matches(
-                "(http(s)?://.)?(www\\.)?[-a-zA-Z0-9@:%._+~#=]{2,256}\\.[a-z]{2,6}\\b([-a-zA-Z0-9@:%_+.~#?&//=]*)")) {
+                "(http(s)?://.)?(www\\.)?[-a-zA-Z0-9@:%._+~#=]{2,256}\\.[a-z]{2,6}\\b([-a-zA-Z0-9@:%_+.~#?&/=]*)")) {
 
                 json = EmbedUtil.jsonFromUrl(args.get(1));
             } else {
-                json = original.getContentRaw()
-                           .substring(original.getContentRaw().indexOf(cRef) + cRef.length() + 1);
+                json = event.getContent()
+                           .substring(event.getContent().indexOf(cRef) + cRef.length() + 1);
             }
         } else {
-            c = channel;
+            c = event.getChannel();
             if (args.get(0).matches(
-                "(http(s)?://.)?(www\\.)?[-a-zA-Z0-9@:%._+~#=]{2,256}\\.[a-z]{2,6}\\b([-a-zA-Z0-9@:%_+.~#?&//=]*)")) {
+                "(http(s)?://.)?(www\\.)?[-a-zA-Z0-9@:%._+~#=]{2,256}\\.[a-z]{2,6}\\b([-a-zA-Z0-9@:%_+.~#?&/=]*)")) {
 
                 json = EmbedUtil.jsonFromUrl(args.get(0));
             } else {
-                json = original.getContentRaw()
-                           .substring(original.getContentRaw().indexOf(invoked) + invoked.length() + 1);
+                json = event.getContent()
+                           .substring(event.getContent().indexOf(event.getInvoked().getLast()) + event.getInvoked().getLast().length() + 1);
             }
         }
 
-        Check.check(user.hasPermission(c, Permission.MESSAGE_WRITE,
+        Check.check(event.getMember().hasPermission(c, Permission.MESSAGE_WRITE,
             Permission.MESSAGE_READ, Permission.MESSAGE_EMBED_LINKS),
             () -> new ReplyError("Error, looks like you don't have all the necessary permissions to post embeds in %s",
                 c.getAsMention()));
 
-        Check.check(original.getGuild().getSelfMember().hasPermission(c, Permission.MESSAGE_WRITE,
+        Check.check(event.getGuild().getSelfMember().hasPermission(c, Permission.MESSAGE_WRITE,
             Permission.MESSAGE_READ, Permission.MESSAGE_EMBED_LINKS),
             () -> new ReplyError("Error, looks like I don't have all the necessary permissions to post embeds in %s",
                 c.getAsMention()));
@@ -71,7 +75,7 @@ public class CustomEmbed implements GuildCommand {
         }
 
         c.sendMessage(e.toDiscordEmbed()).queue();
-        addCheckmark(original);
+        event.addCheckmark();
     }
 
     @NotNull
@@ -107,17 +111,18 @@ public class CustomEmbed implements GuildCommand {
     private static class Bulk implements GuildCommand {
 
         @Override
-        public void run(Member user, TextChannel channel, List<String> args, Message original, String invoked) {
+        public void run(GuildCommandEvent event) {
+            List<String> args = event.getArgs();
             Check.check(args.size() > 1, CommandArgumentException::new);
-            TextChannel c = Parser.Channel.getTextChannel(original.getGuild(), args.get(0));
+            TextChannel c = Parser.Channel.getTextChannel(event.getGuild(), args.get(0));
             Check.entityReferenceNotNull(c, TextChannel.class, args.get(0));
 
-            Check.check(user.hasPermission(c, Permission.MESSAGE_WRITE,
+            Check.check(event.getMember().hasPermission(c, Permission.MESSAGE_WRITE,
                 Permission.MESSAGE_READ, Permission.MESSAGE_EMBED_LINKS),
                 () -> new ReplyError("Error, looks like you don't have all the necessary permissions to post embeds in %s",
                     c.getAsMention()));
 
-            Check.check(original.getGuild().getSelfMember().hasPermission(c, Permission.MESSAGE_WRITE,
+            Check.check(event.getGuild().getSelfMember().hasPermission(c, Permission.MESSAGE_WRITE,
                 Permission.MESSAGE_READ, Permission.MESSAGE_EMBED_LINKS),
                 () -> new ReplyError("Error, looks like I don't have all the necessary permissions to post embeds in %s",
                     c.getAsMention()));
@@ -137,7 +142,7 @@ public class CustomEmbed implements GuildCommand {
             }
 
             embeds.forEach(embed -> c.sendMessage(embed.toDiscordEmbed()).queue());
-            addCheckmark(original);
+            event.addCheckmark();
         }
 
         @NotNull

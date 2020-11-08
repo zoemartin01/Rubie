@@ -1,6 +1,7 @@
 package me.zoemartin.rubie.modules.baseCommands;
 
 import me.zoemartin.rubie.core.CommandPerm;
+import me.zoemartin.rubie.core.GuildCommandEvent;
 import me.zoemartin.rubie.core.exceptions.CommandArgumentException;
 import me.zoemartin.rubie.core.exceptions.ConsoleError;
 import me.zoemartin.rubie.core.interfaces.Command;
@@ -22,15 +23,15 @@ public class Usage implements GuildCommand {
     }
 
     @Override
-    public void run(Member user, TextChannel channel, List<String> args, Message original, String invoked) {
-        Check.check(!args.isEmpty(), CommandArgumentException::new);
+    public void run(GuildCommandEvent event) {
+        Check.check(!event.getArgs().isEmpty(), CommandArgumentException::new);
 
         LinkedList<Command> commands = new LinkedList<>();
-        args.forEach(s -> {
+        event.getArgs().forEach(s -> {
             if (commands.isEmpty()) commands.add(CommandManager.getCommands().stream()
                                                      .filter(c -> s.matches(c.regex().toLowerCase()))
                                                      .findFirst().orElseThrow(
-                    () -> new ConsoleError("Command '%s' not found", invoked)));
+                    () -> new ConsoleError("Command '%s' not found", event.getInvoked().getLast())));
             else commands.getLast().subCommands().stream()
                      .filter(sc -> s.matches(sc.regex().toLowerCase()))
                      .findFirst().ifPresent(commands::add);
@@ -53,7 +54,7 @@ public class Usage implements GuildCommand {
                                                   .collect(Collectors.joining(" or\n")))
                               .setColor(0xdf136c);
 
-        channel.sendMessage(eb.build()).queue();
+        event.getChannel().sendMessage(eb.build()).queue();
     }
 
     @Override

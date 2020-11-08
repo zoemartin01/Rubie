@@ -1,7 +1,7 @@
 package me.zoemartin.rubie.modules.misc;
 
 import de.androidpit.colorthief.ColorThief;
-import me.zoemartin.rubie.core.CommandPerm;
+import me.zoemartin.rubie.core.*;
 import me.zoemartin.rubie.core.exceptions.*;
 import me.zoemartin.rubie.core.interfaces.Command;
 import me.zoemartin.rubie.core.util.Check;
@@ -24,10 +24,10 @@ public class Enlarge implements Command {
     }
 
     @Override
-    public void run(User user, MessageChannel channel, List<String> args, Message original, String invoked) {
-        Check.check(args.size() == 1 && Parser.Emote.isParsable(args.get(0)), CommandArgumentException::new);
+    public void run(CommandEvent event) {
+        Check.check(event.getArgs().size() == 1 && Parser.Emote.isParsable(event.getArgs().get(0)), CommandArgumentException::new);
 
-        String emoteId = Parser.Emote.parse(args.get(0));
+        String emoteId = Parser.Emote.parse(event.getArgs().get(0));
 
         URL gif, png;
         int gifResponse, pngResponse;
@@ -58,7 +58,7 @@ public class Enlarge implements Command {
             eb.setImage(png.toString());
         }
 
-        channel.sendMessage(eb.build()).queue();
+        event.getChannel().sendMessage(eb.build()).queue();
     }
 
     @Override

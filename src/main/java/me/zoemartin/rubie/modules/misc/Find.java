@@ -2,6 +2,7 @@ package me.zoemartin.rubie.modules.misc;
 
 import me.zoemartin.rubie.Bot;
 import me.zoemartin.rubie.core.CommandPerm;
+import me.zoemartin.rubie.core.GuildCommandEvent;
 import me.zoemartin.rubie.core.exceptions.CommandArgumentException;
 import me.zoemartin.rubie.core.interfaces.GuildCommand;
 import me.zoemartin.rubie.core.util.Check;
@@ -19,14 +20,14 @@ import java.util.stream.Stream;
 
 public class Find implements GuildCommand {
     @Override
-    public void run(Member user, TextChannel channel, List<String> args, Message original, String invoked) {
-        Check.check(!args.isEmpty(), CommandArgumentException::new);
+    public void run(GuildCommandEvent event) {
+        Check.check(!event.getArgs().isEmpty(), CommandArgumentException::new);
 
-        List<Member> guildMembers = original.getGuild().loadMembers().get();
-        String search = lastArg(0, args, original);
+        List<Member> guildMembers = event.getGuild().loadMembers().get();
+        String search = lastArg(0, event);
         List<Member> members = guildMembers.stream()
                                    .filter(m -> m.getEffectiveName().contains(search)).collect(Collectors.toList());
-        List<User> users = original.getJDA().getUsers().stream()
+        List<User> users = event.getJDA().getUsers().stream()
                                .filter(u -> u.getName().contains(search)
                                                 && members.stream().map(Member::getUser).noneMatch(u::equals))
                                .collect(Collectors.toList());
@@ -39,7 +40,7 @@ public class Find implements GuildCommand {
                 users.stream().map(u -> String.format("%d. %s - %s\n\n",
                     users.indexOf(u) + members.size(), u.getAsTag(), u.getId()))
             ).collect(Collectors.toList())),
-            channel, user.getUser());
+            event.getChannel(), event.getUser());
 
         PageListener.add(p);
     }

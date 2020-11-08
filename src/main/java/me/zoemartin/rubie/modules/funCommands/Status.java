@@ -1,8 +1,7 @@
 package me.zoemartin.rubie.modules.funCommands;
 
 import me.zoemartin.rubie.Bot;
-import me.zoemartin.rubie.core.CommandPerm;
-import me.zoemartin.rubie.core.LoadModule;
+import me.zoemartin.rubie.core.*;
 import me.zoemartin.rubie.core.exceptions.CommandArgumentException;
 import me.zoemartin.rubie.core.interfaces.*;
 import me.zoemartin.rubie.core.interfaces.Module;
@@ -16,7 +15,7 @@ import java.util.*;
 import static me.zoemartin.rubie.core.managers.CommandManager.register;
 
 @LoadModule
-public class Status implements Module, GuildCommand {
+public class Status implements Module, Command {
     @Override
     public @NotNull Set<Command> subCommands() {
         return Collections.emptySet();
@@ -29,16 +28,16 @@ public class Status implements Module, GuildCommand {
 
     @SuppressWarnings("ConstantConditions")
     @Override
-    public void run(Member user, TextChannel channel, List<String> args, Message original, String invoked) {
-        Check.check(args.size() >= 2, CommandArgumentException::new);
+    public void run(CommandEvent event) {
+        Check.check(event.getArgs().size() >= 2, CommandArgumentException::new);
 
-        int id = Parser.Int.parse(args.get(0));
+        int id = Parser.Int.parse(event.getArgs().get(0));
         Check.notNull(id, CommandArgumentException::new);
 
         Activity.ActivityType type = Activity.ActivityType.fromKey(id);
 
-        Bot.getJDA().getPresence().setActivity(Activity.of(type, lastArg(1, args, original)));
-        channel.sendMessageFormat("Set bot status to `%s %s`", Bot.getJDA().getPresence().getActivity().getType(),
+        Bot.getJDA().getPresence().setActivity(Activity.of(type, lastArg(1, event)));
+        event.getChannel().sendMessageFormat("Set bot status to `%s %s`", Bot.getJDA().getPresence().getActivity().getType(),
             Bot.getJDA().getPresence().getActivity()).queue();
     }
 

@@ -2,6 +2,7 @@ package me.zoemartin.rubie.modules.levels;
 
 import me.zoemartin.rubie.Bot;
 import me.zoemartin.rubie.core.CommandPerm;
+import me.zoemartin.rubie.core.GuildCommandEvent;
 import me.zoemartin.rubie.core.exceptions.CommandArgumentException;
 import me.zoemartin.rubie.core.interfaces.Command;
 import me.zoemartin.rubie.core.interfaces.GuildCommand;
@@ -37,8 +38,8 @@ class BlackList implements GuildCommand {
     }
 
     @Override
-    public void run(Member user, TextChannel channel, List<String> args, Message original, String invoked) {
-        help(user, channel, List.of("level", "config", name()), original);
+    public void run(GuildCommandEvent event) {
+        throw new CommandArgumentException();
     }
 
     @Override
@@ -69,8 +70,8 @@ class BlackList implements GuildCommand {
 
         @SuppressWarnings("ConstantConditions")
         @Override
-        public void run(Member user, TextChannel channel, List<String> args, Message original, String invoked) {
-            Guild g = original.getGuild();
+        public void run(GuildCommandEvent event) {
+            Guild g = event.getGuild();
             LevelConfig config = Levels.getConfig(g);
 
             Collection<String> roles = config.getBlacklistedRoles();
@@ -85,7 +86,7 @@ class BlackList implements GuildCommand {
                     channels.stream().filter(s -> !s.isEmpty()).map(s -> g.getTextChannelById(s) == null ? s :
                                                                              g.getTextChannelById(s).getAsMention()))
                     .map(s -> String.format("%s\n", s)).collect(Collectors.toList())),
-                channel, user.getUser()
+                event.getChannel(), event.getUser()
             );
 
             PageListener.add(p);
@@ -119,21 +120,21 @@ class BlackList implements GuildCommand {
         }
 
         @Override
-        public void run(Member user, TextChannel channel, List<String> args, Message original, String invoked) {
-            Check.check(!args.isEmpty(), CommandArgumentException::new);
-            Guild g = original.getGuild();
-            List<TextChannel> channels = args.stream().map(s -> Parser.Channel.getTextChannel(g, s))
+        public void run(GuildCommandEvent event) {
+            Check.check(!event.getArgs().isEmpty(), CommandArgumentException::new);
+            Guild g = event.getGuild();
+            List<TextChannel> channels = event.getArgs().stream().map(s -> Parser.Channel.getTextChannel(g, s))
                                              .collect(Collectors.toList());
 
-            LevelConfig config = Levels.getConfig(original.getGuild());
+            LevelConfig config = Levels.getConfig(event.getGuild());
             channels.forEach(c -> config.addBlacklistedChannel(c.getId()));
             DatabaseUtil.updateObject(config);
-            addCheckmark(original);
+            event.addCheckmark();
 
             PagedEmbed p = new PagedEmbed(EmbedUtil.pagedDescription(
                 new EmbedBuilder().setTitle("Blacklisted the following channels: " + channels.size()).build(),
                 channels.stream().map(c -> String.format("%s\n", c.getAsMention())).collect(Collectors.toList())),
-                channel, user.getUser());
+                event.getChannel(), event.getUser());
 
             PageListener.add(p);
         }
@@ -166,17 +167,17 @@ class BlackList implements GuildCommand {
             }
 
             @Override
-            public void run(Member user, TextChannel channel, List<String> args, Message original, String invoked) {
-                Check.check(!args.isEmpty(), CommandArgumentException::new);
-                String cRef = lastArg(0, args, original);
-                TextChannel c = Parser.Channel.getTextChannel(original.getGuild(), cRef);
+            public void run(GuildCommandEvent event) {
+                Check.check(!event.getArgs().isEmpty(), CommandArgumentException::new);
+                String cRef = lastArg(0, event);
+                TextChannel c = Parser.Channel.getTextChannel(event.getGuild(), cRef);
 
                 Check.entityReferenceNotNull(c, TextChannel.class, cRef);
-                LevelConfig config = Levels.getConfig(original.getGuild());
+                LevelConfig config = Levels.getConfig(event.getGuild());
                 if (!config.removeBlacklistedChannel(c.getId())) return;
                 DatabaseUtil.updateObject(config);
-                addCheckmark(original);
-                embedReply(original, channel, "Level Blacklist", "Unblacklisted %s",
+                event.addCheckmark();
+                embedReply(event, "Level Blacklist", "Unblacklisted %s",
                     c.getAsMention()).queue();
             }
 
@@ -214,17 +215,17 @@ class BlackList implements GuildCommand {
         }
 
         @Override
-        public void run(Member user, TextChannel channel, List<String> args, Message original, String invoked) {
-            Check.check(!args.isEmpty(), CommandArgumentException::new);
-            String rRef = lastArg(0, args, original);
-            Role r = Parser.Role.getRole(original.getGuild(), rRef);
+        public void run(GuildCommandEvent event) {
+            Check.check(!event.getArgs().isEmpty(), CommandArgumentException::new);
+            String rRef = lastArg(0, event);
+            Role r = Parser.Role.getRole(event.getGuild(), rRef);
 
             Check.entityReferenceNotNull(r, Role.class, rRef);
-            LevelConfig config = Levels.getConfig(original.getGuild());
+            LevelConfig config = Levels.getConfig(event.getGuild());
             config.addBlacklistedRole(r.getId());
             DatabaseUtil.updateObject(config);
-            addCheckmark(original);
-            embedReply(original, channel, "Level Blacklist", "Blacklisted %s",
+            event.addCheckmark();
+            embedReply(event, "Level Blacklist", "Blacklisted %s",
                 r.getAsMention()).queue();
         }
 
@@ -256,17 +257,17 @@ class BlackList implements GuildCommand {
             }
 
             @Override
-            public void run(Member user, TextChannel channel, List<String> args, Message original, String invoked) {
-                Check.check(!args.isEmpty(), CommandArgumentException::new);
-                String rRef = lastArg(0, args, original);
-                Role r = Parser.Role.getRole(original.getGuild(), rRef);
+            public void run(GuildCommandEvent event) {
+                Check.check(!event.getArgs().isEmpty(), CommandArgumentException::new);
+                String rRef = lastArg(0, event);
+                Role r = Parser.Role.getRole(event.getGuild(), rRef);
 
                 Check.entityReferenceNotNull(r, Role.class, rRef);
-                LevelConfig config = Levels.getConfig(original.getGuild());
+                LevelConfig config = Levels.getConfig(event.getGuild());
                 if (!config.removeBlacklistedRole(r.getId())) return;
                 DatabaseUtil.updateObject(config);
-                addCheckmark(original);
-                embedReply(original, channel, "Level Blacklist", "Unblacklisted %s",
+                event.addCheckmark();
+                embedReply(event, "Level Blacklist", "Unblacklisted %s",
                     r.getAsMention()).queue();
             }
 

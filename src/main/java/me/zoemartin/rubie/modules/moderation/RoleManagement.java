@@ -1,6 +1,7 @@
 package me.zoemartin.rubie.modules.moderation;
 
 import me.zoemartin.rubie.core.CommandPerm;
+import me.zoemartin.rubie.core.GuildCommandEvent;
 import me.zoemartin.rubie.core.exceptions.CommandArgumentException;
 import me.zoemartin.rubie.core.exceptions.ReplyError;
 import me.zoemartin.rubie.core.interfaces.Command;
@@ -25,8 +26,8 @@ public class RoleManagement implements GuildCommand {
     }
 
     @Override
-    public void run(Member user, TextChannel channel, List<String> args, Message original, String invoked) {
-        help(user, channel, Collections.singletonList(name()), original);
+    public void run(GuildCommandEvent event) {
+        throw new CommandArgumentException();
     }
 
     @Override
@@ -52,20 +53,20 @@ public class RoleManagement implements GuildCommand {
         }
 
         @Override
-        public void run(Member user, TextChannel channel, List<String> args, Message original, String invoked) {
-            Check.check(args.size() >= 2, CommandArgumentException::new);
+        public void run(GuildCommandEvent event) {
+            Check.check(event.getArgs().size() >= 2, CommandArgumentException::new);
 
-            Guild g = original.getGuild();
-            Member m = CacheUtils.getMember(g, args.get(0));
-            String rRef = lastArg(1, args, original);
+            Guild g = event.getGuild();
+            Member m = CacheUtils.getMember(g, event.getArgs().get(0));
+            String rRef = lastArg(1, event);
             Role r = Parser.Role.getRole(g, rRef);
 
-            Check.entityReferenceNotNull(m, Member.class, args.get(0));
+            Check.entityReferenceNotNull(m, Member.class, event.getArgs().get(0));
             Check.entityReferenceNotNull(r, Role.class, rRef);
             g.addRoleToMember(m, r).queue();
 
-            addCheckmark(original);
-            embedReply(original, channel, "Role Management", "Added %s to %s", m.getAsMention(),
+            event.addCheckmark();
+            embedReply(event, "Role Management", "Added %s to %s", m.getAsMention(),
                 r.getAsMention()).queue(message -> message.delete().queueAfter(10, TimeUnit.SECONDS));
         }
 
@@ -98,21 +99,21 @@ public class RoleManagement implements GuildCommand {
         }
 
         @Override
-        public void run(Member user, TextChannel channel, List<String> args, Message original, String invoked) {
-            Check.check(args.size() >= 2, CommandArgumentException::new);
+        public void run(GuildCommandEvent event) {
+            Check.check(event.getArgs().size() >= 2, CommandArgumentException::new);
 
-            Guild g = original.getGuild();
-            Member m = CacheUtils.getMember(g, args.get(0));
-            String rRef = lastArg(1, args, original);
+            Guild g = event.getGuild();
+            Member m = CacheUtils.getMember(g, event.getArgs().get(0));
+            String rRef = lastArg(1, event);
             Role r = Parser.Role.getRole(g, rRef);
 
-            Check.entityReferenceNotNull(m, Member.class, args.get(0));
+            Check.entityReferenceNotNull(m, Member.class, event.getArgs().get(0));
             Check.entityReferenceNotNull(r, Role.class, rRef);
             Check.check(m.getRoles().contains(r), () -> new ReplyError("Member does not have that role"));
             g.removeRoleFromMember(m, r).queue();
 
-            addCheckmark(original);
-            embedReply(original, channel, "Role Management", "Removed %s from %s", m.getAsMention(),
+            event.addCheckmark();
+            embedReply(event, "Role Management", "Removed %s from %s", m.getAsMention(),
                 r.getAsMention()).queue(message -> message.delete().queueAfter(10, TimeUnit.SECONDS));
         }
 

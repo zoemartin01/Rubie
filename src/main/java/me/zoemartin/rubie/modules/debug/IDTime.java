@@ -1,6 +1,7 @@
 package me.zoemartin.rubie.modules.debug;
 
 import me.zoemartin.rubie.core.CommandPerm;
+import me.zoemartin.rubie.core.GuildCommandEvent;
 import me.zoemartin.rubie.core.exceptions.CommandArgumentException;
 import me.zoemartin.rubie.core.exceptions.ReplyError;
 import me.zoemartin.rubie.core.interfaces.GuildCommand;
@@ -13,16 +14,16 @@ import java.util.List;
 
 public class IDTime implements GuildCommand {
     @Override
-    public void run(Member user, TextChannel channel, List<String> args, Message original, String invoked) {
-        Check.check(args.size() == 1, CommandArgumentException::new);
-        String ref = args.get(0).replaceAll("\\D", "");
+    public void run(GuildCommandEvent event) {
+        Check.check(event.getArgs().size() == 1, CommandArgumentException::new);
+        String ref = event.getArgs().get(0).replaceAll("\\D", "");
         Check.check(ref.matches("\\d{17,19}"),
             () -> new ReplyError("Error, `%s` is not a valid id", ref));
 
         long id = Long.parseLong(ref);
         long time = (id >> 22) + 1420070400000L;
 
-        embedReply(original, channel, "Timestamp of `" + id + "`", Instant.ofEpochMilli(time).toString()).queue();
+        embedReply(event, "Timestamp of `" + id + "`", Instant.ofEpochMilli(time).toString()).queue();
     }
 
     @NotNull

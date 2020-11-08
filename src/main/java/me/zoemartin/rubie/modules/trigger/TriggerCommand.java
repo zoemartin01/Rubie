@@ -1,6 +1,7 @@
 package me.zoemartin.rubie.modules.trigger;
 
 import me.zoemartin.rubie.core.CommandPerm;
+import me.zoemartin.rubie.core.GuildCommandEvent;
 import me.zoemartin.rubie.core.exceptions.*;
 import me.zoemartin.rubie.core.interfaces.Command;
 import me.zoemartin.rubie.core.interfaces.GuildCommand;
@@ -34,20 +35,20 @@ public class TriggerCommand implements GuildCommand {
     }
 
     @Override
-    public void run(Member user, TextChannel channel, List<String> args, Message original, String invoked) {
-        Check.check(args.size() > 1, CommandArgumentException::new);
+    public void run(GuildCommandEvent event) {
+        Check.check(event.getArgs().size() > 1, CommandArgumentException::new);
 
-        String regex = args.get(0);
+        String regex = event.getArgs().get(0);
         try {
             Pattern.compile(regex);
         } catch (PatternSyntaxException exception) {
             throw new ReplyError("That regex is not valid!");
         }
 
-        String message = lastArg(1, args, original);
+        String message = lastArg(1, event);
 
-        Triggers.addTrigger(original.getGuild(), regex, message);
-        channel.sendMessageFormat("Successfully added trigger `%s`", regex).queue();
+        Triggers.addTrigger(event.getGuild(), regex, message);
+        event.getChannel().sendMessageFormat("Successfully added trigger `%s`", regex).queue();
 
     }
 
@@ -73,16 +74,16 @@ public class TriggerCommand implements GuildCommand {
         }
 
         @Override
-        public void run(Member user, TextChannel channel, List<String> args, Message original, String invoked) {
-            Check.check(args.isEmpty(), CommandArgumentException::new);
-            Check.check(Triggers.hasTriggers(original.getGuild()),
+        public void run(GuildCommandEvent event) {
+            Check.check(event.getArgs().isEmpty(), CommandArgumentException::new);
+            Check.check(Triggers.hasTriggers(event.getGuild()),
                 () -> new EntityNotFoundException("No triggers found!"));
 
             PagedEmbed p = new PagedEmbed(EmbedUtil.pagedDescription(
                 new EmbedBuilder().setTitle("Available Triggers").build(), Triggers.getTriggers(
-                    original.getGuild()).stream().map(t -> String.format("`%s` - `%s`\n",
+                    event.getGuild()).stream().map(t -> String.format("`%s` - `%s`\n",
                     t.getRegex(), t.getOutput())).collect(Collectors.toList())),
-                channel, user.getUser());
+                event.getChannel(), event.getUser());
 
             PageListener.add(p);
         }
@@ -110,13 +111,13 @@ public class TriggerCommand implements GuildCommand {
         }
 
         @Override
-        public void run(Member user, TextChannel channel, List<String> args, Message original, String invoked) {
-            Check.check(args.size() == 1, CommandArgumentException::new);
-            Check.check(Triggers.isTrigger(original.getGuild(), args.get(0)),
+        public void run(GuildCommandEvent event) {
+            Check.check(event.getArgs().size() == 1, CommandArgumentException::new);
+            Check.check(Triggers.isTrigger(event.getGuild(), event.getArgs().get(0)),
                 () -> new ReplyError("That trigger does not exist!"));
 
-            channel.sendMessageFormat("Removed the trigger `%s`", Triggers.removeTrigger(original.getGuild(),
-                args.get(0))).queue();
+            event.getChannel().sendMessageFormat("Removed the trigger `%s`", Triggers.removeTrigger(event.getGuild(),
+                event.getArgs().get(0))).queue();
         }
 
         @Override

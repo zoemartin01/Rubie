@@ -1,8 +1,7 @@
 package me.zoemartin.rubie.modules.embeds.pinnedEmbeds;
 
 import com.google.gson.JsonSyntaxException;
-import me.zoemartin.rubie.core.CommandPerm;
-import me.zoemartin.rubie.core.Embed;
+import me.zoemartin.rubie.core.*;
 import me.zoemartin.rubie.core.exceptions.*;
 import me.zoemartin.rubie.core.interfaces.Command;
 import me.zoemartin.rubie.core.interfaces.GuildCommand;
@@ -21,8 +20,8 @@ import java.util.stream.Collectors;
 
 public class PineCommand implements GuildCommand {
     @Override
-    public void run(Member user, TextChannel channel, List<String> args, Message original, String invoked) {
-        help(user, channel, List.of(name()), original);
+    public void run(GuildCommandEvent event) {
+        throw new CommandArgumentException();
     }
 
     @NotNull
@@ -57,7 +56,8 @@ public class PineCommand implements GuildCommand {
 
     private static class Create implements GuildCommand {
         @Override
-        public void run(Member user, TextChannel channel, List<String> args, Message original, String invoked) {
+        public void run(GuildCommandEvent event) {
+            List<String> args = event.getArgs();
             Check.check(!args.isEmpty(), CommandArgumentException::new);
 
             String json = EmbedUtil.jsonFromUrl(args.get(0));
@@ -65,14 +65,14 @@ public class PineCommand implements GuildCommand {
             TextChannel c;
 
             if (args.size() > 1) {
-                String cRef = lastArg(1, args, original);
-                c = Parser.Channel.getTextChannel(original.getGuild(), cRef);
+                String cRef = lastArg(1, event);
+                c = Parser.Channel.getTextChannel(event.getGuild(), cRef);
                 Check.entityReferenceNotNull(c, TextChannel.class, cRef);
-            } else c = channel;
+            } else c = event.getChannel();
 
-            Check.check(user.hasPermission(c, Permission.MESSAGE_WRITE),
+            Check.check(event.getMember().hasPermission(c, Permission.MESSAGE_WRITE),
                 () -> new ConsoleError("Member '%s' doesn't have write permissions in channel '%s'",
-                    user.getId(), c.getId()));
+                    event.getMember().getId(), c.getId()));
 
             Embed e;
             try {
@@ -83,7 +83,7 @@ public class PineCommand implements GuildCommand {
 
             Message m = c.sendMessage(e.toDiscordEmbed()).complete();
 
-            PineEntity pine = new PineEntity(original.getGuild().getId(), c.getId(), m.getId(), args.get(0));
+            PineEntity pine = new PineEntity(event.getGuild().getId(), c.getId(), m.getId(), args.get(0));
             PineController.addPine(pine);
             DatabaseUtil.saveObject(pine);
         }
@@ -116,7 +116,8 @@ public class PineCommand implements GuildCommand {
     private static class Update implements GuildCommand {
 
         @Override
-        public void run(Member user, TextChannel channel, List<String> args, Message original, String invoked) {
+        public void run(GuildCommandEvent event) {
+            List<String> args = event.getArgs();
             Check.check(!args.isEmpty(), CommandArgumentException::new);
 
             String mRef = args.get(0);
@@ -124,10 +125,10 @@ public class PineCommand implements GuildCommand {
             TextChannel c;
 
             if (args.size() > 1) {
-                String cRef = lastArg(1, args, original);
-                c = Parser.Channel.getTextChannel(original.getGuild(), cRef);
+                String cRef = lastArg(1, event);
+                c = Parser.Channel.getTextChannel(event.getGuild(), cRef);
                 Check.entityReferenceNotNull(c, TextChannel.class, cRef);
-            } else c = channel;
+            } else c = event.getChannel();
 
             Message message;
             try {
@@ -139,7 +140,7 @@ public class PineCommand implements GuildCommand {
                     throw e;
             }
 
-            PineEntity pine = PineController.getPine(original.getGuild(), c, mRef);
+            PineEntity pine = PineController.getPine(event.getGuild(), c, mRef);
             Check.notNull(pine, () -> new ReplyError("Error, could not find that pine!"));
 
             String json = EmbedUtil.jsonFromUrl(pine.getSource_url());
@@ -151,7 +152,7 @@ public class PineCommand implements GuildCommand {
             }
 
             message.editMessage(e.toDiscordEmbed()).complete();
-            embedReply(original, channel, "Pine Updates",
+            embedReply(event, "Pine Updates",
                 "Updated Pine [%s](%s) in %s", mRef, message.getJumpUrl(), c.getAsMention()).queue();
         }
 
@@ -182,10 +183,10 @@ public class PineCommand implements GuildCommand {
 
     private static class list implements GuildCommand {
         @Override
-        public void run(Member user, TextChannel channel, java.util.List<String> args, Message original, String invoked) {
-            Guild g = original.getGuild();
+        public void run(GuildCommandEvent event) {
+            Guild g = event.getGuild();
             TextChannel c;
-            if (!args.isEmpty()) c = Parser.Channel.getTextChannel(g, args.get(0));
+            if (!event.getArgs().isEmpty()) c = Parser.Channel.getTextChannel(g, event.getArgs().get(0));
             else c = null;
 
             Collection<PineEntity> pines = PineController.getPines(g);
@@ -206,7 +207,7 @@ public class PineCommand implements GuildCommand {
                         pineEntity.getMessage_id(), pineEntity.getGuild_id(), pineEntity.getChannel_id(),
                         pineEntity.getMessage_id()), pineEntity.getSource_url());
                 }).collect(Collectors.toList())),
-                channel, user.getUser());
+                event.getChannel(), event.getUser());
 
             PageListener.add(p);
 
@@ -239,7 +240,8 @@ public class PineCommand implements GuildCommand {
 
     private static class Delete implements GuildCommand {
         @Override
-        public void run(Member user, TextChannel channel, List<String> args, Message original, String invoked) {
+        public void run(GuildCommandEvent event) {
+            List<String> args = event.getArgs();
             Check.check(!args.isEmpty(), CommandArgumentException::new);
 
             String mRef = args.get(0);
@@ -247,12 +249,12 @@ public class PineCommand implements GuildCommand {
             TextChannel c;
 
             if (args.size() > 1) {
-                String cRef = lastArg(1, args, original);
-                c = Parser.Channel.getTextChannel(original.getGuild(), cRef);
+                String cRef = lastArg(1, event);
+                c = Parser.Channel.getTextChannel(event.getGuild(), cRef);
                 Check.entityReferenceNotNull(c, TextChannel.class, cRef);
-            } else c = channel;
+            } else c = event.getChannel();
 
-            PineEntity pine = PineController.getPine(original.getGuild(), c, mRef);
+            PineEntity pine = PineController.getPine(event.getGuild(), c, mRef);
             Check.notNull(pine, () -> new ReplyError("Error, could not find that pine!"));
 
             Message message;
@@ -265,9 +267,9 @@ public class PineCommand implements GuildCommand {
             DatabaseUtil.deleteObject(pine);
             PineController.removePine(pine);
 
-            if (message == null) embedReply(original, channel, "Pine Deletion",
+            if (message == null) embedReply(event, "Pine Deletion",
                 "Deleted Pine `%s` in %s", mRef, c.getAsMention()).queue();
-            else embedReply(original, channel, "Pine Deletion",
+            else embedReply(event, "Pine Deletion",
                 "Deleted Pine [%s](%s) in %s", mRef, message.getJumpUrl(), c.getAsMention()).queue();
         }
 

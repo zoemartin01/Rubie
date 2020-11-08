@@ -1,6 +1,7 @@
 package me.zoemartin.rubie.modules.hatchery;
 
 import me.zoemartin.rubie.core.CommandPerm;
+import me.zoemartin.rubie.core.GuildCommandEvent;
 import me.zoemartin.rubie.core.interfaces.GuildCommand;
 import me.zoemartin.rubie.core.util.Check;
 import net.dv8tion.jda.api.entities.*;
@@ -10,8 +11,8 @@ import java.util.List;
 
 public class MVCRefresh implements GuildCommand {
     @Override
-    public void run(Member user, TextChannel channel, List<String> args, Message original, String invoked) {
-        Guild g = original.getGuild();
+    public void run(GuildCommandEvent event) {
+        Guild g = event.getGuild();
         Role mvc = g.getRolesByName("mvc", true).get(0);
         Role mvcOld = g.getRolesByName("mvc-old", true).get(0);
 
@@ -25,7 +26,7 @@ public class MVCRefresh implements GuildCommand {
             g.removeRoleFromMember(member, mvc).queue();
         });
 
-        embedReply(original, channel, "MVC Refresh", "Refreshed MVC! Previous mvc count was %d",
+        embedReply(event, "MVC Refresh", "Refreshed MVC! Previous mvc count was %d",
             mvcMembers.size()).queue();
     }
 

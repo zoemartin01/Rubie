@@ -1,7 +1,7 @@
 package me.zoemartin.rubie.modules.baseCommands;
 
 import me.zoemartin.rubie.Bot;
-import me.zoemartin.rubie.core.CommandPerm;
+import me.zoemartin.rubie.core.*;
 import me.zoemartin.rubie.core.interfaces.Command;
 import net.dv8tion.jda.api.*;
 import net.dv8tion.jda.api.entities.*;
@@ -35,7 +35,7 @@ public class About implements Command {
     }
 
     @Override
-    public void run(User user, MessageChannel channel, List<String> args, Message original, String invoked) {
+    public void run(CommandEvent event) {
         EmbedBuilder eb = new EmbedBuilder();
         eb.setTitle("About").setColor(0xdf136c);
 
@@ -66,7 +66,7 @@ public class About implements Command {
         eb.setFooter("Made with JDA",
             "https://raw.githubusercontent.com/DV8FromTheWorld/JDA/assets/assets/readme/logo.png");
 
-        channel.sendMessage(eb.build()).queue();
+        event.getChannel().sendMessage(eb.build()).queue();
     }
 
     @Override

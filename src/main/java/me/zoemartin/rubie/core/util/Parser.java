@@ -79,6 +79,7 @@ public abstract class Parser<T, K> {
          */
         @Override
         public boolean isParsable(String s) {
+            if (s == null) return false;
             return (s.matches("<@!?\\d{17,19}>") || s.matches("\\d{17,19}"));
         }
 
@@ -94,6 +95,7 @@ public abstract class Parser<T, K> {
          * @return true if the input contains a valid id
          */
         public boolean tagIsParsable(String s) {
+            if (s == null) return false;
             return (s.matches("(.{2,32})#(\\d{4})"));
         }
 

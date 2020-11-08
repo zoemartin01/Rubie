@@ -1,9 +1,12 @@
 package me.zoemartin.rubie.modules.moderation;
 
 import me.zoemartin.rubie.core.CommandPerm;
+import me.zoemartin.rubie.core.GuildCommandEvent;
+import me.zoemartin.rubie.core.exceptions.CommandArgumentException;
 import me.zoemartin.rubie.core.interfaces.Command;
 import me.zoemartin.rubie.core.interfaces.GuildCommand;
 import me.zoemartin.rubie.core.managers.CommandManager;
+import me.zoemartin.rubie.core.util.Check;
 import net.dv8tion.jda.api.entities.*;
 import org.jetbrains.annotations.NotNull;
 
@@ -17,10 +20,11 @@ public class BackgroundCheck implements GuildCommand {
     private static final Command MODLOGS = new ModLogs();
 
     @Override
-    public void run(Member user, TextChannel channel, List<String> args, Message original, String invoked) {
-        if (USERINFO != null) USERINFO.run(user.getUser(), channel, args, original, USERINFO.name());
-        NOTE.run(user.getUser(), channel, args, original, NOTE.name());
-        MODLOGS.run(user.getUser(), channel, args, original, MODLOGS.name());
+    public void run(GuildCommandEvent event) {
+        Check.check(!event.getArgs().isEmpty(), CommandArgumentException::new);
+        if (USERINFO != null) USERINFO.run(event);
+        NOTE.run(event);
+        MODLOGS.run(event);
 
     }
 
@@ -40,6 +44,12 @@ public class BackgroundCheck implements GuildCommand {
     @Override
     public CommandPerm commandPerm() {
         return CommandPerm.BOT_MODERATOR;
+    }
+
+    @NotNull
+    @Override
+    public String usage() {
+        return "<user>";
     }
 
     @NotNull

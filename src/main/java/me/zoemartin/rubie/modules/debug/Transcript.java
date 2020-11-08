@@ -2,6 +2,7 @@ package me.zoemartin.rubie.modules.debug;
 
 import com.google.gson.Gson;
 import me.zoemartin.rubie.core.CommandPerm;
+import me.zoemartin.rubie.core.GuildCommandEvent;
 import me.zoemartin.rubie.core.interfaces.GuildCommand;
 import me.zoemartin.rubie.core.util.Parser;
 import net.dv8tion.jda.api.entities.*;
@@ -19,20 +20,20 @@ import java.util.stream.Collectors;
 
 public class Transcript implements GuildCommand {
     @Override
-    public void run(Member user, TextChannel channel, List<String> args, Message original, String invoked) {
+    public void run(GuildCommandEvent event) {
         Instant start = Instant.now();
         Runtime runtime = Runtime.getRuntime();
         long memStart = runtime.totalMemory();
         ScheduledExecutorService se = new ScheduledThreadPoolExecutor(1);
-        se.scheduleAtFixedRate(() -> channel.sendTyping().complete(), 0, 10, TimeUnit.SECONDS);
+        se.scheduleAtFixedRate(() -> event.getChannel().sendTyping().complete(), 0, 10, TimeUnit.SECONDS);
 
         MessageChannel c = null;
-        if (!args.isEmpty()) c = Parser.Channel.getTextChannel(original.getGuild(), args.get(0));
-        if (c == null) c = channel;
+        if (!event.getArgs().isEmpty()) c = Parser.Channel.getTextChannel(event.getGuild(), event.getArgs().get(0));
+        if (c == null) c = event.getChannel();
 
         int limit = 100;
-        if (!args.isEmpty() && c == channel && Parser.Int.isParsable(args.get(0)))
-            limit = Parser.Int.parse(args.get(0));
+        if (!event.getArgs().isEmpty() && c == event.getChannel() && Parser.Int.isParsable(event.getArgs().get(0)))
+            limit = Parser.Int.parse(event.getArgs().get(0));
 
         // Memory Tracking
         AtomicLong memory = new AtomicLong();
@@ -94,7 +95,7 @@ public class Transcript implements GuildCommand {
         }
 
         mem.shutdown();
-        embedReply(original, channel, "Transcript",
+        embedReply(event, "Transcript",
             "Saved a transcript with %s messages\n\n" +
                 "Chunk size: %d\n" +
                 "Memory Used: %d MB\n" +

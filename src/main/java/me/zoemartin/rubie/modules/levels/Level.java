@@ -2,6 +2,7 @@ package me.zoemartin.rubie.modules.levels;
 
 import me.zoemartin.rubie.Bot;
 import me.zoemartin.rubie.core.CommandPerm;
+import me.zoemartin.rubie.core.GuildCommandEvent;
 import me.zoemartin.rubie.core.interfaces.Command;
 import me.zoemartin.rubie.core.interfaces.GuildCommand;
 import me.zoemartin.rubie.modules.pagedEmbeds.PageListener;
@@ -32,8 +33,8 @@ public class Level implements GuildCommand {
     }
 
     @Override
-    public void run(Member user, TextChannel channel, List<String> args, Message original, String invoked) {
-        new Show().run(user, channel, args, original, invoked);
+    public void run(GuildCommandEvent event) {
+        new Show().run(event);
     }
 
     @Override
@@ -54,16 +55,17 @@ public class Level implements GuildCommand {
         }
 
         @Override
-        public void run(Member user, TextChannel channel, List<String> args, Message original, String invoked) {
+        public void run(GuildCommandEvent event) {
+            List<String> args = event.getArgs();
             List<UserLevel> levels;
             int start;
             if (!args.isEmpty() && args.get(0).equalsIgnoreCase("full")) {
-                levels = Levels.getLevels(original.getGuild()).stream()
+                levels = Levels.getLevels(event.getGuild()).stream()
                              .sorted(Comparator.comparingInt(UserLevel::getExp).reversed())
                              .collect(Collectors.toList());
                 start = args.size() > 1 && Parser.Int.isParsable(args.get(1)) ? Parser.Int.parse(args.get(1)) : 1;
             } else {
-                levels = Levels.getLevels(original.getGuild()).stream()
+                levels = Levels.getLevels(event.getGuild()).stream()
                              .filter(userLevel -> Bot.getJDA().getUserById(userLevel.getUser_id()) != null)
                              .sorted(Comparator.comparingInt(UserLevel::getExp).reversed())
                              .collect(Collectors.toList());
@@ -81,7 +83,7 @@ public class Level implements GuildCommand {
                                 u.getAsMention(), Levels.calcLevel(ul.getExp()), ul.getExp());
                         }
                     ).collect(Collectors.toList())),
-                channel, user.getUser(), start);
+                event.getChannel(), event.getUser(), start);
 
             PageListener.add(p);
         }
@@ -105,21 +107,21 @@ public class Level implements GuildCommand {
         }
 
         @Override
-        public void run(Member user, TextChannel channel, List<String> args, Message original, String invoked) {
+        public void run(GuildCommandEvent event) {
             User u = null;
             String arg;
-            if (args.isEmpty()) u = user.getUser();
-            else if (Parser.User.isParsable(arg = lastArg(0, args, original))) u = CacheUtils.getUser(arg);
-            else if (Parser.User.tagIsParsable(arg)) u = Bot.getJDA().getUserByTag(arg);
-            if (u == null) u = user.getUser();
+            if (event.getArgs().isEmpty()) u = event.getUser();
+            else if (Parser.User.isParsable(arg = lastArg(0, event))) u = CacheUtils.getUser(arg);
+            else if (Parser.User.tagIsParsable(arg)) u = event.getJDA().getUserByTag(Objects.requireNonNull(arg));
+            if (u == null) u = event.getUser();
 
-            Member member = CacheUtils.getMember(original.getGuild(), u.getId());
-            UserLevel level = Levels.getUserLevel(original.getGuild(), u);
+            Member member = CacheUtils.getMember(event.getGuild(), u.getId());
+            UserLevel level = Levels.getUserLevel(event.getGuild(), u);
             int exp = level.getExp();
             int lvl = Levels.calcLevel(exp);
             double expToNext = Levels.calcExp(lvl + 1);
 
-            List<UserLevel> levels = Levels.getLevels(original.getGuild()).stream()
+            List<UserLevel> levels = Levels.getLevels(event.getGuild()).stream()
                                          .filter(userLevel -> Bot.getJDA().getUserById(userLevel.getUser_id()) != null)
                                          .sorted(Comparator.comparingInt(UserLevel::getExp).reversed())
                                          .collect(Collectors.toList());
@@ -136,7 +138,7 @@ public class Level implements GuildCommand {
             eb.addField((int) ((exp - Levels.calcExp(lvl)) / (expToNext - Levels.calcExp(lvl)) * 100) + "%",
                 String.format("%d/%dxp", exp, Levels.calcExp(lvl + 1)), true);
 
-            channel.sendMessage(eb.build()).queue();
+            event.getChannel().sendMessage(eb.build()).queue();
 
         }
 

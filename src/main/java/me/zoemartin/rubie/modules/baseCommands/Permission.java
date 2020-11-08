@@ -2,6 +2,7 @@ package me.zoemartin.rubie.modules.baseCommands;
 
 import me.zoemartin.rubie.Bot;
 import me.zoemartin.rubie.core.CommandPerm;
+import me.zoemartin.rubie.core.GuildCommandEvent;
 import me.zoemartin.rubie.core.exceptions.CommandArgumentException;
 import me.zoemartin.rubie.core.exceptions.ReplyError;
 import me.zoemartin.rubie.core.interfaces.Command;
@@ -32,8 +33,8 @@ public class Permission implements GuildCommand {
     }
 
     @Override
-    public void run(Member user, TextChannel channel, List<String> args, Message original, String invoked) {
-        help(user, channel, List.of(name()), original);
+    public void run(GuildCommandEvent event) {
+        throw new CommandArgumentException();
     }
 
     @Override
@@ -68,8 +69,8 @@ public class Permission implements GuildCommand {
         }
 
         @Override
-        public void run(Member user, TextChannel channel, List<String> args, Message original, String invoked) {
-            help(user, channel, List.of("perm", name()), original);
+        public void run(GuildCommandEvent event) {
+            throw new CommandArgumentException();
         }
 
         @Override
@@ -89,21 +90,22 @@ public class Permission implements GuildCommand {
             }
 
             @Override
-            public void run(Member user, TextChannel channel, List<String> args, Message original, String invoked) {
+            public void run(GuildCommandEvent event) {
+                List<String> args = event.getArgs();
                 Check.check(args.size() == 2 && Parser.User.isParsable(args.get(0))
                                 && Parser.Int.isParsable(args.get(1)), CommandArgumentException::new);
 
-                Member m = CacheUtils.getMemberExplicit(original.getGuild(), Parser.User.parse(args.get(0)));
+                Member m = CacheUtils.getMemberExplicit(event.getGuild(), Parser.User.parse(args.get(0)));
                 CommandPerm cp = CommandPerm.fromNum(Parser.Int.parse(args.get(1)));
                 Check.notNull(cp, CommandArgumentException::new);
-                Check.check(!cp.equals(CommandPerm.OWNER) || user.getId().equals(Bot.getOWNER()),
+                Check.check(!cp.equals(CommandPerm.OWNER) || event.getUser().getId().equals(Bot.getOWNER()),
                     CommandArgumentException::new);
 
                 if (cp.equals(CommandPerm.EVERYONE))
-                    PermissionHandler.removeMemberPerm(original.getGuild().getId(), m.getId());
+                    PermissionHandler.removeMemberPerm(event.getGuild().getId(), m.getId());
                 else
-                    PermissionHandler.addMemberPerm(original.getGuild().getId(), m.getId(), cp);
-                embedReply(original, channel, null, "Set `[%d] %s` to %s", cp.raw(), cp.toString(),
+                    PermissionHandler.addMemberPerm(event.getGuild().getId(), m.getId(), cp);
+                embedReply(event, null, "Set `[%d] %s` to %s", cp.raw(), cp.toString(),
                     m.getAsMention()).queue();
             }
 
@@ -130,16 +132,16 @@ public class Permission implements GuildCommand {
             }
 
             @Override
-            public void run(Member user, TextChannel channel, List<String> args, Message original, String invoked) {
-                Check.check(args.size() == 1 && Parser.User.isParsable(args.get(0)),
+            public void run(GuildCommandEvent event) {
+                Check.check(event.getArgs().size() == 1 && Parser.User.isParsable(event.getArgs().get(0)),
                     CommandArgumentException::new);
 
-                Member m = CacheUtils.getMemberExplicit(original.getGuild(), Parser.User.parse(args.get(0)));
+                Member m = CacheUtils.getMemberExplicit(event.getGuild(), Parser.User.parse(event.getArgs().get(0)));
 
-                Check.check(PermissionHandler.removeMemberPerm(original.getGuild().getId(), m.getId()),
+                Check.check(PermissionHandler.removeMemberPerm(event.getGuild().getId(), m.getId()),
                     () -> new ReplyError("Error, Member does not have an assigned Member Permission"));
 
-                embedReply(original, channel, null, "Removed Member Permission from %s", m.getAsMention()).queue();
+                embedReply(event, (String) null, "Removed Member Permission from %s", m.getAsMention()).queue();
             }
 
             @Override
@@ -165,26 +167,26 @@ public class Permission implements GuildCommand {
             }
 
             @Override
-            public void run(Member user, TextChannel channel, List<String> args, Message original, String invoked) {
-                Check.check(args.isEmpty(), CommandArgumentException::new);
+            public void run(GuildCommandEvent event) {
+                Check.check(event.getArgs().isEmpty(), CommandArgumentException::new);
 
                 EmbedBuilder eb = new EmbedBuilder();
-                eb.setColor(original.getGuild().getSelfMember().getColor());
+                eb.setColor(event.getGuild().getSelfMember().getColor());
                 eb.setTitle("Member Permission List");
 
                 String list = PermissionHandler.getMemberPerms(
-                    original.getGuild().getId())
+                    event.getGuild().getId())
                                   .stream().sorted(Comparator.comparingInt((MemberPermission o) -> o.getPerm().raw()).reversed())
                                   .map(
                                       mp -> "`[" + mp.getPerm().raw() + "] " + mp.getPerm().toString() + "` " +
-                                                CacheUtils.getMemberExplicit(original.getGuild(), mp.getMember_id())
+                                                CacheUtils.getMemberExplicit(event.getGuild(), mp.getMember_id())
                                                     .getAsMention()
                                   ).collect(Collectors.joining("\n"));
 
                 eb.setDescription(list);
                 Check.check(!list.isEmpty(), () -> new ReplyError("No bot member permission overrides"));
 
-                channel.sendMessage(eb.build()).queue();
+                event.getChannel().sendMessage(eb.build()).queue();
             }
 
             @Override
@@ -216,8 +218,8 @@ public class Permission implements GuildCommand {
         }
 
         @Override
-        public void run(Member user, TextChannel channel, List<String> args, Message original, String invoked) {
-            help(user, channel, List.of("perm", name()), original);
+        public void run(GuildCommandEvent event) {
+            throw new CommandArgumentException();
         }
 
         @Override
@@ -237,22 +239,22 @@ public class Permission implements GuildCommand {
             }
 
             @Override
-            public void run(Member user, TextChannel channel, List<String> args, Message original, String invoked) {
-                Check.check(args.size() == 2 && Parser.Int.isParsable(args.get(1)),
+            public void run(GuildCommandEvent event) {
+                Check.check(event.getArgs().size() == 2 && Parser.Int.isParsable(event.getArgs().get(1)),
                     CommandArgumentException::new);
 
-                Role r = Parser.Role.getRole(original.getGuild(), args.get(0));
-                CommandPerm cp = CommandPerm.fromNum(Parser.Int.parse(args.get(1)));
+                Role r = Parser.Role.getRole(event.getGuild(), event.getArgs().get(0));
+                CommandPerm cp = CommandPerm.fromNum(Parser.Int.parse(event.getArgs().get(1)));
                 Check.notNull(cp, CommandArgumentException::new);
-                Check.entityReferenceNotNull(r, Role.class, args.get(0));
-                Check.check(!cp.equals(CommandPerm.OWNER) || user.getId().equals(Bot.getOWNER()),
+                Check.entityReferenceNotNull(r, Role.class, event.getArgs().get(0));
+                Check.check(!cp.equals(CommandPerm.OWNER) || event.getUser().getId().equals(Bot.getOWNER()),
                     CommandArgumentException::new);
 
                 if (cp.equals(CommandPerm.EVERYONE))
-                    PermissionHandler.removeRolePerm(original.getGuild().getId(), r.getId());
+                    PermissionHandler.removeRolePerm(event.getGuild().getId(), r.getId());
                 else
-                    PermissionHandler.addRolePerm(original.getGuild().getId(), r.getId(), cp);
-                embedReply(original, channel, null, "Set `[%d] %s` to %s", cp.raw(), cp.toString(),
+                    PermissionHandler.addRolePerm(event.getGuild().getId(), r.getId(), cp);
+                embedReply(event, null, "Set `[%d] %s` to %s", cp.raw(), cp.toString(),
                     r.getAsMention()).queue();
             }
 
@@ -279,17 +281,17 @@ public class Permission implements GuildCommand {
             }
 
             @Override
-            public void run(Member user, TextChannel channel, List<String> args, Message original, String invoked) {
-                Check.check(!args.isEmpty(), CommandArgumentException::new);
+            public void run(GuildCommandEvent event) {
+                Check.check(!event.getArgs().isEmpty(), CommandArgumentException::new);
 
-                String rRef = lastArg(0, args, original);
-                Role r = Parser.Role.getRole(original.getGuild(), rRef);
+                String rRef = lastArg(0, event);
+                Role r = Parser.Role.getRole(event.getGuild(), rRef);
                 Check.entityReferenceNotNull(r, Role.class, rRef);
 
-                Check.check(PermissionHandler.removeRolePerm(original.getGuild().getId(), r.getId()),
+                Check.check(PermissionHandler.removeRolePerm(event.getGuild().getId(), r.getId()),
                     () -> new ReplyError("Error, Role does not have an assigned Role Permission"));
 
-                embedReply(original, channel, null, "Removed Role Permission from %s", r.getAsMention()).queue();
+                embedReply(event, (String) null, "Removed Role Permission from %s", r.getAsMention()).queue();
             }
 
             @Override
@@ -315,19 +317,19 @@ public class Permission implements GuildCommand {
             }
 
             @Override
-            public void run(Member user, TextChannel channel, List<String> args, Message original, String invoked) {
-                Check.check(args.isEmpty(), CommandArgumentException::new);
+            public void run(GuildCommandEvent event) {
+                Check.check(event.getArgs().isEmpty(), CommandArgumentException::new);
 
                 EmbedBuilder eb = new EmbedBuilder();
-                eb.setColor(original.getGuild().getSelfMember().getColor());
+                eb.setColor(event.getGuild().getSelfMember().getColor());
                 eb.setTitle("Role Permission List");
 
                 String list = PermissionHandler.getRolePerms(
-                    original.getGuild().getId())
+                    event.getGuild().getId())
                                   .stream().sorted(Comparator.comparingInt((RolePermission r) -> r.getPerm().raw()).reversed())
                                   .map(
                                       rp -> {
-                                          Role r = original.getGuild().getRoleById(rp.getRole_id());
+                                          Role r = event.getGuild().getRoleById(rp.getRole_id());
                                           return "`[" + rp.getPerm().raw() + "] " + rp.getPerm().toString() + "` " +
                                                      (r == null ? "" : r.getAsMention());
                                       }
@@ -336,7 +338,7 @@ public class Permission implements GuildCommand {
                 eb.setDescription(list);
                 Check.check(!list.isEmpty(), () -> new ReplyError("No bot role permission overrides"));
 
-                channel.sendMessage(eb.build()).queue();
+                event.getChannel().sendMessage(eb.build()).queue();
             }
 
             @Override
