@@ -3,6 +3,7 @@ package me.zoemartin.rubie.core.managers;
 import me.zoemartin.rubie.Bot;
 import me.zoemartin.rubie.core.exceptions.ConsoleError;
 import me.zoemartin.rubie.core.interfaces.*;
+import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent;
 
 import java.util.*;
@@ -16,6 +17,7 @@ public class CommandManager {
 
     private static CommandProcessor processor;
     private static CommandLogger logger = null;
+    private static ErrorProcessor errorProcessor = null;
 
     public static void register(Command c) {
         registered.add(c);
@@ -29,7 +31,11 @@ public class CommandManager {
         logger = cl;
     }
 
-    public static void process(GuildMessageReceivedEvent event, String input) {
+    public static void setErrorHandler(ErrorProcessor errorProcessor) {
+        CommandManager.errorProcessor = errorProcessor;
+    }
+
+    public static void process(MessageReceivedEvent event, String input) {
         new Thread(() -> {
             try {
                 processor.process(event, input);
@@ -47,5 +53,9 @@ public class CommandManager {
 
     public static CommandLogger getCommandLogger() {
         return logger;
+    }
+
+    public static ErrorProcessor getErrorHandler() {
+        return errorProcessor;
     }
 }

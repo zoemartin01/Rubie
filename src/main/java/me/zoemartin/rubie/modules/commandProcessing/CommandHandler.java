@@ -9,6 +9,7 @@ import me.zoemartin.rubie.core.util.*;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.*;
+import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent;
 
 import java.awt.*;
@@ -23,7 +24,7 @@ import java.util.stream.Stream;
 
 public class CommandHandler implements CommandProcessor {
     @Override
-    public void process(GuildMessageReceivedEvent event, String input) {
+    public void process(MessageReceivedEvent event, String input) {
         User user = event.getAuthor();
         MessageChannel channel = event.getChannel();
 
@@ -58,21 +59,23 @@ public class CommandHandler implements CommandProcessor {
         int commandLevel = commands.size();
         Command command = commands.getLast();
 
-        Guild guild = event.getGuild();
-        Member member = guild.getMember(user);
-        Check.notNull(member, () -> new ConsoleError("member is null"));
+        if (event.isFromGuild()) {
+            Guild guild = event.getGuild();
+            Member member = guild.getMember(user);
+            Check.notNull(member, () -> new ConsoleError("member is null"));
 
-        if (command.commandPerm() != CommandPerm.EVERYONE) {
-            Check.check(PermissionHandler.getHighestFromUser(guild, member).raw() >= command.commandPerm().raw(),
-                () -> new ConsoleError("Member '%s' doesn't have the required permission rank for Command '%s'",
+            if (command.commandPerm() != CommandPerm.EVERYONE) {
+                Check.check(PermissionHandler.getHighestFromUser(guild, member).raw() >= command.commandPerm().raw(),
+                    () -> new ConsoleError("Member '%s' doesn't have the required permission rank for Command '%s'",
+                        member.getId(), command.name()));
+            }
+
+            Check.check((command.required().size() == 1 && command.required().contains(Permission.UNKNOWN))
+                            || member.hasPermission(Permission.ADMINISTRATOR)
+                            || command.required().stream().allMatch(member::hasPermission),
+                () -> new ConsoleError("Member '%s' doesn't have the required permission for Command '%s'",
                     member.getId(), command.name()));
         }
-
-        Check.check((command.required().size() == 1 && command.required().contains(Permission.UNKNOWN))
-                        || member.hasPermission(Permission.ADMINISTRATOR)
-                        || command.required().stream().allMatch(member::hasPermission),
-            () -> new ConsoleError("Member '%s' doesn't have the required permission for Command '%s'",
-                member.getId(), command.name()));
 
         List<String> arguments;
 
