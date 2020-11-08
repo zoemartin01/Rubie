@@ -4,6 +4,7 @@ import com.google.gson.JsonSyntaxException;
 import me.zoemartin.rubie.core.CommandPerm;
 import me.zoemartin.rubie.core.Embed;
 import me.zoemartin.rubie.core.exceptions.*;
+import me.zoemartin.rubie.core.interfaces.Command;
 import me.zoemartin.rubie.core.interfaces.GuildCommand;
 import me.zoemartin.rubie.core.util.Check;
 import me.zoemartin.rubie.core.util.Parser;
@@ -11,9 +12,16 @@ import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.*;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class CustomEmbed implements GuildCommand {
+    @NotNull
+    @Override
+    public Set<Command> subCommands() {
+        return Set.of(new Bulk());
+    }
+
     @Override
     public void run(Member user, TextChannel channel, List<String> args, Message original, String invoked) {
         Check.check(!args.isEmpty(), CommandArgumentException::new);
@@ -88,5 +96,62 @@ public class CustomEmbed implements GuildCommand {
     @Override
     public String description() {
         return "Creates a custom embed";
+    }
+
+    private static class Bulk implements GuildCommand {
+
+        @Override
+        public void run(Member user, TextChannel channel, List<String> args, Message original, String invoked) {
+            Check.check(args.size() > 1, CommandArgumentException::new);
+            TextChannel c = Parser.Channel.getTextChannel(original.getGuild(), args.get(0));
+            Check.entityReferenceNotNull(c, TextChannel.class, args.get(0));
+
+
+            List<String> jsons = args.subList(1, args.size())
+                                     .stream()
+                                     .map(EmbedUtil::jsonFromUrl)
+                                     .collect(Collectors.toList());
+
+            List<Embed> embeds;
+
+            try {
+                embeds = jsons.stream().map(Embed::fromJson).collect(Collectors.toList());
+            } catch (JsonSyntaxException e) {
+                throw new ReplyError("An error occurred while parsing a json file!");
+            }
+
+            embeds.forEach(embed -> channel.sendMessage(embed.toDiscordEmbed()).queue());
+            addCheckmark(original);
+        }
+
+        @NotNull
+        @Override
+        public String name() {
+            return "bulk";
+        }
+
+        @NotNull
+        @Override
+        public CommandPerm commandPerm() {
+            return CommandPerm.BOT_ADMIN;
+        }
+
+        @NotNull
+        @Override
+        public Collection<Permission> required() {
+            return EnumSet.of(Permission.MANAGE_CHANNEL);
+        }
+
+        @NotNull
+        @Override
+        public String usage() {
+            return "<channel> <urls...>";
+        }
+
+        @NotNull
+        @Override
+        public String description() {
+            return "Send Many custom Embeds at once";
+        }
     }
 }
