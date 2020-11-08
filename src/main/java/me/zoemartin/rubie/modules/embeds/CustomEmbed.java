@@ -34,16 +34,28 @@ public class CustomEmbed implements GuildCommand {
         String json;
         if (args.size() > 1) {
             String cRef = args.get(0);
-            c = Parser.Channel.getTextChannel(event.getGuild(), cRef);
-            Check.entityReferenceNotNull(c, TextChannel.class, cRef);
+            TextChannel tc = Parser.Channel.getTextChannel(event.getGuild(), cRef);
 
-            if (args.get(1).matches(
-                "(http(s)?://.)?(www\\.)?[-a-zA-Z0-9@:%._+~#=]{2,256}\\.[a-z]{2,6}\\b([-a-zA-Z0-9@:%_+.~#?&/=]*)")) {
+            if (tc == null) {
+                c = event.getChannel();
+                if (args.get(0).matches(
+                    "(http(s)?://.)?(www\\.)?[-a-zA-Z0-9@:%._+~#=]{2,256}\\.[a-z]{2,6}\\b([-a-zA-Z0-9@:%_+.~#?&/=]*)")) {
 
-                json = EmbedUtil.jsonFromUrl(args.get(1));
+                    json = EmbedUtil.jsonFromUrl(args.get(0));
+                } else {
+                    json = event.getContent()
+                               .substring(event.getContent().indexOf(event.getInvoked().getLast()) + event.getInvoked().getLast().length() + 1);
+                }
             } else {
-                json = event.getContent()
-                           .substring(event.getContent().indexOf(cRef) + cRef.length() + 1);
+                c = tc;
+                if (args.get(1).matches(
+                    "(http(s)?://.)?(www\\.)?[-a-zA-Z0-9@:%._+~#=]{2,256}\\.[a-z]{2,6}\\b([-a-zA-Z0-9@:%_+.~#?&/=]*)")) {
+
+                    json = EmbedUtil.jsonFromUrl(args.get(1));
+                } else {
+                    json = event.getContent()
+                               .substring(event.getContent().indexOf(cRef) + cRef.length() + 1);
+                }
             }
         } else {
             c = event.getChannel();
