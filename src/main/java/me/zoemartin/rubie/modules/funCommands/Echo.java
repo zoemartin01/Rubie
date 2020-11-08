@@ -52,7 +52,6 @@ public class Echo implements GuildCommand {
         return "Makes the bot say stuff";
     }
 
-    @SuppressWarnings("ConstantConditions")
     private static class To implements GuildCommand {
         @Override
         public @NotNull String name() {
@@ -70,9 +69,16 @@ public class Echo implements GuildCommand {
 
             TextChannel c = Parser.Channel.getTextChannel(original.getGuild(), args.get(0));
             Check.entityReferenceNotNull(c, TextChannel.class, args.get(0));
-            Check.check(user.hasPermission(c, Permission.MESSAGE_WRITE),
-                () -> new ConsoleError("Member '%s' doesn't have write permissions in channel '%s'",
-                    original.getMember().getId(), c.getId()));
+
+            Check.check(user.hasPermission(c, Permission.MESSAGE_WRITE,
+                Permission.MESSAGE_READ),
+                () -> new ReplyError("Error, looks like you don't have all the necessary permissions to post embeds in %s",
+                    c.getAsMention()));
+
+            Check.check(original.getGuild().getSelfMember().hasPermission(c, Permission.MESSAGE_WRITE,
+                Permission.MESSAGE_READ),
+                () -> new ReplyError("Error, looks like I don't have all the necessary permissions to post embeds in %s",
+                    c.getAsMention()));
 
             String echo = lastArg(1, args, original);
 

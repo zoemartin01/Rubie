@@ -53,9 +53,15 @@ public class CustomEmbed implements GuildCommand {
             }
         }
 
-        Check.check(user.hasPermission(c, Permission.MESSAGE_WRITE),
-            () -> new ConsoleError("Member '%s' doesn't have write permissions in channel '%s'",
-                user.getId(), c.getId()));
+        Check.check(user.hasPermission(c, Permission.MESSAGE_WRITE,
+            Permission.MESSAGE_READ, Permission.MESSAGE_EMBED_LINKS),
+            () -> new ReplyError("Error, looks like you don't have all the necessary permissions to post embeds in %s",
+                c.getAsMention()));
+
+        Check.check(original.getGuild().getSelfMember().hasPermission(c, Permission.MESSAGE_WRITE,
+            Permission.MESSAGE_READ, Permission.MESSAGE_EMBED_LINKS),
+            () -> new ReplyError("Error, looks like I don't have all the necessary permissions to post embeds in %s",
+                c.getAsMention()));
 
         Embed e;
         try {
@@ -64,7 +70,7 @@ public class CustomEmbed implements GuildCommand {
             throw new ReplyError("Sorry, I cannot parse your input json!");
         }
 
-        channel.sendMessage(e.toDiscordEmbed()).queue();
+        c.sendMessage(e.toDiscordEmbed()).queue();
         addCheckmark(original);
     }
 
@@ -105,6 +111,16 @@ public class CustomEmbed implements GuildCommand {
             Check.check(args.size() > 1, CommandArgumentException::new);
             TextChannel c = Parser.Channel.getTextChannel(original.getGuild(), args.get(0));
             Check.entityReferenceNotNull(c, TextChannel.class, args.get(0));
+
+            Check.check(user.hasPermission(c, Permission.MESSAGE_WRITE,
+                Permission.MESSAGE_READ, Permission.MESSAGE_EMBED_LINKS),
+                () -> new ReplyError("Error, looks like you don't have all the necessary permissions to post embeds in %s",
+                    c.getAsMention()));
+
+            Check.check(original.getGuild().getSelfMember().hasPermission(c, Permission.MESSAGE_WRITE,
+                Permission.MESSAGE_READ, Permission.MESSAGE_EMBED_LINKS),
+                () -> new ReplyError("Error, looks like I don't have all the necessary permissions to post embeds in %s",
+                    c.getAsMention()));
 
 
             List<String> jsons = args.subList(1, args.size())
