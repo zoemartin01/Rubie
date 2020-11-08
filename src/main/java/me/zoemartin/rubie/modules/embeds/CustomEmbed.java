@@ -120,7 +120,7 @@ public class CustomEmbed implements GuildCommand {
                 throw new ReplyError("An error occurred while parsing a json file!");
             }
 
-            embeds.forEach(embed -> channel.sendMessage(embed.toDiscordEmbed()).queue());
+            embeds.forEach(embed -> c.sendMessage(embed.toDiscordEmbed()).queue());
             addCheckmark(original);
         }
 
