@@ -12,7 +12,7 @@ public class TimeUtils {
         Period period = duration.toPeriodFrom(Instant.ofEpochMilli(start.toInstant().toEpochMilli()));
         PeriodFormatter formatter;
 
-        if (period.getMonths() < 1)
+        if (period.getMonths() < 1 && period.getYears() < 1)
             formatter = new PeriodFormatterBuilder()
                                                     .appendWeeks()
                                                     .appendSuffix(period.getWeeks() > 1 ? " weeks " : " week ")
