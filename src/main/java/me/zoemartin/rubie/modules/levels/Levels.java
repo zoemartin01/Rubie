@@ -118,6 +118,7 @@ public class Levels extends ListenerAdapter implements Module {
         });
 
         LevelConfig config = getConfig(g);
+        String name = event.getMember().getEffectiveName();
 
         switch (config.getAnnouncements()) {
             case ALL:
@@ -126,14 +127,14 @@ public class Levels extends ListenerAdapter implements Module {
                         "Hey, %s! Congratulations on hitting level %s in %s! " +
                             "Hope you enjoy your new server privileges, and hey, thanks for being here " +
                             "\uD83D\uDC9A",
-                        event.getAuthor().getName(), level, g.getName()
+                        name, level, g.getName()
                     ).queue();
                 else
                     event.getAuthor().openPrivateChannel().complete().sendMessageFormat(
                         "Hey, %s! Congratulations on hitting level %s in %s! " +
                             "Thanks for being here! " +
                             "\uD83D\uDC9A",
-                        event.getAuthor().getName(), level, g.getName()
+                        name, level, g.getName()
                     ).queue();
                 break;
 
@@ -143,7 +144,7 @@ public class Levels extends ListenerAdapter implements Module {
                         "Hey, %s! Congratulations on hitting level %s in %s! " +
                             "Hope you enjoy your new server privileges, and hey, thanks for being here " +
                             "\uD83D\uDC9A",
-                        event.getAuthor().getName(), level, g.getName()
+                        name, level, g.getName()
                     ).queue();
                 break;
         }
