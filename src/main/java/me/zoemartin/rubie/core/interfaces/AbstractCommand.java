@@ -1,6 +1,7 @@
 package me.zoemartin.rubie.core.interfaces;
 
-import me.zoemartin.rubie.core.*;
+import me.zoemartin.rubie.core.CommandEvent;
+import me.zoemartin.rubie.core.CommandPerm;
 import me.zoemartin.rubie.core.annotations.*;
 import me.zoemartin.rubie.core.util.MessageUtils;
 import net.dv8tion.jda.api.Permission;
@@ -137,7 +138,7 @@ public abstract class AbstractCommand {
         CommandOptions[] options = this.getClass().getAnnotationsByType(CommandOptions.class);
 
         if (options == null || options.length == 0)
-            throw new IllegalStateException("Command Class missing CommandOptions Annotation");
+            throw new IllegalStateException(String.format("Command '%s' missing CommandOptions Annotation", this.getClass().getName()));
 
         return options[0].perm();
     }

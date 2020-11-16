@@ -1,8 +1,11 @@
 package me.zoemartin.rubie.core.managers;
 
+import javassist.*;
+import me.zoemartin.rubie.core.*;
 import me.zoemartin.rubie.core.annotations.*;
-import me.zoemartin.rubie.core.interfaces.AbstractCommand;
+import me.zoemartin.rubie.core.interfaces.*;
 import me.zoemartin.rubie.core.interfaces.Module;
+import org.jetbrains.annotations.NotNull;
 import org.reflections8.Reflections;
 import org.reflections8.scanners.SubTypesScanner;
 import org.reflections8.scanners.TypeAnnotationsScanner;
@@ -15,6 +18,7 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.*;
 import java.util.concurrent.*;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -22,10 +26,6 @@ public class ModuleManager {
     private static final Collection<Module> modules = Collections.newSetFromMap(new ConcurrentHashMap<>());
 
     public static void init() {
-        /*Reflections reflections = new Reflections(new ConfigurationBuilder()
-                                                      .setUrls(ClasspathHelper.forPackage("me.zoemartin.rubie.modules"))
-                                                      .setScanners(new SubTypesScanner(), new TypeAnnotationsScanner())
-                                                      .setExecutorService(Executors.newFixedThreadPool(4)));*/
         // This is a really dumb way to suppress all the warns coming from java reflections
         // but it works so ¯\_(ツ)_/¯
         PrintStream err = System.err;
@@ -87,11 +87,22 @@ public class ModuleManager {
                 }
                 if (command == null) return;
 
-                command.subCommands();
+                sub(command);
                 CommandManager.register(command);
                 System.out.printf("Loaded Module '%s' command '%s'\n", m.getClass().getName(), command.name());
             });
+    }
 
+
+    private static void sub(AbstractCommand c) {
+        System.out.printf("Searched for scab in %s\n%s\n\n", c.name(), Arrays.toString(c.getClass().getAnnotations()));
+        if (c.getClass().getAnnotationsByType(SubCommand.AsBase.class).length != 0) {
+            CommandManager.register(new SubcommandAdapter(c));
+        }
+
+        if (!c.subCommands().isEmpty()) {
+            c.subCommands().forEach(ModuleManager::sub);
+        }
     }
 
     public static void initLate() {

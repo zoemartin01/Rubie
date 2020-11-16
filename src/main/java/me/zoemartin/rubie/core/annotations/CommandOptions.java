@@ -19,8 +19,4 @@ public @interface CommandOptions {
     Permission[] botPerms() default {};
 
     String[] alias() default {};
-
-    @interface Alias {
-        String[] value();
-    }
 }

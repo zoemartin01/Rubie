@@ -8,7 +8,10 @@ import java.lang.annotation.*;
 @Retention(RetentionPolicy.RUNTIME)
 public @interface SubCommand {
     Class<? extends AbstractCommand> value();
-    public @interface AsBase {
+
+    @Target(ElementType.TYPE)
+    @Retention(RetentionPolicy.RUNTIME)
+    @interface AsBase {
         String name();
         String[] alias() default {};
     }
