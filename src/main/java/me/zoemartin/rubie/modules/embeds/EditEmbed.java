@@ -2,6 +2,7 @@ package me.zoemartin.rubie.modules.embeds;
 
 import com.google.gson.JsonSyntaxException;
 import me.zoemartin.rubie.core.*;
+import me.zoemartin.rubie.core.annotations.*;
 import me.zoemartin.rubie.core.exceptions.*;
 import me.zoemartin.rubie.core.interfaces.GuildCommand;
 import me.zoemartin.rubie.core.util.Check;
@@ -9,11 +10,19 @@ import me.zoemartin.rubie.core.util.Parser;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.*;
 import net.dv8tion.jda.api.exceptions.ErrorResponseException;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 
-public class EditEmbed implements GuildCommand {
+@Command
+@CommandOptions(
+    name = "editembed",
+    description = "Edit a Custom Embed sent by me",
+    usage = "<message id> [channel] <json|link>",
+    perm = CommandPerm.BOT_MANAGER,
+    alias = {"ecembed", "ee"}
+)
+@Checks.Permissions.Channel(Permission.MESSAGE_MANAGE)
+public class EditEmbed extends GuildCommand {
     @Override
     public void run(GuildCommandEvent event) {
         List<String> args = event.getArgs();
@@ -39,7 +48,7 @@ public class EditEmbed implements GuildCommand {
                            .substring(event.getContent().indexOf(cRef) + cRef.length() + 1);
             }
         } else {
-            c = event.getChannel();
+            c = event.getTextChannel();
             if (args.get(1).matches(
                 "(http(s)?://.)?(www\\.)?[-a-zA-Z0-9@:%._+~#=]{2,256}\\.[a-z]{2,6}\\b([-a-zA-Z0-9@:%_+.~#?&/=]*)")) {
 
@@ -73,35 +82,5 @@ public class EditEmbed implements GuildCommand {
 
         message.editMessage(e.toDiscordEmbed()).queue();
         event.addCheckmark();
-    }
-
-    @NotNull
-    @Override
-    public String name() {
-        return "editembed";
-    }
-
-    @NotNull
-    @Override
-    public String regex() {
-        return "editembed|ee";
-    }
-
-    @NotNull
-    @Override
-    public CommandPerm commandPerm() {
-        return CommandPerm.BOT_MANAGER;
-    }
-
-    @NotNull
-    @Override
-    public String usage() {
-        return "<message id> [channel] <json|link>";
-    }
-
-    @NotNull
-    @Override
-    public String description() {
-        return "Edit a Custom Embed sent by me";
     }
 }

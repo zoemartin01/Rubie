@@ -3,57 +3,40 @@ package me.zoemartin.rubie.modules.levels;
 import me.zoemartin.rubie.Bot;
 import me.zoemartin.rubie.core.CommandPerm;
 import me.zoemartin.rubie.core.GuildCommandEvent;
-import me.zoemartin.rubie.core.interfaces.Command;
+import me.zoemartin.rubie.core.annotations.*;
 import me.zoemartin.rubie.core.interfaces.GuildCommand;
 import me.zoemartin.rubie.modules.pagedEmbeds.PageListener;
 import me.zoemartin.rubie.modules.pagedEmbeds.PagedEmbed;
 import me.zoemartin.rubie.core.util.*;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.*;
-import org.jetbrains.annotations.NotNull;
 
 import java.time.Instant;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class Level implements GuildCommand {
-    @Override
-    public @NotNull String name() {
-        return "level";
-    }
-
-    @Override
-    public @NotNull String regex() {
-        return "level|lvl";
-    }
-
-    @Override
-    public @NotNull Set<Command> subCommands() {
-        return Set.of(new Show(), new Config(), new Leaderboard());
-    }
-
+@Command
+@CommandOptions(
+    name = "level",
+    alias = "lvl",
+    description = "Shows Levels",
+    perm = CommandPerm.BOT_USER
+)
+public class Level extends GuildCommand {
     @Override
     public void run(GuildCommandEvent event) {
         new Show().run(event);
     }
 
-    @Override
-    public @NotNull CommandPerm commandPerm() {
-        return CommandPerm.BOT_USER;
-    }
-
-    @Override
-    public @NotNull String description() {
-        return "Shows Levels";
-    }
-
-    static class Leaderboard implements GuildCommand {
-
-        @Override
-        public @NotNull String name() {
-            return "leaderboard";
-        }
-
+    @SubCommand(Level.class)
+    @CommandOptions(
+        name = "leaderboard",
+        description = "Shows the current leaderboard",
+        usage = "[full]",
+        perm = CommandPerm.BOT_MANAGER
+    )
+    @SubCommand.AsBase(name = "leaderboard")
+    static class Leaderboard extends GuildCommand {
         @Override
         public void run(GuildCommandEvent event) {
             List<String> args = event.getArgs();
@@ -82,30 +65,19 @@ public class Level implements GuildCommand {
                             return String.format("%d. %s - Level: `%s` - `%sxp`\n", levels.indexOf(ul) + 1,
                                 u.getAsMention(), Levels.calcLevel(ul.getExp()), ul.getExp());
                         }
-                    ).collect(Collectors.toList())),
-                event.getChannel(), event.getUser(), start);
+                    ).collect(Collectors.toList())), event, start);
 
             PageListener.add(p);
         }
-
-        @Override
-        public @NotNull CommandPerm commandPerm() {
-            return CommandPerm.BOT_MANAGER;
-        }
-
-        @Override
-        public @NotNull String description() {
-            return "Shows the current leaderboard";
-        }
     }
 
-    private static class Show implements GuildCommand {
-
-        @Override
-        public @NotNull String name() {
-            return "show";
-        }
-
+    @SubCommand(Level.class)
+    @CommandOptions(
+        name = "show",
+        description = "Shows a users level",
+        perm = CommandPerm.BOT_USER
+    )
+    private static class Show extends GuildCommand {
         @Override
         public void run(GuildCommandEvent event) {
             User u = null;
@@ -140,16 +112,6 @@ public class Level implements GuildCommand {
 
             event.getChannel().sendMessage(eb.build()).queue();
 
-        }
-
-        @Override
-        public @NotNull CommandPerm commandPerm() {
-            return CommandPerm.BOT_USER;
-        }
-
-        @Override
-        public @NotNull String description() {
-            return "Shows a users level";
         }
     }
 }

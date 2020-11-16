@@ -1,5 +1,6 @@
 package me.zoemartin.rubie.modules.pagedEmbeds;
 
+import me.zoemartin.rubie.core.GuildCommandEvent;
 import net.dv8tion.jda.api.entities.*;
 
 import java.util.List;
@@ -27,12 +28,37 @@ public class PagedEmbed {
         }
     }
 
+    public PagedEmbed(List<MessageEmbed> pages, GuildCommandEvent event) {
+        this.pages = pages;
+        this.guildId = event.getGuild().getId();
+        this.userId = event.getUser().getId();
+        this.message = event.getChannel().sendMessage(this.pages.get(current = 0)).complete();
+        if (pages.size() > 1) {
+            message.addReaction(BACK).queue();
+            message.addReaction(FORWARD).queue();
+            message.addReaction(STOP).queue();
+        }
+    }
+
     public PagedEmbed(List<MessageEmbed> pages, TextChannel channel, User user, int start) {
         this.pages = pages;
         this.guildId = channel.getGuild().getId();
         this.userId = user.getId();
         this.current = start > pages.size() || start < 1 ? 0 : start - 1;
         this.message = channel.sendMessage(this.pages.get(this.current)).complete();
+        if (pages.size() > 1) {
+            message.addReaction(BACK).queue();
+            message.addReaction(FORWARD).queue();
+            message.addReaction(STOP).queue();
+        }
+    }
+
+    public PagedEmbed(List<MessageEmbed> pages, GuildCommandEvent event, int start) {
+        this.pages = pages;
+        this.guildId = event.getGuild().getId();
+        this.userId = event.getUser().getId();
+        this.current = start > pages.size() || start < 1 ? 0 : start - 1;
+        this.message = event.getChannel().sendMessage(this.pages.get(current = 0)).complete();
         if (pages.size() > 1) {
             message.addReaction(BACK).queue();
             message.addReaction(FORWARD).queue();

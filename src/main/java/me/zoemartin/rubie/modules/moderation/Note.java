@@ -5,8 +5,8 @@ import com.google.gson.reflect.TypeToken;
 import me.zoemartin.rubie.Bot;
 import me.zoemartin.rubie.core.CommandPerm;
 import me.zoemartin.rubie.core.GuildCommandEvent;
+import me.zoemartin.rubie.core.annotations.*;
 import me.zoemartin.rubie.core.exceptions.*;
-import me.zoemartin.rubie.core.interfaces.Command;
 import me.zoemartin.rubie.core.interfaces.GuildCommand;
 import me.zoemartin.rubie.core.util.*;
 import me.zoemartin.rubie.modules.Export.Notes;
@@ -15,54 +15,42 @@ import me.zoemartin.rubie.modules.pagedEmbeds.PagedEmbed;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.*;
 import org.hibernate.Session;
-import org.jetbrains.annotations.NotNull;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.format.ISODateTimeFormat;
 
 import javax.persistence.criteria.*;
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
 import java.lang.reflect.Type;
-import java.sql.Timestamp;
 import java.time.Instant;
-import java.time.ZoneOffset;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.stream.Collectors;
 
-public class Note implements GuildCommand {
-    @Override
-    public @NotNull Set<Command> subCommands() {
-        return Set.of(new list(), new Remove(), new BulkImportFile(), new Clear(), new Add());
-    }
-
-    @Override
-    public @NotNull String name() {
-        return "notes";
-    }
-
+@Disabled
+@Command
+@CommandOptions(
+    name = "notes",
+    description = "Lists a user's notes",
+    usage = "<user>",
+    perm = CommandPerm.BOT_MODERATOR
+)
+public class Note extends GuildCommand {
     @Override
     public void run(GuildCommandEvent event) {
         new list().run(event);
     }
 
-    @Override
-    public @NotNull CommandPerm commandPerm() {
-        return CommandPerm.BOT_MODERATOR;
-    }
-
-    @NotNull
-    @Override
-    public String usage() {
-        return "<user>";
-    }
-
-    @Override
-    public @NotNull String description() {
-        return "Notes";
-    }
-
-    private static class Add implements GuildCommand {
+    @SubCommand(Note.class)
+    @CommandOptions(
+        name = "add",
+        description = "Adds a note to a user",
+        usage = "<user> <note>",
+        perm = CommandPerm.BOT_MODERATOR
+    )
+    @SubCommand.AsBase(name = "addnote", alias = "setnote")
+    private static class Add extends GuildCommand {
 
         @Override
         public void run(GuildCommandEvent event) {
@@ -97,40 +85,16 @@ public class Note implements GuildCommand {
 
             event.getChannel().sendMessage(eb.build()).queue();
         }
-
-        @NotNull
-        @Override
-        public String name() {
-            return "add";
-        }
-
-        @Override
-        @NotNull
-        public String usage() {
-            return "<user> <note>";
-        }
-
-
-        @NotNull
-        @Override
-        public CommandPerm commandPerm() {
-            return CommandPerm.BOT_MODERATOR;
-        }
-
-        @NotNull
-        @Override
-        public String description() {
-            return "Adds a note to a user";
-        }
     }
 
-    private static class list implements GuildCommand {
-
-        @Override
-        public @NotNull String name() {
-            return "list";
-        }
-
+    @SubCommand(Note.class)
+    @CommandOptions(
+        name = "list",
+        description = "Lists a user's notes",
+        usage = "<user>",
+        perm = CommandPerm.BOT_MODERATOR
+    )
+    private static class list extends GuildCommand {
         @Override
         public void run(GuildCommandEvent event) {
             Check.check(!event.getArgs().isEmpty(), CommandArgumentException::new);
@@ -174,31 +138,18 @@ public class Note implements GuildCommand {
                 }).collect(Collectors.toList()), 1000
             );
 
-            PageListener.add(new PagedEmbed(pages, event.getChannel(), event.getUser()));
-        }
-
-        @Override
-        public @NotNull CommandPerm commandPerm() {
-            return CommandPerm.BOT_MODERATOR;
-        }
-
-        @Override
-        public @NotNull String usage() {
-            return "<user>";
-        }
-
-        @Override
-        public @NotNull String description() {
-            return "Lists a users notes";
+            PageListener.add(new PagedEmbed(pages, event));
         }
     }
 
-    private static class Remove implements GuildCommand {
-        @Override
-        public @NotNull String name() {
-            return "remove";
-        }
-
+    @SubCommand(Note.class)
+    @CommandOptions(
+        name = "remove",
+        description = "Remove a user's note",
+        usage = "<uuid>",
+        perm = CommandPerm.BOT_MODERATOR
+    )
+    private static class Remove extends GuildCommand {
         @Override
         public void run(GuildCommandEvent event) {
             Check.check(event.getArgs().size() == 1, CommandArgumentException::new);
@@ -230,25 +181,16 @@ public class Note implements GuildCommand {
 
             event.getChannel().sendMessage(eb.build()).queue();
         }
-
-        @Override
-        public @NotNull CommandPerm commandPerm() {
-            return CommandPerm.BOT_MANAGER;
-        }
-
-        @Override
-        public @NotNull String usage() {
-            return "<uuid>";
-        }
-
-        @Override
-        public @NotNull String description() {
-            return "Remove a warning";
-        }
     }
 
-    private static class Clear implements GuildCommand {
-
+    @SubCommand(Note.class)
+    @CommandOptions(
+        name = "clear",
+        description = "Clear a user's notes",
+        usage = "<user>",
+        perm = CommandPerm.BOT_MODERATOR
+    )
+    private static class Clear extends GuildCommand {
         @Override
         public void run(GuildCommandEvent event) {
             Check.check(!event.getArgs().isEmpty(), CommandArgumentException::new);
@@ -278,33 +220,15 @@ public class Note implements GuildCommand {
             embedReply(event, "Notes", "Cleared all notes for %s",
                 u == null ? userId : u.getAsMention()).queue();
         }
-
-        @NotNull
-        @Override
-        public String name() {
-            return "clear";
-        }
-
-        @NotNull
-        @Override
-        public CommandPerm commandPerm() {
-            return CommandPerm.BOT_MANAGER;
-        }
-
-        @NotNull
-        @Override
-        public String description() {
-            return "Clears a users notes";
-        }
     }
 
-    private static class BulkImportFile implements GuildCommand {
-
-        @Override
-        public @NotNull String name() {
-            return "import";
-        }
-
+    @SubCommand(Note.class)
+    @CommandOptions(
+        name = "import",
+        description = "Bulk import user notes from an attachment",
+        perm = CommandPerm.BOT_ADMIN
+    )
+    private static class BulkImportFile extends GuildCommand {
         @Override
         public void run(GuildCommandEvent event) {
             Check.check(event.getArgs().isEmpty(), CommandArgumentException::new);
@@ -328,7 +252,8 @@ public class Note implements GuildCommand {
             List<NoteEntity> existing = s.createQuery(q.select(r).where(
                 cb.equal(r.get("guild_id"), event.getGuild().getId()))).getResultList();
 
-            Type listType = new TypeToken<ArrayList<Notes.NoteEntry>>(){}.getType();
+            Type listType = new TypeToken<ArrayList<Notes.NoteEntry>>() {
+            }.getType();
             List<Notes.NoteEntry> toImport = new Gson().fromJson(br, listType);
 
             String guildId = event.getGuild().getId();
@@ -346,16 +271,6 @@ public class Note implements GuildCommand {
             eb.setDescription("Imported Notes:\n" + String.join("\n", users));
             m.delete().complete();
             event.getChannel().sendMessage(eb.build()).queue();
-        }
-
-        @Override
-        public @NotNull CommandPerm commandPerm() {
-            return CommandPerm.BOT_ADMIN;
-        }
-
-        @Override
-        public @NotNull String description() {
-            return "Bulk Import Notes. Attach a text file with one Line for each warn.";
         }
     }
 }

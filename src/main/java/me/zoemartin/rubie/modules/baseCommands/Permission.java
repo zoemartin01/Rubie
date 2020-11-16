@@ -3,9 +3,9 @@ package me.zoemartin.rubie.modules.baseCommands;
 import me.zoemartin.rubie.Bot;
 import me.zoemartin.rubie.core.CommandPerm;
 import me.zoemartin.rubie.core.GuildCommandEvent;
+import me.zoemartin.rubie.core.annotations.*;
 import me.zoemartin.rubie.core.exceptions.CommandArgumentException;
 import me.zoemartin.rubie.core.exceptions.ReplyError;
-import me.zoemartin.rubie.core.interfaces.Command;
 import me.zoemartin.rubie.core.interfaces.GuildCommand;
 import me.zoemartin.rubie.core.util.*;
 import me.zoemartin.rubie.modules.commandProcessing.*;
@@ -16,74 +16,43 @@ import org.jetbrains.annotations.NotNull;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class Permission implements GuildCommand {
-    @Override
-    public @NotNull Set<Command> subCommands() {
-        return Set.of(new MemberPerm(), new RolePerm());
-    }
-
-    @Override
-    public @NotNull String name() {
-        return "permission";
-    }
-
-    @Override
-    public @NotNull String regex() {
-        return "permission|perm";
-    }
-
+@Command
+@CommandOptions(
+    name = "permission",
+    description = "Bot Permission Management",
+    perm = CommandPerm.BOT_ADMIN,
+    alias = "perm"
+)
+@Checks.Permissions.Guild(net.dv8tion.jda.api.Permission.MANAGE_ROLES)
+public class Permission extends GuildCommand {
     @Override
     public void run(GuildCommandEvent event) {
         throw new CommandArgumentException();
     }
 
-    @Override
-    public @NotNull CommandPerm commandPerm() {
-        return CommandPerm.BOT_ADMIN;
-    }
-
-    @Override
-    public @NotNull String usage() {
-        return "help";
-    }
-
-    @Override
-    public @NotNull String description() {
-        return "Bot Permission Management";
-    }
-
-    private static class MemberPerm implements GuildCommand {
-        @Override
-        public @NotNull Set<Command> subCommands() {
-            return Set.of(new set(), new Remove(), new list());
-        }
-
-        @Override
-        public @NotNull String name() {
-            return "member";
-        }
-
-        @Override
-        public @NotNull String regex() {
-            return "member|m";
-        }
-
+    @SubCommand(Permission.class)
+    @CommandOptions(
+        name = "member",
+        description = "Member Permission Management",
+        perm = CommandPerm.BOT_ADMIN,
+        alias = "m"
+    )
+    @Checks.Permissions.Guild(net.dv8tion.jda.api.Permission.MANAGE_ROLES)
+    @SubCommand.AsBase(name = "memberperm", alias = "memberperms")
+    public static class MemberPerm extends GuildCommand {
         @Override
         public void run(GuildCommandEvent event) {
             throw new CommandArgumentException();
         }
 
-        @Override
-        public @NotNull CommandPerm commandPerm() {
-            return CommandPerm.BOT_ADMIN;
-        }
-
-        @Override
-        public @NotNull String description() {
-            return "Member Permission Management";
-        }
-
-        private static class set implements GuildCommand {
+        @SubCommand(MemberPerm.class)
+        @CommandOptions(
+            name = "set",
+            description = "Sets a Members Bot Permission",
+            usage = "<user> <level>"
+        )
+        @Checks.Permissions.Guild(net.dv8tion.jda.api.Permission.MANAGE_ROLES)
+        public static class set extends GuildCommand {
             @Override
             public @NotNull String name() {
                 return "set";
@@ -108,29 +77,17 @@ public class Permission implements GuildCommand {
                 embedReply(event, null, "Set `[%d] %s` to %s", cp.raw(), cp.toString(),
                     m.getAsMention()).queue();
             }
-
-            @Override
-            public @NotNull CommandPerm commandPerm() {
-                return CommandPerm.BOT_ADMIN;
-            }
-
-            @Override
-            public @NotNull String usage() {
-                return "<user> <level>";
-            }
-
-            @Override
-            public @NotNull String description() {
-                return "Adds Bot Permissions to a Member";
-            }
         }
 
-        private static class Remove implements GuildCommand {
-            @Override
-            public @NotNull String name() {
-                return "remove";
-            }
-
+        @SubCommand(MemberPerm.class)
+        @CommandOptions(
+            name = "remove",
+            description = "Removes a Members Bot Permission",
+            usage = "<user>",
+            alias = {"rm", "delete", "del"}
+        )
+        @Checks.Permissions.Guild(net.dv8tion.jda.api.Permission.MANAGE_ROLES)
+        public static class Remove extends GuildCommand {
             @Override
             public void run(GuildCommandEvent event) {
                 Check.check(event.getArgs().size() == 1 && Parser.User.isParsable(event.getArgs().get(0)),
@@ -143,29 +100,14 @@ public class Permission implements GuildCommand {
 
                 embedReply(event, (String) null, "Removed Member Permission from %s", m.getAsMention()).queue();
             }
-
-            @Override
-            public @NotNull CommandPerm commandPerm() {
-                return CommandPerm.BOT_ADMIN;
-            }
-
-            @Override
-            public @NotNull String usage() {
-                return "<user>";
-            }
-
-            @Override
-            public @NotNull String description() {
-                return "Removes Bot Permissions from a Member";
-            }
         }
 
-        private static class list implements GuildCommand {
-            @Override
-            public @NotNull String name() {
-                return "list";
-            }
-
+        @SubCommand(MemberPerm.class)
+        @CommandOptions(
+            name = "list",
+            description = "Lists all members with special bot member permissions"
+        )
+        public static class list extends GuildCommand {
             @Override
             public void run(GuildCommandEvent event) {
                 Check.check(event.getArgs().isEmpty(), CommandArgumentException::new);
@@ -188,55 +130,32 @@ public class Permission implements GuildCommand {
 
                 event.getChannel().sendMessage(eb.build()).queue();
             }
-
-            @Override
-            public @NotNull CommandPerm commandPerm() {
-                return CommandPerm.BOT_ADMIN;
-            }
-
-            @Override
-            public @NotNull String description() {
-                return "Lists all members with special bot member permissions";
-            }
         }
     }
 
-    private static class RolePerm implements GuildCommand {
-        @Override
-        public @NotNull Set<Command> subCommands() {
-            return Set.of(new set(), new Remove(), new list());
-        }
-
-        @Override
-        public @NotNull String name() {
-            return "role";
-        }
-
-        @Override
-        public @NotNull String regex() {
-            return "role|r";
-        }
-
+    @SubCommand(Permission.class)
+    @CommandOptions(
+        name = "role",
+        description = "Role Permission Management",
+        perm = CommandPerm.BOT_ADMIN,
+        alias = "r"
+    )
+    @Checks.Permissions.Guild(net.dv8tion.jda.api.Permission.MANAGE_ROLES)
+    @SubCommand.AsBase(name = "roleperm", alias = "roleperms")
+    public static class RolePerm extends GuildCommand {
         @Override
         public void run(GuildCommandEvent event) {
             throw new CommandArgumentException();
         }
 
-        @Override
-        public @NotNull CommandPerm commandPerm() {
-            return CommandPerm.BOT_ADMIN;
-        }
-
-        @Override
-        public @NotNull String description() {
-            return "Role Permission Management";
-        }
-
-        private static class set implements GuildCommand {
-            @Override
-            public @NotNull String name() {
-                return "set";
-            }
+        @SubCommand(RolePerm.class)
+        @CommandOptions(
+            name = "set",
+            description = "Sets a Roles Bot Permission",
+            usage = "<role> <level>"
+        )
+        @Checks.Permissions.Guild(net.dv8tion.jda.api.Permission.MANAGE_ROLES)
+        public static class set extends GuildCommand {
 
             @Override
             public void run(GuildCommandEvent event) {
@@ -257,29 +176,16 @@ public class Permission implements GuildCommand {
                 embedReply(event, null, "Set `[%d] %s` to %s", cp.raw(), cp.toString(),
                     r.getAsMention()).queue();
             }
-
-            @Override
-            public @NotNull CommandPerm commandPerm() {
-                return CommandPerm.BOT_ADMIN;
-            }
-
-            @Override
-            public @NotNull String usage() {
-                return "<role> <level>";
-            }
-
-            @Override
-            public @NotNull String description() {
-                return "Adds Bot Permissions to a Role";
-            }
         }
 
-        private static class Remove implements GuildCommand {
-            @Override
-            public @NotNull String name() {
-                return "remove";
-            }
-
+        @SubCommand(RolePerm.class)
+        @CommandOptions(
+            name = "remove",
+            description = "Removes a Roles Bot Permission",
+            usage = "<role>",
+            alias = {"rm", "delete", "del"}
+        )
+        public static class Remove extends GuildCommand {
             @Override
             public void run(GuildCommandEvent event) {
                 Check.check(!event.getArgs().isEmpty(), CommandArgumentException::new);
@@ -293,29 +199,14 @@ public class Permission implements GuildCommand {
 
                 embedReply(event, (String) null, "Removed Role Permission from %s", r.getAsMention()).queue();
             }
-
-            @Override
-            public @NotNull CommandPerm commandPerm() {
-                return CommandPerm.BOT_ADMIN;
-            }
-
-            @Override
-            public @NotNull String usage() {
-                return "<role>";
-            }
-
-            @Override
-            public @NotNull String description() {
-                return "Remove Bot Permissions from a Role";
-            }
         }
 
-        private static class list implements GuildCommand {
-            @Override
-            public @NotNull String name() {
-                return "list";
-            }
-
+        @SubCommand(RolePerm.class)
+        @CommandOptions(
+            name = "list",
+            description = "Lists all roles with special bot role permissions"
+        )
+        public static class list extends GuildCommand {
             @Override
             public void run(GuildCommandEvent event) {
                 Check.check(event.getArgs().isEmpty(), CommandArgumentException::new);
@@ -339,16 +230,6 @@ public class Permission implements GuildCommand {
                 Check.check(!list.isEmpty(), () -> new ReplyError("No bot role permission overrides"));
 
                 event.getChannel().sendMessage(eb.build()).queue();
-            }
-
-            @Override
-            public @NotNull CommandPerm commandPerm() {
-                return CommandPerm.BOT_ADMIN;
-            }
-
-            @Override
-            public @NotNull String description() {
-                return "Lists all roles with special bot role permissions";
             }
         }
     }

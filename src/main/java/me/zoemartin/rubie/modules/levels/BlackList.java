@@ -1,73 +1,41 @@
 package me.zoemartin.rubie.modules.levels;
 
-import me.zoemartin.rubie.Bot;
 import me.zoemartin.rubie.core.CommandPerm;
 import me.zoemartin.rubie.core.GuildCommandEvent;
+import me.zoemartin.rubie.core.annotations.*;
 import me.zoemartin.rubie.core.exceptions.CommandArgumentException;
-import me.zoemartin.rubie.core.interfaces.Command;
 import me.zoemartin.rubie.core.interfaces.GuildCommand;
 import me.zoemartin.rubie.modules.pagedEmbeds.PageListener;
 import me.zoemartin.rubie.modules.pagedEmbeds.PagedEmbed;
 import me.zoemartin.rubie.core.util.*;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.*;
-import org.jetbrains.annotations.NotNull;
 
-import java.time.Duration;
-import java.time.Instant;
 import java.util.*;
-import java.util.function.ToIntFunction;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-class BlackList implements GuildCommand {
-
-    @Override
-    public @NotNull String name() {
-        return "blacklist";
-    }
-
-    @Override
-    public @NotNull Set<Command> subCommands() {
-        return Set.of(new list(), new Channel(), new role());
-    }
-
-    @Override
-    public @NotNull String regex() {
-        return "bl|blacklist";
-    }
-
+@SubCommand(Config.class)
+@CommandOptions(
+    name = "blacklist",
+    description = "Blacklist Config",
+    perm = CommandPerm.BOT_ADMIN,
+    alias = "bl"
+)
+class BlackList extends GuildCommand {
     @Override
     public void run(GuildCommandEvent event) {
         throw new CommandArgumentException();
     }
 
-    @Override
-    public @NotNull CommandPerm commandPerm() {
-        return CommandPerm.BOT_ADMIN;
-    }
-
-    @Override
-    public @NotNull String usage() {
-        return "help";
-    }
-
-    @Override
-    public @NotNull String description() {
-        return "Blacklist config";
-    }
-
-    private static class list implements GuildCommand {
-        @Override
-        public @NotNull String name() {
-            return "list";
-        }
-
-        @Override
-        public @NotNull String regex() {
-            return "l|list";
-        }
-
+    @SubCommand(BlackList.class)
+    @CommandOptions(
+        name = "list",
+        description = "List all blacklistings",
+        perm = CommandPerm.BOT_ADMIN,
+        alias = "l"
+    )
+    private static class list extends GuildCommand {
         @SuppressWarnings("ConstantConditions")
         @Override
         public void run(GuildCommandEvent event) {
@@ -85,40 +53,21 @@ class BlackList implements GuildCommand {
                                                                                     g.getRoleById(s).getAsMention()),
                     channels.stream().filter(s -> !s.isEmpty()).map(s -> g.getTextChannelById(s) == null ? s :
                                                                              g.getTextChannelById(s).getAsMention()))
-                    .map(s -> String.format("%s\n", s)).collect(Collectors.toList())),
-                event.getChannel(), event.getUser()
-            );
+                    .map(s -> String.format("%s\n", s)).collect(Collectors.toList())), event);
 
             PageListener.add(p);
         }
-
-        @Override
-        public @NotNull CommandPerm commandPerm() {
-            return CommandPerm.BOT_ADMIN;
-        }
-
-        @Override
-        public @NotNull String description() {
-            return "Lists all blacklistings";
-        }
     }
 
-    private static class Channel implements GuildCommand {
-        @Override
-        public @NotNull Set<Command> subCommands() {
-            return Set.of(new Channel.Remove());
-        }
-
-        @Override
-        public @NotNull String name() {
-            return "channel";
-        }
-
-        @Override
-        public @NotNull String regex() {
-            return "c|channel";
-        }
-
+    @SubCommand(BlackList.class)
+    @CommandOptions(
+        name = "channel",
+        description = "Blacklist a channel",
+        usage = "<channel...>",
+        perm = CommandPerm.BOT_ADMIN,
+        alias = "c"
+    )
+    private static class Channel extends GuildCommand {
         @Override
         public void run(GuildCommandEvent event) {
             Check.check(!event.getArgs().isEmpty(), CommandArgumentException::new);
@@ -134,38 +83,20 @@ class BlackList implements GuildCommand {
             PagedEmbed p = new PagedEmbed(EmbedUtil.pagedDescription(
                 new EmbedBuilder().setTitle("Blacklisted the following channels: " + channels.size()).build(),
                 channels.stream().map(c -> String.format("%s\n", c.getAsMention())).collect(Collectors.toList())),
-                event.getChannel(), event.getUser());
+                event);
 
             PageListener.add(p);
         }
 
-        @Override
-        public @NotNull CommandPerm commandPerm() {
-            return CommandPerm.BOT_ADMIN;
-        }
-
-        @Override
-        public @NotNull String usage() {
-            return "<channel...>";
-        }
-
-        @Override
-        public @NotNull String description() {
-            return "Blacklist a channel";
-        }
-
-        private static class Remove implements GuildCommand {
-
-            @Override
-            public @NotNull String name() {
-                return "remove";
-            }
-
-            @Override
-            public @NotNull String regex() {
-                return "rm|remove";
-            }
-
+        @SubCommand(Channel.class)
+        @CommandOptions(
+            name = "remove",
+            description = "Removes a blacklisted channel",
+            usage = "<channel>",
+            perm = CommandPerm.BOT_ADMIN,
+            alias = "rm"
+        )
+        private static class Remove extends GuildCommand {
             @Override
             public void run(GuildCommandEvent event) {
                 Check.check(!event.getArgs().isEmpty(), CommandArgumentException::new);
@@ -180,40 +111,18 @@ class BlackList implements GuildCommand {
                 embedReply(event, "Level Blacklist", "Unblacklisted %s",
                     c.getAsMention()).queue();
             }
-
-            @Override
-            public @NotNull CommandPerm commandPerm() {
-                return CommandPerm.BOT_ADMIN;
-            }
-
-            @Override
-            public @NotNull String usage() {
-                return "<channel>";
-            }
-
-            @Override
-            public @NotNull String description() {
-                return "Removes a blacklisted channel";
-            }
         }
     }
 
-    private static class role implements GuildCommand {
-        @Override
-        public @NotNull Set<Command> subCommands() {
-            return Set.of(new role.Remove());
-        }
-
-        @Override
-        public @NotNull String name() {
-            return "role";
-        }
-
-        @Override
-        public @NotNull String regex() {
-            return "r|role";
-        }
-
+    @SubCommand(BlackList.class)
+    @CommandOptions(
+        name = "role",
+        description = "Blacklist a role",
+        usage = "<role>",
+        perm = CommandPerm.BOT_ADMIN,
+        alias = "r"
+    )
+    private static class role extends GuildCommand {
         @Override
         public void run(GuildCommandEvent event) {
             Check.check(!event.getArgs().isEmpty(), CommandArgumentException::new);
@@ -229,33 +138,15 @@ class BlackList implements GuildCommand {
                 r.getAsMention()).queue();
         }
 
-        @Override
-        public @NotNull CommandPerm commandPerm() {
-            return CommandPerm.BOT_ADMIN;
-        }
-
-        @Override
-        public @NotNull String usage() {
-            return "<role>";
-        }
-
-        @Override
-        public @NotNull String description() {
-            return "Blacklist a channel";
-        }
-
-        private static class Remove implements GuildCommand {
-
-            @Override
-            public @NotNull String name() {
-                return "remove";
-            }
-
-            @Override
-            public @NotNull String regex() {
-                return "rm|remove";
-            }
-
+        @SubCommand(role.class)
+        @CommandOptions(
+            name = "remove",
+            description = "Removes a blacklisted role",
+            usage = "<role>",
+            perm = CommandPerm.BOT_ADMIN,
+            alias = "rm"
+        )
+        private static class Remove extends GuildCommand {
             @Override
             public void run(GuildCommandEvent event) {
                 Check.check(!event.getArgs().isEmpty(), CommandArgumentException::new);
@@ -269,21 +160,6 @@ class BlackList implements GuildCommand {
                 event.addCheckmark();
                 embedReply(event, "Level Blacklist", "Unblacklisted %s",
                     r.getAsMention()).queue();
-            }
-
-            @Override
-            public @NotNull CommandPerm commandPerm() {
-                return CommandPerm.BOT_ADMIN;
-            }
-
-            @Override
-            public @NotNull String usage() {
-                return "<role>";
-            }
-
-            @Override
-            public @NotNull String description() {
-                return "Removes a blacklisted role";
             }
         }
     }

@@ -5,8 +5,8 @@ import com.google.gson.reflect.TypeToken;
 import me.zoemartin.rubie.Bot;
 import me.zoemartin.rubie.core.CommandPerm;
 import me.zoemartin.rubie.core.GuildCommandEvent;
+import me.zoemartin.rubie.core.annotations.*;
 import me.zoemartin.rubie.core.exceptions.*;
-import me.zoemartin.rubie.core.interfaces.Command;
 import me.zoemartin.rubie.core.interfaces.GuildCommand;
 import me.zoemartin.rubie.core.util.*;
 import me.zoemartin.rubie.modules.pagedEmbeds.PageListener;
@@ -14,7 +14,6 @@ import me.zoemartin.rubie.modules.pagedEmbeds.PagedEmbed;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.*;
 import org.hibernate.Session;
-import org.jetbrains.annotations.NotNull;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.format.DateTimeFormat;
@@ -29,17 +28,15 @@ import java.util.*;
 import java.util.concurrent.*;
 import java.util.stream.Collectors;
 
-public class Warn implements GuildCommand {
-    @Override
-    public @NotNull Set<Command> subCommands() {
-        return Set.of(new list(), new Remove(), new BulkImportFile());
-    }
-
-    @Override
-    public @NotNull String name() {
-        return "warn";
-    }
-
+@Disabled
+@Command
+@CommandOptions(
+    name = "warn",
+    description = "Warn a user",
+    usage = "<user> <reason>",
+    perm = CommandPerm.BOT_MODERATOR
+)
+public class Warn extends GuildCommand {
     @Override
     public void run(GuildCommandEvent event) {
         Check.check(event.getArgs().size() > 1 && Parser.User.isParsable(event.getArgs().get(0)),
@@ -69,28 +66,14 @@ public class Warn implements GuildCommand {
         event.getChannel().sendMessage(eb.build()).queue();
     }
 
-    @Override
-    public @NotNull CommandPerm commandPerm() {
-        return CommandPerm.BOT_MODERATOR;
-    }
-
-    @Override
-    public @NotNull String usage() {
-        return "<user> <reason>";
-    }
-
-    @Override
-    public @NotNull String description() {
-        return "Warn a user";
-    }
-
-    private static class list implements GuildCommand {
-
-        @Override
-        public @NotNull String name() {
-            return "list";
-        }
-
+    @SubCommand(Warn.class)
+    @CommandOptions(
+        name = "list",
+        description = "Lists a users warns",
+        usage = "<user>",
+        perm = CommandPerm.BOT_MODERATOR
+    )
+    private static class list extends GuildCommand {
         @Override
         public void run(GuildCommandEvent event) {
             Check.check(event.getArgs().size() == 1 && Parser.User.isParsable(event.getArgs().get(0)), CommandArgumentException::new);
@@ -126,31 +109,18 @@ public class Warn implements GuildCommand {
                 }).collect(Collectors.toList())
             );
 
-            PageListener.add(new PagedEmbed(pages, event.getChannel(), event.getUser()));
-        }
-
-        @Override
-        public @NotNull CommandPerm commandPerm() {
-            return CommandPerm.BOT_MODERATOR;
-        }
-
-        @Override
-        public @NotNull String usage() {
-            return "<user>";
-        }
-
-        @Override
-        public @NotNull String description() {
-            return "Lists a users warns";
+            PageListener.add(new PagedEmbed(pages, event));
         }
     }
 
-    private static class Remove implements GuildCommand {
-        @Override
-        public @NotNull String name() {
-            return "remove";
-        }
-
+    @SubCommand(Warn.class)
+    @CommandOptions(
+        name = "remove",
+        description = "Remove a warning",
+        usage = "<uuid>",
+        perm = CommandPerm.BOT_MODERATOR
+    )
+    private static class Remove extends GuildCommand {
         @Override
         public void run(GuildCommandEvent event) {
             Check.check(event.getArgs().size() == 1, CommandArgumentException::new);
@@ -183,30 +153,16 @@ public class Warn implements GuildCommand {
 
             event.getChannel().sendMessage(eb.build()).queue();
         }
-
-        @Override
-        public @NotNull CommandPerm commandPerm() {
-            return CommandPerm.BOT_MANAGER;
-        }
-
-        @Override
-        public @NotNull String usage() {
-            return "<uuid>";
-        }
-
-        @Override
-        public @NotNull String description() {
-            return "Remove a warning";
-        }
     }
 
-    private static class BulkImportFile implements GuildCommand {
+    @SubCommand(Warn.class)
+    @CommandOptions(
+        name = "import",
+        description = "Bulk import user warns from an attachment",
+        perm = CommandPerm.BOT_ADMIN
+    )
+    private static class BulkImportFile extends GuildCommand {
         private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormat.forPattern("yyyy-MM-dd'T'HH:mm:ss.SSSSSS");
-
-        @Override
-        public @NotNull String name() {
-            return "import";
-        }
 
         @Override
         public void run(GuildCommandEvent event) {
@@ -238,8 +194,8 @@ public class Warn implements GuildCommand {
             String guildId = event.getGuild().getId();
             List<ModLogEntity> modlogs = toImport.stream().filter(e -> e.getAction().equals("warn"))
                                              .map(e ->
-                                                     new ModLogEntity(guildId, e.getOffender_id(), e.getModerator_id(), e.getReason(),
-                                                         DateTime.parse(e.getTimestamp(), TIME_FORMATTER).getMillis(), ModLogEntity.ModLogType.WARN)
+                                                      new ModLogEntity(guildId, e.getOffender_id(), e.getModerator_id(), e.getReason(),
+                                                          DateTime.parse(e.getTimestamp(), TIME_FORMATTER).getMillis(), ModLogEntity.ModLogType.WARN)
 
                                              ).filter(e -> existing.stream().noneMatch(e::equals))
                                              .collect(Collectors.toList());
@@ -252,16 +208,6 @@ public class Warn implements GuildCommand {
             eb.setDescription("Imported warns:\n" + String.join("\n", users));
             m.delete().complete();
             event.getChannel().sendMessage(eb.build()).queue();
-        }
-
-        @Override
-        public @NotNull CommandPerm commandPerm() {
-            return CommandPerm.BOT_ADMIN;
-        }
-
-        @Override
-        public @NotNull String description() {
-            return "Bulk Import Warns. These warns are added silently. Attach a text file with one Line for each warn.";
         }
     }
 }

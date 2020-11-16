@@ -1,11 +1,11 @@
 package me.zoemartin.rubie.modules.baseCommands;
 
 import me.zoemartin.rubie.Bot;
-import me.zoemartin.rubie.core.*;
-import me.zoemartin.rubie.core.interfaces.Command;
-import net.dv8tion.jda.api.*;
-import net.dv8tion.jda.api.entities.*;
-import org.jetbrains.annotations.NotNull;
+import me.zoemartin.rubie.core.CommandEvent;
+import me.zoemartin.rubie.core.annotations.Command;
+import me.zoemartin.rubie.core.annotations.CommandOptions;
+import me.zoemartin.rubie.core.interfaces.AbstractCommand;
+import net.dv8tion.jda.api.EmbedBuilder;
 import org.joda.time.DateTime;
 import org.joda.time.Duration;
 import org.joda.time.format.PeriodFormatter;
@@ -13,25 +13,21 @@ import org.joda.time.format.PeriodFormatterBuilder;
 
 import java.io.IOException;
 import java.net.URL;
-import java.util.*;
+import java.util.Enumeration;
 import java.util.jar.Manifest;
 
-public class About implements Command {
+@Command
+@CommandOptions(
+    name = "about",
+    description = "Shows info about the bot",
+    alias = "botinfo"
+)
+public class About extends AbstractCommand {
     private String JDA_VERSION = null;
     private static DateTime STARTUP;
 
     public About() {
         STARTUP = DateTime.now();
-    }
-
-    @Override
-    public @NotNull String name() {
-        return "about";
-    }
-
-    @Override
-    public @NotNull String regex() {
-        return "about|botinfo";
     }
 
     @Override
@@ -69,21 +65,11 @@ public class About implements Command {
         event.getChannel().sendMessage(eb.build()).queue();
     }
 
-    @Override
-    public @NotNull CommandPerm commandPerm() {
-        return CommandPerm.EVERYONE;
-    }
-
-    @Override
-    public @NotNull String description() {
-        return "Shows info about the bot";
-    }
-
     private void findVersion() {
         Enumeration<URL> resources;
         try {
             resources = getClass().getClassLoader()
-                                             .getResources("META-INF/MANIFEST.MF");
+                            .getResources("META-INF/MANIFEST.MF");
             while (resources.hasMoreElements()) {
                 Manifest manifest = new Manifest(resources.nextElement().openStream());
                 JDA_VERSION = manifest.getMainAttributes().getValue("jda-version");

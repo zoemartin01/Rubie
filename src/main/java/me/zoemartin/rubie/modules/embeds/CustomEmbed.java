@@ -1,30 +1,28 @@
 package me.zoemartin.rubie.modules.embeds;
 
-import club.minnced.discord.webhook.WebhookClient;
-import club.minnced.discord.webhook.WebhookClientBuilder;
-import club.minnced.discord.webhook.send.WebhookEmbed;
-import club.minnced.discord.webhook.send.WebhookMessageBuilder;
 import com.google.gson.JsonSyntaxException;
 import me.zoemartin.rubie.core.*;
+import me.zoemartin.rubie.core.annotations.*;
 import me.zoemartin.rubie.core.exceptions.*;
-import me.zoemartin.rubie.core.interfaces.Command;
 import me.zoemartin.rubie.core.interfaces.GuildCommand;
 import me.zoemartin.rubie.core.util.Check;
 import me.zoemartin.rubie.core.util.Parser;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.*;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class CustomEmbed implements GuildCommand {
-    @NotNull
-    @Override
-    public Set<Command> subCommands() {
-        return Set.of(new Bulk());
-    }
-
+@Command
+@CommandOptions(
+    name = "customembed",
+    description = "Creates a custom embed",
+    usage = "[channel] <json|url>",
+    perm = CommandPerm.BOT_MANAGER,
+    alias = "cembed"
+)
+@Checks.Permissions.Channel({Permission.MESSAGE_WRITE, Permission.MESSAGE_READ})
+public class CustomEmbed extends GuildCommand {
     @Override
     public void run(GuildCommandEvent event) {
         List<String> args = event.getArgs();
@@ -37,7 +35,7 @@ public class CustomEmbed implements GuildCommand {
             TextChannel tc = Parser.Channel.getTextChannel(event.getGuild(), cRef);
 
             if (tc == null) {
-                c = event.getChannel();
+                c = event.getTextChannel();
                 if (args.get(0).matches(
                     "(http(s)?://.)?(www\\.)?[-a-zA-Z0-9@:%._+~#=]{2,256}\\.[a-z]{2,6}\\b([-a-zA-Z0-9@:%_+.~#?&/=]*)")) {
 
@@ -58,7 +56,7 @@ public class CustomEmbed implements GuildCommand {
                 }
             }
         } else {
-            c = event.getChannel();
+            c = event.getTextChannel();
             if (args.get(0).matches(
                 "(http(s)?://.)?(www\\.)?[-a-zA-Z0-9@:%._+~#=]{2,256}\\.[a-z]{2,6}\\b([-a-zA-Z0-9@:%_+.~#?&/=]*)")) {
 
@@ -90,37 +88,16 @@ public class CustomEmbed implements GuildCommand {
         event.addCheckmark();
     }
 
-    @NotNull
-    @Override
-    public String regex() {
-        return "customembed|cembed";
-    }
-
-    @NotNull
-    @Override
-    public String name() {
-        return "customembed";
-    }
-
-    @NotNull
-    @Override
-    public CommandPerm commandPerm() {
-        return CommandPerm.BOT_MANAGER;
-    }
-
-    @NotNull
-    @Override
-    public String usage() {
-        return "[channel] <json|url>";
-    }
-
-    @NotNull
-    @Override
-    public String description() {
-        return "Creates a custom embed";
-    }
-
-    private static class Bulk implements GuildCommand {
+    @SubCommand(CustomEmbed.class)
+    @CommandOptions(
+        name = "bulk",
+        description = "Send multiple custom embeds at once",
+        usage = "<channel> <urls...>",
+        perm = CommandPerm.BOT_ADMIN
+    )
+    @Checks.Permissions.Guild(Permission.MESSAGE_MANAGE)
+    @Checks.Permissions.Channel({Permission.MESSAGE_WRITE, Permission.MESSAGE_READ, Permission.MANAGE_CHANNEL})
+    private static class Bulk extends GuildCommand {
 
         @Override
         public void run(GuildCommandEvent event) {
@@ -155,36 +132,6 @@ public class CustomEmbed implements GuildCommand {
 
             embeds.forEach(embed -> c.sendMessage(embed.toDiscordEmbed()).queue());
             event.addCheckmark();
-        }
-
-        @NotNull
-        @Override
-        public String name() {
-            return "bulk";
-        }
-
-        @NotNull
-        @Override
-        public CommandPerm commandPerm() {
-            return CommandPerm.BOT_ADMIN;
-        }
-
-        @NotNull
-        @Override
-        public Collection<Permission> required() {
-            return EnumSet.of(Permission.MANAGE_CHANNEL);
-        }
-
-        @NotNull
-        @Override
-        public String usage() {
-            return "<channel> <urls...>";
-        }
-
-        @NotNull
-        @Override
-        public String description() {
-            return "Send Many custom Embeds at once";
         }
     }
 }

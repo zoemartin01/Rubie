@@ -1,6 +1,6 @@
 package me.zoemartin.rubie.modules.slf4jlogs;
 
-import me.zoemartin.rubie.core.LoadModule;
+import me.zoemartin.rubie.core.annotations.LoadModule;
 import me.zoemartin.rubie.core.interfaces.Module;
 
 @LoadModule

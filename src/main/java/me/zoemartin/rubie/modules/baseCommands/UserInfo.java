@@ -3,30 +3,27 @@ package me.zoemartin.rubie.modules.baseCommands;
 import me.zoemartin.rubie.Bot;
 import me.zoemartin.rubie.core.CommandPerm;
 import me.zoemartin.rubie.core.GuildCommandEvent;
+import me.zoemartin.rubie.core.annotations.Command;
+import me.zoemartin.rubie.core.annotations.CommandOptions;
 import me.zoemartin.rubie.core.interfaces.GuildCommand;
 import me.zoemartin.rubie.core.util.*;
 import me.zoemartin.rubie.modules.commandProcessing.*;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.*;
-import org.jetbrains.annotations.NotNull;
 
 import java.sql.Timestamp;
 import java.time.*;
 import java.time.temporal.ChronoUnit;
-import java.util.List;
 import java.util.stream.Collectors;
 
-public class UserInfo implements GuildCommand {
-    @Override
-    public @NotNull String name() {
-        return "userinfo";
-    }
-
-    @Override
-    public @NotNull String regex() {
-        return "i|userinfo|info|profile";
-    }
-
+@Command
+@CommandOptions(
+    name = "userinfo",
+    description = "Shows information about a User",
+    usage = "[user]",
+    alias = {"i", "info", "profile"}
+)
+public class UserInfo extends GuildCommand {
     @Override
     public void run(GuildCommandEvent event) {
         User u = null;
@@ -96,10 +93,10 @@ public class UserInfo implements GuildCommand {
                     Timestamp.valueOf(member.getTimeJoined().atZoneSameInstant(ZoneOffset.UTC).toLocalDateTime())
                         + " UTC", true)
                 .addField("Joined Server", TimeUtils.dateAgo(member.getTimeJoined(), OffsetDateTime.now())
-                                                   + " ago\n"
-                                                   + ChronoUnit.DAYS.between(event.getGuild().getTimeCreated(),
+                                               + " ago\n"
+                                               + ChronoUnit.DAYS.between(event.getGuild().getTimeCreated(),
                     member.getTimeJoined())
-                                                   + " days after the server was created", false);
+                                               + " days after the server was created", false);
 
             String roles = member.getRoles().stream().map(Role::getAsMention).collect(Collectors.joining(", "));
             eb.addField(String.format("Roles (%s)", member.getRoles().size()),
@@ -107,20 +104,5 @@ public class UserInfo implements GuildCommand {
 
         }
         event.getChannel().sendMessage(eb.build()).queue();
-    }
-
-    @Override
-    public @NotNull CommandPerm commandPerm() {
-        return CommandPerm.EVERYONE;
-    }
-
-    @Override
-    public @NotNull String usage() {
-        return "[user]";
-    }
-
-    @Override
-    public @NotNull String description() {
-        return "Gives Information about a user";
     }
 }

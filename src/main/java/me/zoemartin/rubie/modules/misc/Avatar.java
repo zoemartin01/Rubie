@@ -1,29 +1,28 @@
 package me.zoemartin.rubie.modules.misc;
 
 import de.androidpit.colorthief.ColorThief;
-import me.zoemartin.rubie.Bot;
-import me.zoemartin.rubie.core.CommandPerm;
 import me.zoemartin.rubie.core.GuildCommandEvent;
+import me.zoemartin.rubie.core.annotations.Command;
+import me.zoemartin.rubie.core.annotations.CommandOptions;
 import me.zoemartin.rubie.core.interfaces.GuildCommand;
 import me.zoemartin.rubie.core.util.CacheUtils;
 import me.zoemartin.rubie.core.util.Parser;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.*;
-import org.jetbrains.annotations.NotNull;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
 import java.io.IOException;
 import java.net.URL;
-import java.util.List;
 import java.util.Objects;
 
-public class Avatar implements GuildCommand {
-    @Override
-    public @NotNull String name() {
-        return "avatar";
-    }
-
+@Command
+@CommandOptions(
+    name = "avatar",
+    description = "Shows a user's avatar",
+    usage = "[user]"
+)
+public class Avatar extends GuildCommand {
     @Override
     public void run(GuildCommandEvent event) {
         User u = null;
@@ -56,20 +55,5 @@ public class Avatar implements GuildCommand {
         }
 
         event.getChannel().sendMessage(eb.build()).queue();
-    }
-
-    @Override
-    public @NotNull CommandPerm commandPerm() {
-        return CommandPerm.EVERYONE;
-    }
-
-    @Override
-    public @NotNull String usage() {
-        return "[user]";
-    }
-
-    @Override
-    public @NotNull String description() {
-        return "Shows the avatar for a user";
     }
 }

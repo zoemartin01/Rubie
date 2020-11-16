@@ -2,14 +2,23 @@ package me.zoemartin.rubie.modules.hatchery;
 
 import me.zoemartin.rubie.core.CommandPerm;
 import me.zoemartin.rubie.core.GuildCommandEvent;
+import me.zoemartin.rubie.core.annotations.Command;
+import me.zoemartin.rubie.core.annotations.CommandOptions;
 import me.zoemartin.rubie.core.interfaces.GuildCommand;
 import me.zoemartin.rubie.core.util.Check;
+import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.*;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 
-public class MVCRefresh implements GuildCommand {
+@Command
+@CommandOptions(
+    name = "mvcrefresh",
+    description = "Refreshes MVC",
+    perm = CommandPerm.BOT_MANAGER,
+    botPerms = Permission.MANAGE_ROLES
+)
+public class MVCRefresh extends GuildCommand {
     @Override
     public void run(GuildCommandEvent event) {
         Guild g = event.getGuild();
@@ -28,23 +37,5 @@ public class MVCRefresh implements GuildCommand {
 
         embedReply(event, "MVC Refresh", "Refreshed MVC! Previous mvc count was %d",
             mvcMembers.size()).queue();
-    }
-
-    @NotNull
-    @Override
-    public String name() {
-        return "mvcrefresh";
-    }
-
-    @NotNull
-    @Override
-    public CommandPerm commandPerm() {
-        return CommandPerm.BOT_MANAGER;
-    }
-
-    @NotNull
-    @Override
-    public String description() {
-        return "Refreshes MVC";
     }
 }

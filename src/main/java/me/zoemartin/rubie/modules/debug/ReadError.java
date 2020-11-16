@@ -1,29 +1,31 @@
 package me.zoemartin.rubie.modules.debug;
 
-import me.zoemartin.rubie.Bot;
 import me.zoemartin.rubie.core.CommandEvent;
 import me.zoemartin.rubie.core.CommandPerm;
+import me.zoemartin.rubie.core.annotations.Command;
+import me.zoemartin.rubie.core.annotations.CommandOptions;
 import me.zoemartin.rubie.core.exceptions.CommandArgumentException;
 import me.zoemartin.rubie.core.exceptions.ReplyError;
-import me.zoemartin.rubie.core.interfaces.Command;
-import me.zoemartin.rubie.core.interfaces.GuildCommand;
+import me.zoemartin.rubie.core.interfaces.AbstractCommand;
 import me.zoemartin.rubie.core.util.Check;
 import me.zoemartin.rubie.core.util.DatabaseUtil;
 import me.zoemartin.rubie.modules.commandProcessing.LoggedError;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.*;
 import org.hibernate.Session;
-import org.jetbrains.annotations.NotNull;
 
 import javax.persistence.criteria.*;
 import java.util.List;
 import java.util.UUID;
 
-public class ReadError implements Command {
-    @Override
-    public @NotNull String name() {
-        return "readerror";
-    }
+@Command
+@CommandOptions(
+    name = "readerror",
+    description = "Output information about a logged Error",
+    usage = "<uuid>",
+    perm = CommandPerm.OWNER
+)
+public class ReadError extends AbstractCommand {
 
     @Override
     public void run(CommandEvent event) {
@@ -55,20 +57,5 @@ public class ReadError implements Command {
                               .addField("Invoked by", error.getInvoked_message(), true);
 
         event.getChannel().sendMessage(eb.build()).queue();
-    }
-
-    @Override
-    public @NotNull CommandPerm commandPerm() {
-        return CommandPerm.OWNER;
-    }
-
-    @Override
-    public @NotNull String usage() {
-        return "<uuid>";
-    }
-
-    @Override
-    public @NotNull String description() {
-        return "read an error";
     }
 }

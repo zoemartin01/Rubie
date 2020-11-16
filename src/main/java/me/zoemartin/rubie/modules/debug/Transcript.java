@@ -3,10 +3,11 @@ package me.zoemartin.rubie.modules.debug;
 import com.google.gson.Gson;
 import me.zoemartin.rubie.core.CommandPerm;
 import me.zoemartin.rubie.core.GuildCommandEvent;
+import me.zoemartin.rubie.core.annotations.Command;
+import me.zoemartin.rubie.core.annotations.CommandOptions;
 import me.zoemartin.rubie.core.interfaces.GuildCommand;
 import me.zoemartin.rubie.core.util.Parser;
 import net.dv8tion.jda.api.entities.*;
-import org.jetbrains.annotations.NotNull;
 
 import java.io.*;
 import java.nio.file.Files;
@@ -18,7 +19,14 @@ import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
-public class Transcript implements GuildCommand {
+@Command
+@CommandOptions(
+    name = "transcript",
+    description = "Create a channel transcript",
+    usage = "[channel]",
+    perm = CommandPerm.OWNER
+)
+public class Transcript extends GuildCommand {
     @Override
     public void run(GuildCommandEvent event) {
         Instant start = Instant.now();
@@ -109,24 +117,6 @@ public class Transcript implements GuildCommand {
             Duration.between(start, Instant.now()).toSeconds()
         ).complete();
         se.shutdown();
-    }
-
-    @NotNull
-    @Override
-    public String name() {
-        return "transcript";
-    }
-
-    @NotNull
-    @Override
-    public CommandPerm commandPerm() {
-        return CommandPerm.OWNER;
-    }
-
-    @NotNull
-    @Override
-    public String description() {
-        return "Create a channel transcript";
     }
 
     private static class SerializableMessage implements Serializable {

@@ -12,12 +12,10 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
-public interface GuildCommand extends Command {
+public abstract class GuildCommand extends AbstractCommand {
     @Deprecated
-    default MessageAction embedReply(@NotNull Message original, @NotNull MessageChannel channel,
+    protected MessageAction embedReply(@NotNull Message original, @NotNull MessageChannel channel,
                                      @Nullable String title, @NotNull String replyFormat, @Nullable Object... args) {
         EmbedBuilder eb = new EmbedBuilder();
         eb.setColor(original.getGuild().getSelfMember().getColor());
@@ -26,7 +24,7 @@ public interface GuildCommand extends Command {
         return channel.sendMessage(eb.build());
     }
 
-    default MessageAction embedReply(GuildCommandEvent event, @NotNull MessageChannel channel,
+    protected MessageAction embedReply(GuildCommandEvent event, @NotNull MessageChannel channel,
                                      @Nullable String title, @NotNull String replyFormat, @Nullable Object... args) {
         EmbedBuilder eb = new EmbedBuilder();
         eb.setColor(event.getGuild().getSelfMember().getColor());
@@ -35,7 +33,7 @@ public interface GuildCommand extends Command {
         return channel.sendMessage(eb.build());
     }
 
-    default MessageAction embedReply(GuildCommandEvent event, @Nullable String title, @NotNull String replyFormat,
+    protected MessageAction embedReply(GuildCommandEvent event, @Nullable String title, @NotNull String replyFormat,
                                      @Nullable Object... args) {
         EmbedBuilder eb = new EmbedBuilder();
         eb.setColor(event.getGuild().getSelfMember().getColor());
@@ -45,7 +43,7 @@ public interface GuildCommand extends Command {
     }
 
     @Deprecated
-    default String lastArg(int expectedIndex, List<String> args, Message original) {
+    protected String lastArg(int expectedIndex, List<String> args, Message original) {
         if (args.size() == expectedIndex + 1) return args.get(expectedIndex);
 
         String orig = original.getContentRaw();
@@ -55,10 +53,10 @@ public interface GuildCommand extends Command {
         return MessageUtils.getArgsFrom(orig, args.get(expectedIndex));
     }
 
-    void run(GuildCommandEvent event);
+    public abstract void run(GuildCommandEvent event);
 
     @Override
-    default void run(CommandEvent event) {
+    public void run(CommandEvent event) {
         if (event instanceof GuildCommandEvent) {
             run((GuildCommandEvent) event);
         } else {
@@ -67,26 +65,26 @@ public interface GuildCommand extends Command {
     }
 
     @Deprecated
-    default void run(Member user, TextChannel channel, List<String> args, Message original, String invoked) {
+    public void run(Member user, TextChannel channel, List<String> args, Message original, String invoked) {
         run(new GuildCommandEvent(user, channel, original.getContentRaw(), original.getJDA(), args, List.of(invoked)));
     }
 
-    default void run(User user, MessageChannel channel, List<String> args, Message original, String invoked) {
+    public void run(User user, MessageChannel channel, List<String> args, Message original, String invoked) {
         run(original.getMember(), original.getTextChannel(), args, original, invoked);
     }
 
     @SuppressWarnings("ConstantConditions")
     @Deprecated
-    default void addCheckmark(Message message) {
+    protected void addCheckmark(Message message) {
         message.addReaction(Bot.getJDA().getEmoteById("762424762412040192")).queue();
     }
 
     @Deprecated
-    default void help(Member user, MessageChannel channel, List<String> args, Message original) {
+    public void help(Member user, MessageChannel channel, List<String> args, Message original) {
         throw new IllegalAccessError("Deprecated");
     }
 
-    default void help(GuildCommandEvent event) {
+    public void help(GuildCommandEvent event) {
         if (Help.getHelper() != null) Help.getHelper().send(event);
     }
 }

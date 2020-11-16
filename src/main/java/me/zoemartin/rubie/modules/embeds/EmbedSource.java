@@ -1,6 +1,8 @@
 package me.zoemartin.rubie.modules.embeds;
 
 import me.zoemartin.rubie.core.*;
+import me.zoemartin.rubie.core.annotations.Command;
+import me.zoemartin.rubie.core.annotations.CommandOptions;
 import me.zoemartin.rubie.core.exceptions.*;
 import me.zoemartin.rubie.core.interfaces.GuildCommand;
 import me.zoemartin.rubie.core.util.Check;
@@ -8,7 +10,6 @@ import me.zoemartin.rubie.core.util.Parser;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.*;
 import net.dv8tion.jda.api.exceptions.ErrorResponseException;
-import org.jetbrains.annotations.NotNull;
 import org.json.JSONObject;
 
 import java.io.IOException;
@@ -16,7 +17,14 @@ import java.net.URI;
 import java.net.http.*;
 import java.util.List;
 
-public class EmbedSource implements GuildCommand {
+@Command
+@CommandOptions(
+    name = "embedsource",
+    description = "Get an embeds source code",
+    usage = "<message id> [channel]",
+    perm = CommandPerm.BOT_USER
+)
+public class EmbedSource extends GuildCommand {
     @Override
     public void run(GuildCommandEvent event) {
         List<String> args = event.getArgs();
@@ -29,7 +37,7 @@ public class EmbedSource implements GuildCommand {
         TextChannel c;
 
         if (args.size() == 1) {
-            c = event.getChannel();
+            c = event.getTextChannel();
         } else {
             String cRef = args.get(1);
             c = Parser.Channel.getTextChannel(event.getGuild(), cRef);
@@ -57,38 +65,15 @@ public class EmbedSource implements GuildCommand {
                 } catch (IOException | InterruptedException e) {
                     throw new UnexpectedError();
                 }
-            } else embedReply(event, "Embed Source", embed.toJson().isEmpty() ? "%s" : "```%s```", embed.toJson()).queue();
+            } else
+                embedReply(event, "Embed Source", embed.toJson().isEmpty() ? "%s" : "```%s```", embed.toJson()).queue();
         });
-    }
-
-    @NotNull
-    @Override
-    public String name() {
-        return "embedsource";
-    }
-
-    @NotNull
-    @Override
-    public CommandPerm commandPerm() {
-        return CommandPerm.BOT_USER;
-    }
-
-    @NotNull
-    @Override
-    public String usage() {
-        return "<message id> [channel]";
-    }
-
-    @NotNull
-    @Override
-    public String description() {
-        return "Get an embeds source code";
     }
 
     public static String haste(String content) throws IOException, InterruptedException {
         final HttpClient client = HttpClient.newHttpClient();
         final HttpRequest request = HttpRequest.newBuilder(URI.create("https://hastebin.com/documents"))
-                                       .POST(HttpRequest.BodyPublishers.ofString(content)).build();
+                                        .POST(HttpRequest.BodyPublishers.ofString(content)).build();
 
         final HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
         final String responseContent = response.body();

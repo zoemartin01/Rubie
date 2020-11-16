@@ -2,23 +2,26 @@ package me.zoemartin.rubie.modules.baseCommands;
 
 import me.zoemartin.rubie.core.CommandPerm;
 import me.zoemartin.rubie.core.GuildCommandEvent;
+import me.zoemartin.rubie.core.annotations.Command;
+import me.zoemartin.rubie.core.annotations.CommandOptions;
 import me.zoemartin.rubie.core.exceptions.CommandArgumentException;
 import me.zoemartin.rubie.core.interfaces.GuildCommand;
 import me.zoemartin.rubie.core.util.*;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.*;
-import org.jetbrains.annotations.NotNull;
 
 import java.time.Instant;
 import java.time.OffsetDateTime;
-import java.util.List;
 
-public class RoleInfo implements GuildCommand {
-    @Override
-    public @NotNull String name() {
-        return "roleinfo";
-    }
-
+@Command
+@CommandOptions(
+    name = "roleinfo",
+    description = "Shows information about a Role",
+    usage = "<role>",
+    perm = CommandPerm.BOT_MODERATOR
+)
+public class RoleInfo extends GuildCommand {
+    // TODO: Refactor into ROLE Command
     @Override
     public void run(GuildCommandEvent event) {
         Check.check(!event.getArgs().isEmpty(), CommandArgumentException::new);
@@ -45,20 +48,5 @@ public class RoleInfo implements GuildCommand {
                 .setColor(role.getColor());
 
         event.getChannel().sendMessage(eb.build()).queue();
-    }
-
-    @Override
-    public @NotNull CommandPerm commandPerm() {
-        return CommandPerm.BOT_MODERATOR;
-    }
-
-    @Override
-    public @NotNull String usage() {
-        return "<@role>";
-    }
-
-    @Override
-    public @NotNull String description() {
-        return "Gives information about a role";
     }
 }

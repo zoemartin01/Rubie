@@ -2,14 +2,14 @@ package me.zoemartin.rubie.modules.debug;
 
 import me.zoemartin.rubie.core.CommandPerm;
 import me.zoemartin.rubie.core.GuildCommandEvent;
+import me.zoemartin.rubie.core.annotations.Command;
+import me.zoemartin.rubie.core.annotations.CommandOptions;
 import me.zoemartin.rubie.core.exceptions.CommandArgumentException;
-import me.zoemartin.rubie.core.interfaces.Command;
 import me.zoemartin.rubie.core.interfaces.GuildCommand;
 import me.zoemartin.rubie.core.util.Check;
 import me.zoemartin.rubie.core.util.Parser;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.*;
-import org.jetbrains.annotations.NotNull;
 
 import java.time.*;
 import java.time.temporal.ChronoUnit;
@@ -19,17 +19,14 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-public class Purge implements GuildCommand {
-    @Override
-    public @NotNull Set<Command> subCommands() {
-        return Collections.emptySet();
-    }
-
-    @Override
-    public @NotNull String name() {
-        return "purge";
-    }
-
+@Command
+@CommandOptions(
+    name = "purge",
+    description = "Purges the last sent messages in this channel",
+    usage = "<count>",
+    perm = CommandPerm.BOT_ADMIN
+)
+public class Purge extends GuildCommand {
     @Override
     public void run(GuildCommandEvent event) {
         List<String> args = event.getArgs();
@@ -73,7 +70,7 @@ public class Purge implements GuildCommand {
 
         event.deleteInvoking();
         Instant start = Instant.now();
-        msgs.forEach(messages -> event.getChannel().deleteMessages(messages).complete());
+        msgs.forEach(messages -> event.getTextChannel().deleteMessages(messages).complete());
         Instant end = Instant.now();
 
 
@@ -88,20 +85,5 @@ public class Purge implements GuildCommand {
         eb.setDescription(sb.toString());
 
         event.getChannel().sendMessage(eb.build()).complete().delete().queueAfter(5, TimeUnit.SECONDS);
-    }
-
-    @Override
-    public @NotNull CommandPerm commandPerm() {
-        return CommandPerm.BOT_ADMIN;
-    }
-
-    @Override
-    public @NotNull String usage() {
-        return "<count>";
-    }
-
-    @Override
-    public @NotNull String description() {
-        return "Purges the last sent messages in this channel";
     }
 }

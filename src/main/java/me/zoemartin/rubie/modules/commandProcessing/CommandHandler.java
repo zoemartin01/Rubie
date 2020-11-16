@@ -6,21 +6,15 @@ import me.zoemartin.rubie.core.exceptions.*;
 import me.zoemartin.rubie.core.interfaces.*;
 import me.zoemartin.rubie.core.managers.CommandManager;
 import me.zoemartin.rubie.core.util.*;
-import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.*;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
-import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent;
 
-import java.awt.*;
-import java.time.Instant;
 import java.util.*;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public class CommandHandler implements CommandProcessor {
     @Override
@@ -33,17 +27,17 @@ public class CommandHandler implements CommandProcessor {
         while (m.find())
             inputs.add(m.group(1).replace("\"", ""));
 
-        LinkedList<Command> commands = new LinkedList<>();
+        LinkedList<AbstractCommand> commands = new LinkedList<>();
         LinkedList<String> invoked = new LinkedList<>();
         inputs.forEach(s -> {
             if (commands.isEmpty()) {
-                Command cmd = CommandManager.getCommands().stream()
+                AbstractCommand cmd = CommandManager.getCommands().stream()
                                   .filter(c -> s.matches(c.regex().toLowerCase()))
                                   .findFirst().orElse(null);
                 commands.add(cmd);
                 if (cmd != null) invoked.add(s);
             } else if (commands.getLast() != null) {
-                Command cmd = commands.getLast().subCommands().stream()
+                AbstractCommand cmd = commands.getLast().subCommands().stream()
                                   .filter(sc -> s.matches(sc.regex().toLowerCase()))
                                   .findFirst().orElse(null);
                 if (cmd != null) {
@@ -57,7 +51,7 @@ public class CommandHandler implements CommandProcessor {
         if (commands.isEmpty() || commands.getLast() == null) return;
 
         int commandLevel = commands.size();
-        Command command = commands.getLast();
+        AbstractCommand command = commands.getLast();
 
         if (event.isFromGuild()) {
             Guild guild = event.getGuild();
@@ -75,6 +69,11 @@ public class CommandHandler implements CommandProcessor {
                             || command.required().stream().allMatch(member::hasPermission),
                 () -> new ConsoleError("Member '%s' doesn't have the required permission for Command '%s'",
                     member.getId(), command.name()));
+        } else {
+            Check.check(command.commandPerm() == CommandPerm.EVERYONE
+                            || command.commandPerm() == CommandPerm.BOT_USER
+                            || user.getId().equals(Bot.getOWNER()),
+                () -> new ReplyError("It looks like you dont have permissions for this command!"));
         }
 
         List<String> arguments;
@@ -85,22 +84,22 @@ public class CommandHandler implements CommandProcessor {
         try {
             //command.run(user, channel, Collections.unmodifiableList(arguments), event.getMessage(), inputs.get(commands.size() - 1));
             if (command instanceof GuildCommand) {
-                GuildCommandEvent e = new GuildCommandEvent(event.getMessage(), Collections.unmodifiableList(arguments), invoked);
-                ce = e;
+                GuildCommandEvent e = new GuildCommandEvent(event.getMessage(), arguments, invoked);
                 ((GuildCommand) command).run(e);
             } else {
-                CommandEvent e = new CommandEvent(event.getMessage(), Collections.unmodifiableList(arguments), invoked);
+                CommandEvent e = new CommandEvent(event.getMessage(), arguments, invoked);
                 command.run(e);
             }
         } catch (CommandArgumentException e) {
-            if (ce != null) Help.getHelper().send(ce);
+            if(event.isFromGuild()) Help.getHelper().send(new GuildCommandEvent(event.getMessage(), invoked, List.of(invoked.getFirst())));
             else channel.sendMessageFormat("Sorry, I had an error trying to understand that command.").queue();
         } catch (ReplyError e) {
             channel.sendMessage(e.getMessage()).queue(message -> message.delete().queueAfter(10, TimeUnit.SECONDS));
         } catch (ConsoleError e) {
-            throw new ConsoleError(String.format("[Command Error] %s: %s", command.getClass().getName(), e.getMessage()));
+            throw e;
+            //throw new ConsoleError(String.format("[Command Error] %s: %s", command.getClass().getName(), e.getMessage()));
         } catch (Exception e) {
-            LoggedError error = new LoggedError(event.getGuild().getId(), event.getChannel().getId(), event.getAuthor().getId(),
+            /*LoggedError error = new LoggedError(event.getGuild().getId(), event.getChannel().getId(), event.getAuthor().getId(),
                 event.getMessageId(), event.getMessage().getContentRaw(), e.getMessage(), e.getStackTrace(), System.currentTimeMillis());
 
             DatabaseUtil.saveObject(error);
@@ -113,16 +112,15 @@ public class CommandHandler implements CommandProcessor {
                                                "along with a description of what you were doing.")
                            .setFooter(error.getUuid().toString())
                            .setTimestamp(Instant.now())
-                           .build()).queue();
-
+                           .build()).queue();*/
             throw e;
         }
 
         System.out.printf("[Command used] %s used command %s in %s\n", user.getId(), command.getClass().getCanonicalName(),
-            event.getGuild().getId());
+            event.isFromGuild() ? event.getGuild().getId() : event.getChannel().getId());
     }
 
-    private boolean isGuildCommand(Command c) {
+    private boolean isGuildCommand(AbstractCommand c) {
         return Arrays.asList(c.getClass().getClasses()).contains(GuildCommand.class);
     }
 }

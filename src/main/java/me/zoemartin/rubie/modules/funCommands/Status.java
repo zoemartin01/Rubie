@@ -2,30 +2,25 @@ package me.zoemartin.rubie.modules.funCommands;
 
 import me.zoemartin.rubie.Bot;
 import me.zoemartin.rubie.core.*;
+import me.zoemartin.rubie.core.annotations.*;
 import me.zoemartin.rubie.core.exceptions.CommandArgumentException;
 import me.zoemartin.rubie.core.interfaces.*;
 import me.zoemartin.rubie.core.interfaces.Module;
 import me.zoemartin.rubie.core.util.Check;
 import me.zoemartin.rubie.core.util.Parser;
 import net.dv8tion.jda.api.entities.*;
-import org.jetbrains.annotations.NotNull;
-
-import java.util.*;
 
 import static me.zoemartin.rubie.core.managers.CommandManager.register;
 
 @LoadModule
-public class Status implements Module, Command {
-    @Override
-    public @NotNull Set<Command> subCommands() {
-        return Collections.emptySet();
-    }
-
-    @Override
-    public @NotNull String name() {
-        return "status";
-    }
-
+@Command
+@CommandOptions(
+    name = "status",
+    description = "Sets the Bot's status",
+    usage = "<type id> <status...>",
+    perm = CommandPerm.OWNER
+)
+public class Status extends AbstractCommand implements Module {
     @SuppressWarnings("ConstantConditions")
     @Override
     public void run(CommandEvent event) {
@@ -42,23 +37,6 @@ public class Status implements Module, Command {
     }
 
     @Override
-    public @NotNull CommandPerm commandPerm() {
-        return CommandPerm.OWNER;
-    }
-
-    @Override
-    public @NotNull String usage() {
-        return "<type id> <status...>";
-    }
-
-    @Override
-    public @NotNull String description() {
-        return "Sets the bot's status";
-    }
-
-    @Override
     public void init() {
-        register(new Status());
-        register(new Echo());
     }
 }

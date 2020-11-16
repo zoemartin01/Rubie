@@ -17,7 +17,8 @@ import org.hibernate.cfg.Environment;
 
 import javax.annotation.Nonnull;
 import javax.security.auth.login.LoginException;
-import java.util.*;
+import java.util.EnumSet;
+import java.util.Properties;
 
 public class Bot extends ListenerAdapter {
     private static JDABuilder builder;
@@ -52,7 +53,7 @@ public class Bot extends ListenerAdapter {
         builder.setMemberCachePolicy(MemberCachePolicy.ALL);
         builder.setBulkDeleteSplittingEnabled(false);
         builder.setCompression(Compression.NONE);
-        builder.setActivity(Activity.playing("n'yaa"));
+        builder.setActivity(Activity.listening("your levels!"));
         builder.addEventListeners(new Bot());
 
         EnumSet<Message.MentionType> deny = EnumSet.of(Message.MentionType.EVERYONE, Message.MentionType.HERE,

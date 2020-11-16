@@ -2,27 +2,27 @@ package me.zoemartin.rubie.modules.misc;
 
 import de.androidpit.colorthief.ColorThief;
 import me.zoemartin.rubie.core.*;
+import me.zoemartin.rubie.core.annotations.Command;
+import me.zoemartin.rubie.core.annotations.CommandOptions;
 import me.zoemartin.rubie.core.exceptions.*;
-import me.zoemartin.rubie.core.interfaces.Command;
+import me.zoemartin.rubie.core.interfaces.AbstractCommand;
 import me.zoemartin.rubie.core.util.Check;
 import me.zoemartin.rubie.core.util.Parser;
 import net.dv8tion.jda.api.EmbedBuilder;
-import net.dv8tion.jda.api.entities.*;
-import org.jetbrains.annotations.NotNull;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.net.*;
-import java.util.List;
 
-public class Enlarge implements Command {
-    @Override
-    public @NotNull String name() {
-        return "enlarge";
-    }
-
+@Command
+@CommandOptions(
+    name = "enlarge",
+    description = "Shows an enlarged version of an emote",
+    usage = "<emote>"
+)
+public class Enlarge extends AbstractCommand {
     @Override
     public void run(CommandEvent event) {
         Check.check(event.getArgs().size() == 1 && Parser.Emote.isParsable(event.getArgs().get(0)), CommandArgumentException::new);
@@ -61,21 +61,6 @@ public class Enlarge implements Command {
         event.getChannel().sendMessage(eb.build()).queue();
     }
 
-    @Override
-    public @NotNull CommandPerm commandPerm() {
-        return CommandPerm.EVERYONE;
-    }
-
-    @Override
-    public @NotNull String usage() {
-        return "<emote>";
-    }
-
-    @Override
-    public @NotNull String description() {
-        return "Enlarge an Emote";
-    }
-
     // Unused at the moment
     public static Color averageColor(BufferedImage bi) {
         float r = 0;
@@ -103,8 +88,8 @@ public class Enlarge implements Command {
         g = g > 255 ? 255 : g;
         b = b > 255 ? 255 : b;
 
-        System.out.println(String.format("%s %s %s", r,g,b));
+        System.out.println(String.format("%s %s %s", r, g, b));
 
-        return new Color(r/255, g/255, b/255);
+        return new Color(r / 255, g / 255, b / 255);
     }
 }

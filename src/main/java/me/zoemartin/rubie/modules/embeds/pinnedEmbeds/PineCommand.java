@@ -2,8 +2,8 @@ package me.zoemartin.rubie.modules.embeds.pinnedEmbeds;
 
 import com.google.gson.JsonSyntaxException;
 import me.zoemartin.rubie.core.*;
+import me.zoemartin.rubie.core.annotations.*;
 import me.zoemartin.rubie.core.exceptions.*;
-import me.zoemartin.rubie.core.interfaces.Command;
 import me.zoemartin.rubie.core.interfaces.GuildCommand;
 import me.zoemartin.rubie.core.util.*;
 import me.zoemartin.rubie.modules.embeds.EmbedUtil;
@@ -13,48 +13,31 @@ import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.*;
 import net.dv8tion.jda.api.exceptions.ErrorResponseException;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class PineCommand implements GuildCommand {
+@Command
+@CommandOptions(
+    name = "pinnedembed",
+    description = "Pinned Embeds",
+    perm = CommandPerm.BOT_MANAGER,
+                   alias = "pine"
+)
+public class PineCommand extends GuildCommand {
     @Override
     public void run(GuildCommandEvent event) {
         throw new CommandArgumentException();
     }
 
-    @NotNull
-    @Override
-    public Set<Command> subCommands() {
-        return Set.of(new Create(), new Update(), new list(), new Delete());
-    }
-
-    @NotNull
-    @Override
-    public String name() {
-        return "pinnedembed";
-    }
-
-    @NotNull
-    @Override
-    public String regex() {
-        return "pinnedembed|pine";
-    }
-
-    @NotNull
-    @Override
-    public CommandPerm commandPerm() {
-        return CommandPerm.BOT_MANAGER;
-    }
-
-    @NotNull
-    @Override
-    public String description() {
-        return "Pinned Embeds";
-    }
-
-    private static class Create implements GuildCommand {
+    @SubCommand(PineCommand.class)
+    @CommandOptions(
+        name = "create",
+        description = "Creates a PINE",
+        usage = "<url> [channel]",
+        perm = CommandPerm.BOT_MANAGER
+    )
+    private static class Create extends GuildCommand {
         @Override
         public void run(GuildCommandEvent event) {
             List<String> args = event.getArgs();
@@ -68,7 +51,7 @@ public class PineCommand implements GuildCommand {
                 String cRef = lastArg(1, event);
                 c = Parser.Channel.getTextChannel(event.getGuild(), cRef);
                 Check.entityReferenceNotNull(c, TextChannel.class, cRef);
-            } else c = event.getChannel();
+            } else c = event.getTextChannel();
 
             Check.check(event.getMember().hasPermission(c, Permission.MESSAGE_WRITE),
                 () -> new ConsoleError("Member '%s' doesn't have write permissions in channel '%s'",
@@ -87,34 +70,16 @@ public class PineCommand implements GuildCommand {
             PineController.addPine(pine);
             DatabaseUtil.saveObject(pine);
         }
-
-        @NotNull
-        @Override
-        public String name() {
-            return "create";
-        }
-
-        @NotNull
-        @Override
-        public CommandPerm commandPerm() {
-            return CommandPerm.BOT_MANAGER;
-        }
-
-        @NotNull
-        @Override
-        public String usage() {
-            return "<url> [channel]";
-        }
-
-        @NotNull
-        @Override
-        public String description() {
-            return "Create a Pine";
-        }
     }
 
-    private static class Update implements GuildCommand {
-
+    @SubCommand(PineCommand.class)
+    @CommandOptions(
+        name = "update",
+        description = "Updates a PINE",
+        usage = "<message id> [channel]",
+        perm = CommandPerm.BOT_MANAGER
+    )
+    private static class Update extends GuildCommand {
         @Override
         public void run(GuildCommandEvent event) {
             List<String> args = event.getArgs();
@@ -128,7 +93,7 @@ public class PineCommand implements GuildCommand {
                 String cRef = lastArg(1, event);
                 c = Parser.Channel.getTextChannel(event.getGuild(), cRef);
                 Check.entityReferenceNotNull(c, TextChannel.class, cRef);
-            } else c = event.getChannel();
+            } else c = event.getTextChannel();
 
             Message message;
             try {
@@ -155,33 +120,16 @@ public class PineCommand implements GuildCommand {
             embedReply(event, "Pine Updates",
                 "Updated Pine [%s](%s) in %s", mRef, message.getJumpUrl(), c.getAsMention()).queue();
         }
-
-        @NotNull
-        @Override
-        public String name() {
-            return "update";
-        }
-
-        @NotNull
-        @Override
-        public CommandPerm commandPerm() {
-            return CommandPerm.BOT_MANAGER;
-        }
-
-        @NotNull
-        @Override
-        public String usage() {
-            return "<message id> [channel]";
-        }
-
-        @NotNull
-        @Override
-        public String description() {
-            return "Updates a Pine";
-        }
     }
 
-    private static class list implements GuildCommand {
+    @SubCommand(PineCommand.class)
+    @CommandOptions(
+        name = "list",
+        description = "Lists all PINEs",
+        usage = "[channel]",
+        perm = CommandPerm.BOT_MANAGER
+    )
+    private static class list extends GuildCommand {
         @Override
         public void run(GuildCommandEvent event) {
             Guild g = event.getGuild();
@@ -206,39 +154,21 @@ public class PineCommand implements GuildCommand {
                     else return String.format("%s - %s\n", String.format("[%s](https://discord.com/channels/%s/%s/%s)",
                         pineEntity.getMessage_id(), pineEntity.getGuild_id(), pineEntity.getChannel_id(),
                         pineEntity.getMessage_id()), pineEntity.getSource_url());
-                }).collect(Collectors.toList())),
-                event.getChannel(), event.getUser());
+                }).collect(Collectors.toList())), event);
 
             PageListener.add(p);
 
         }
-
-        @NotNull
-        @Override
-        public String name() {
-            return "list";
-        }
-
-        @NotNull
-        @Override
-        public CommandPerm commandPerm() {
-            return CommandPerm.BOT_MANAGER;
-        }
-
-        @NotNull
-        @Override
-        public String usage() {
-            return "[channel]";
-        }
-
-        @NotNull
-        @Override
-        public String description() {
-            return "List all pines";
-        }
     }
 
-    private static class Delete implements GuildCommand {
+    @SubCommand(PineCommand.class)
+    @CommandOptions(
+        name = "delete",
+        description = "Deletes a PINE",
+        usage = "<message id> [channel]",
+        perm = CommandPerm.BOT_MANAGER
+    )
+    private static class Delete extends GuildCommand {
         @Override
         public void run(GuildCommandEvent event) {
             List<String> args = event.getArgs();
@@ -252,7 +182,7 @@ public class PineCommand implements GuildCommand {
                 String cRef = lastArg(1, event);
                 c = Parser.Channel.getTextChannel(event.getGuild(), cRef);
                 Check.entityReferenceNotNull(c, TextChannel.class, cRef);
-            } else c = event.getChannel();
+            } else c = event.getTextChannel();
 
             PineEntity pine = PineController.getPine(event.getGuild(), c, mRef);
             Check.notNull(pine, () -> new ReplyError("Error, could not find that pine!"));
@@ -271,30 +201,6 @@ public class PineCommand implements GuildCommand {
                 "Deleted Pine `%s` in %s", mRef, c.getAsMention()).queue();
             else embedReply(event, "Pine Deletion",
                 "Deleted Pine [%s](%s) in %s", mRef, message.getJumpUrl(), c.getAsMention()).queue();
-        }
-
-        @NotNull
-        @Override
-        public String name() {
-            return "delete";
-        }
-
-        @NotNull
-        @Override
-        public CommandPerm commandPerm() {
-            return CommandPerm.BOT_MANAGER;
-        }
-
-        @NotNull
-        @Override
-        public String usage() {
-            return "<message id> [channel]";
-        }
-
-        @NotNull
-        @Override
-        public String description() {
-            return "Deletes a pine";
         }
     }
 }

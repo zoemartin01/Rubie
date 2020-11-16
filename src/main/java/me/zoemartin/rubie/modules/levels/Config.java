@@ -6,13 +6,15 @@ import com.google.gson.reflect.TypeToken;
 import me.zoemartin.rubie.Bot;
 import me.zoemartin.rubie.core.CommandPerm;
 import me.zoemartin.rubie.core.GuildCommandEvent;
+import me.zoemartin.rubie.core.annotations.CommandOptions;
+import me.zoemartin.rubie.core.annotations.SubCommand;
 import me.zoemartin.rubie.core.exceptions.*;
-import me.zoemartin.rubie.core.interfaces.Command;
 import me.zoemartin.rubie.core.interfaces.GuildCommand;
 import me.zoemartin.rubie.modules.pagedEmbeds.PageListener;
 import me.zoemartin.rubie.modules.pagedEmbeds.PagedEmbed;
 import me.zoemartin.rubie.core.util.*;
 import net.dv8tion.jda.api.EmbedBuilder;
+import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.*;
 import org.jetbrains.annotations.NotNull;
 
@@ -26,40 +28,27 @@ import java.util.function.ToIntFunction;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-class Config implements GuildCommand {
-    @Override
-    public @NotNull Set<Command> subCommands() {
-        return Set.of(new Enable(), new RoleRewards(), new Import(), new BlackList(), new Disable(), new Announce(),
-            new SetExp(), new Clear());
-    }
-
-    @Override
-    public @NotNull String name() {
-        return "config";
-    }
-
-    @Override
-    public @NotNull String regex() {
-        return "config|conf";
-    }
-
+@SubCommand(Level.class)
+@CommandOptions(
+    name = "config",
+    description = "Level Configuration",
+    perm = CommandPerm.BOT_ADMIN,
+    alias = "conf"
+)
+@SubCommand.AsBase(name = "levelconfig", alias = "lvlconf")
+class Config extends GuildCommand {
     @Override
     public void run(GuildCommandEvent event) {
         throw new CommandArgumentException();
     }
 
-    @Override
-    public @NotNull CommandPerm commandPerm() {
-        return CommandPerm.BOT_ADMIN;
-    }
-
-    @Override
-    public @NotNull String description() {
-        return "Level Configuration";
-    }
-
-    private static class Enable implements GuildCommand {
-
+    @SubCommand(Config.class)
+    @CommandOptions(
+        name = "enable",
+        description = "Enable the Leveling System",
+        perm = CommandPerm.BOT_ADMIN
+    )
+    private static class Enable extends GuildCommand {
         @Override
         public @NotNull String name() {
             return "enable";
@@ -85,13 +74,13 @@ class Config implements GuildCommand {
         }
     }
 
-    private static class Disable implements GuildCommand {
-
-        @Override
-        public @NotNull String name() {
-            return "disable";
-        }
-
+    @SubCommand(Config.class)
+    @CommandOptions(
+        name = "disable",
+        description = "Disable the Leveling System",
+        perm = CommandPerm.BOT_ADMIN
+    )
+    private static class Disable extends GuildCommand {
         @Override
         public void run(GuildCommandEvent event) {
             LevelConfig c = Levels.getConfig(event.getGuild());
@@ -100,25 +89,16 @@ class Config implements GuildCommand {
             event.addCheckmark();
             embedReply(event, "Levels", "Disabled Leveling System").queue();
         }
-
-        @Override
-        public @NotNull CommandPerm commandPerm() {
-            return CommandPerm.BOT_ADMIN;
-        }
-
-        @Override
-        public @NotNull String description() {
-            return "Disable the Leveling System";
-        }
     }
 
-    private static class Announce implements GuildCommand {
-
-        @Override
-        public @NotNull String name() {
-            return "announce";
-        }
-
+    @SubCommand(Config.class)
+    @CommandOptions(
+        name = "announce",
+        description = "Announce level up ALWAYS/REWARD/NEVER",
+        usage = "<always/reward/never>",
+        perm = CommandPerm.BOT_ADMIN
+    )
+    private static class Announce extends GuildCommand {
         @Override
         public void run(GuildCommandEvent event) {
             Check.check(event.getArgs().size() == 1 && event.getArgs().get(0).toLowerCase().matches("always|reward|never"),
@@ -137,25 +117,16 @@ class Config implements GuildCommand {
             embedReply(event, "Levels", "Level up announcements set to `%s`",
                 config.getAnnouncements().toString()).queue();
         }
-
-        @Override
-        public @NotNull CommandPerm commandPerm() {
-            return CommandPerm.BOT_ADMIN;
-        }
-
-        @Override
-        public @NotNull String description() {
-            return "Announce level up ALWAYS/REWARD/NEVER";
-        }
     }
 
-    private static class SetExp implements GuildCommand {
-
-        @Override
-        public @NotNull String name() {
-            return "setxp";
-        }
-
+    @SubCommand(Config.class)
+    @CommandOptions(
+        name = "setxp",
+        description = "Sets a users exp",
+        usage = "<xp> <user>",
+        perm = CommandPerm.BOT_ADMIN
+    )
+    private static class SetExp extends GuildCommand {
         @Override
         public void run(GuildCommandEvent event) {
             Check.check(event.getArgs().size() == 2 && Parser.Int.isParsable(event.getArgs().get(0))
@@ -171,16 +142,6 @@ class Config implements GuildCommand {
             event.addCheckmark();
             embedReply(event, "Levels", "Set %s's xp to `%s`", u.getAsMention(), xp).queue();
         }
-
-        @Override
-        public @NotNull CommandPerm commandPerm() {
-            return CommandPerm.BOT_ADMIN;
-        }
-
-        @Override
-        public @NotNull String description() {
-            return "Set's a users exp";
-        }
     }
 
     /**
@@ -188,13 +149,14 @@ class Config implements GuildCommand {
      * <p>
      * [ { "Userid": id, "Exp": exp }, ... ]
      */
-    private static class Import implements GuildCommand {
+    @SubCommand(Config.class)
+    @CommandOptions(
+        name = "import",
+        description = "Import Levels from an Attachment",
+        perm = CommandPerm.BOT_ADMIN
 
-        @Override
-        public @NotNull String name() {
-            return "import";
-        }
-
+    )
+    private static class Import extends GuildCommand {
         @SuppressWarnings("unchecked")
         @Override
         public void run(GuildCommandEvent event) {
@@ -227,30 +189,19 @@ class Config implements GuildCommand {
                 Stream.concat(
                     Stream.of(String.format("Time taken: %s seconds\n",
                         Duration.between(start, Instant.now()).toSeconds())),
-                levels.entrySet().stream()
-                    .sorted(Comparator.comparingInt((ToIntFunction<Map.Entry<String, Integer>>) Map.Entry::getValue)
-                                .reversed())
-                    .map(e -> {
-                            User u = Bot.getJDA().getUserById(e.getKey());
-                            if (u == null) return String.format("User: `%s` - Level: `%s` - Exp: `%s`\n", e.getKey(),
-                                Levels.calcLevel(e.getValue()), e.getValue());
-                            return String.format("User: %s - Level: `%s` - Exp: `%s`\n", u.getAsMention(),
-                                Levels.calcLevel(e.getValue()), e.getValue());
-                        }
-                    )).collect(Collectors.toList())),
-                event.getChannel(), event.getUser());
+                    levels.entrySet().stream()
+                        .sorted(Comparator.comparingInt((ToIntFunction<Map.Entry<String, Integer>>) Map.Entry::getValue)
+                                    .reversed())
+                        .map(e -> {
+                                User u = Bot.getJDA().getUserById(e.getKey());
+                                if (u == null) return String.format("User: `%s` - Level: `%s` - Exp: `%s`\n", e.getKey(),
+                                    Levels.calcLevel(e.getValue()), e.getValue());
+                                return String.format("User: %s - Level: `%s` - Exp: `%s`\n", u.getAsMention(),
+                                    Levels.calcLevel(e.getValue()), e.getValue());
+                            }
+                        )).collect(Collectors.toList())), event);
 
             PageListener.add(p);
-        }
-
-        @Override
-        public @NotNull CommandPerm commandPerm() {
-            return CommandPerm.BOT_ADMIN;
-        }
-
-        @Override
-        public @NotNull String description() {
-            return "Import Levels";
         }
 
         private static class ImportLevel implements Serializable {
@@ -275,7 +226,13 @@ class Config implements GuildCommand {
         }
     }
 
-    private static class Clear implements GuildCommand {
+    @SubCommand(Config.class)
+    @CommandOptions(
+        name = "clear",
+        description = "WARNING: CLEARS ALL LEVELS FROM THE DATABASE",
+        perm = CommandPerm.BOT_ADMIN
+    )
+    private static class Clear extends GuildCommand {
         @Override
         public void run(GuildCommandEvent event) {
             Check.check(event.getArgs().size() >= 1 && event.getArgs().get(0).matches("--agree"),
@@ -288,64 +245,35 @@ class Config implements GuildCommand {
             Levels.clearGuildCache(event.getGuild());
             event.addCheckmark();
             m.delete().complete();
-            embedReply(event,"Level Config",
+            embedReply(event, "Level Config",
                 "Successfully cleared all Levels\nTime taken: %s seconds",
                 Duration.between(start, Instant.now()).toSeconds()).queue();
         }
-
-        @NotNull
-        @Override
-        public String name() {
-            return "clear";
-        }
-
-        @NotNull
-        @Override
-        public CommandPerm commandPerm() {
-            return CommandPerm.BOT_ADMIN;
-        }
-
-        @NotNull
-        @Override
-        public String description() {
-            return "WARNING: CLEARS ALL LEVELS FROM THE DATABASE";
-        }
     }
 
-    private static class RoleRewards implements GuildCommand {
-
-        @Override
-        public @NotNull Set<Command> subCommands() {
-            return Set.of(new RoleRewards.Add(), new RoleRewards.Remove(), new RoleRewards.list());
-        }
-
-        @Override
-        public @NotNull String name() {
-            return "rewards";
-        }
-
+    @SubCommand(Config.class)
+    @CommandOptions(
+        name = "rewards",
+        description = "Manage Role Rewards",
+        perm = CommandPerm.BOT_ADMIN,
+        alias = "rolerewards",
+        botPerms = Permission.MANAGE_ROLES
+    )
+    private static class RoleRewards extends GuildCommand {
         @Override
         public void run(GuildCommandEvent event) {
             throw new CommandArgumentException();
         }
 
-        @Override
-        public @NotNull CommandPerm commandPerm() {
-            return CommandPerm.BOT_ADMIN;
-        }
-
-        @Override
-        public @NotNull String description() {
-            return "Manage Role Rewards";
-        }
-
-        private static class Add implements GuildCommand {
-
-            @Override
-            public @NotNull String name() {
-                return "add";
-            }
-
+        @SubCommand(RoleRewards.class)
+        @CommandOptions(
+            name = "add",
+            description = "Adds a role reward",
+            usage = "<level> <role>",
+            perm = CommandPerm.BOT_ADMIN,
+            botPerms = Permission.MANAGE_ROLES
+        )
+        private static class Add extends GuildCommand {
             @Override
             public void run(GuildCommandEvent event) {
                 Check.check(event.getArgs().size() > 1 && Parser.Int.isParsable(event.getArgs().get(0)),
@@ -366,30 +294,16 @@ class Config implements GuildCommand {
                 embedReply(event, "Level Rewards", "Added %s to Level %s",
                     r.getAsMention(), level).queue();
             }
-
-            @Override
-            public @NotNull CommandPerm commandPerm() {
-                return CommandPerm.BOT_ADMIN;
-            }
-
-            @Override
-            public @NotNull String usage() {
-                return "<level> <role>";
-            }
-
-            @Override
-            public @NotNull String description() {
-                return "Adds Role Rewards";
-            }
         }
 
-        private static class Remove implements GuildCommand {
-
-            @Override
-            public @NotNull String name() {
-                return "remove";
-            }
-
+        @SubCommand(RoleRewards.class)
+        @CommandOptions(
+            name = "remove",
+            description = "Removes a role reward",
+            usage = "<level> <role>",
+            perm = CommandPerm.BOT_ADMIN
+        )
+        private static class Remove extends GuildCommand {
             @Override
             public void run(GuildCommandEvent event) {
                 Check.check(event.getArgs().size() > 1, CommandArgumentException::new);
@@ -408,30 +322,15 @@ class Config implements GuildCommand {
                 embedReply(event, "Level Rewards", "Removed %s from Level %s",
                     r.getAsMention(), level).queue();
             }
-
-            @Override
-            public @NotNull String usage() {
-                return "<level> <role>";
-            }
-
-            @Override
-            public @NotNull CommandPerm commandPerm() {
-                return CommandPerm.BOT_ADMIN;
-            }
-
-            @Override
-            public @NotNull String description() {
-                return "Removes Role Rewards";
-            }
         }
 
-        private static class list implements GuildCommand {
-
-            @Override
-            public @NotNull String name() {
-                return "list";
-            }
-
+        @SubCommand(RoleRewards.class)
+        @CommandOptions(
+            name = "list",
+            description = "Lists all role rewards",
+            perm = CommandPerm.BOT_ADMIN
+        )
+        private static class list extends GuildCommand {
             @Override
             public void run(GuildCommandEvent event) {
                 Check.check(event.getArgs().isEmpty(), CommandArgumentException::new);
@@ -448,21 +347,10 @@ class Config implements GuildCommand {
                                          return r == null ? s : r.getAsMention();
                                      }).collect(Collectors.joining(", "))
                                  )
-                        ).collect(Collectors.toList())),
-                    event.getChannel(), event.getUser());
+                        ).collect(Collectors.toList())), event);
 
                 PageListener.add(p);
                 event.addCheckmark();
-            }
-
-            @Override
-            public @NotNull CommandPerm commandPerm() {
-                return CommandPerm.BOT_ADMIN;
-            }
-
-            @Override
-            public @NotNull String description() {
-                return "Lists Role Rewards";
             }
         }
     }

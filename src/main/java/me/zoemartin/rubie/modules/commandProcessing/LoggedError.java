@@ -27,10 +27,10 @@ public class LoggedError {
     @Column
     private String message_id;
 
-    @Column
+    @Column(columnDefinition="TEXT")
     private String invoked_message;
 
-    @Column
+    @Column(columnDefinition="TEXT")
     private String error_message;
 
     @Column(columnDefinition="TEXT")

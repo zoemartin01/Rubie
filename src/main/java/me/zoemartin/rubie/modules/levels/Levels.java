@@ -1,7 +1,7 @@
 package me.zoemartin.rubie.modules.levels;
 
 import me.zoemartin.rubie.Bot;
-import me.zoemartin.rubie.core.LoadModule;
+import me.zoemartin.rubie.core.annotations.LoadModule;
 import me.zoemartin.rubie.core.interfaces.Module;
 import me.zoemartin.rubie.core.managers.CommandManager;
 import me.zoemartin.rubie.core.util.DatabaseUtil;
@@ -26,8 +26,6 @@ public class Levels extends ListenerAdapter implements Module {
         Bot.addListener(this);
         DatabaseUtil.setMapped(UserLevel.class);
         DatabaseUtil.setMapped(LevelConfig.class);
-        CommandManager.register(new Level());
-        CommandManager.register(new Level.Leaderboard());
     }
 
     @Override
