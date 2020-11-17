@@ -6,7 +6,4 @@ import me.zoemartin.rubie.core.managers.CommandManager;
 
 @LoadModule
 public class Hatchery implements Module {
-    @Override
-    public void init() {
-    }
 }

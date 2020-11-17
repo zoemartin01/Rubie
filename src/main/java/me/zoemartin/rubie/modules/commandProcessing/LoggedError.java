@@ -1,5 +1,6 @@
 package me.zoemartin.rubie.modules.commandProcessing;
 
+import me.zoemartin.rubie.core.annotations.Mapped;
 import net.dv8tion.jda.api.entities.Message;
 import org.hibernate.annotations.Type;
 
@@ -7,6 +8,7 @@ import javax.persistence.*;
 import java.util.Arrays;
 import java.util.UUID;
 
+@Mapped
 @Entity
 @Table(name = "errors")
 public class LoggedError {

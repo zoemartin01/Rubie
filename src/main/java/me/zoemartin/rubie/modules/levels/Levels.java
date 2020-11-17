@@ -3,17 +3,16 @@ package me.zoemartin.rubie.modules.levels;
 import me.zoemartin.rubie.Bot;
 import me.zoemartin.rubie.core.annotations.LoadModule;
 import me.zoemartin.rubie.core.interfaces.Module;
-import me.zoemartin.rubie.core.managers.CommandManager;
 import me.zoemartin.rubie.core.util.DatabaseUtil;
 import net.dv8tion.jda.api.entities.*;
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.jodah.expiringmap.ExpiringMap;
-import org.hibernate.Session;
 
 import javax.annotation.Nonnull;
 import java.util.*;
 import java.util.concurrent.*;
+import java.util.function.Function;
 
 @LoadModule
 public class Levels extends ListenerAdapter implements Module {
@@ -24,8 +23,6 @@ public class Levels extends ListenerAdapter implements Module {
     @Override
     public void init() {
         Bot.addListener(this);
-        DatabaseUtil.setMapped(UserLevel.class);
-        DatabaseUtil.setMapped(LevelConfig.class);
     }
 
     @Override
@@ -35,22 +32,21 @@ public class Levels extends ListenerAdapter implements Module {
     }
 
     private void initLevels() {
-        try (Session session = DatabaseUtil.getSessionFactory().openSession()) {
-            List<UserLevel> load = session.createQuery("from UserLevel", UserLevel.class).list();
-            load.forEach(l -> levels.computeIfAbsent(l.getGuild_id(),
-                s -> new ConcurrentHashMap<>()).put(l.getUser_id(), l));
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        levels.putAll(DatabaseUtil.loadGroupedMap("from UserLevel", UserLevel.class,
+            UserLevel::getGuild_id, UserLevel::getUser_id, Function.identity()));
+        levels.forEach((s, stringUserLevelMap) -> System.out.printf(
+            "\u001B[36m[Level] Loaded '%d' levels for '%s'\u001B[0m\n",
+            stringUserLevelMap.keySet().size(), s));
     }
 
     private void initConfigs() {
-        try (Session session = DatabaseUtil.getSessionFactory().openSession()) {
-            List<LevelConfig> load = session.createQuery("from LevelConfig", LevelConfig.class).list();
-            load.forEach(c -> configs.put(c.getGuild_id(), c));
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        configs.putAll(DatabaseUtil.loadMap("from LevelConfig", LevelConfig.class,
+            LevelConfig::getGuild_id, Function.identity()));
+        configs.forEach((s, levelConfig) -> System.out.printf(
+            "\u001B[36m[Level] Loaded config for '%s' with UUID `%s`\u001B[0m\n",
+            levelConfig.getGuild_id(),
+            levelConfig.getUUID()));
+        System.out.printf("\u001B[36m[Level] Loaded '%d' configuration files\u001B[0m\n", configs.keySet().size());
     }
 
     @Override
@@ -72,12 +68,7 @@ public class Levels extends ListenerAdapter implements Module {
             return;
 
 
-        UserLevel level;
-
-        boolean exists = levels.getOrDefault(g.getId(), Collections.emptyMap()).containsKey(u.getId());
-
-        if (exists) level = getUserLevel(g, u);
-        else level = new UserLevel(g.getId(), u.getId());
+        UserLevel level = getUserLevel(g, u);
 
         int before = calcLevel(level.getExp());
         level.addExp(ThreadLocalRandom.current().nextInt(15, 26));
@@ -90,13 +81,7 @@ public class Levels extends ListenerAdapter implements Module {
         if (after > before) {
             levelUp(event, after);
         }
-
-        if (exists)
-            DatabaseUtil.updateObject(level);
-        else {
-            DatabaseUtil.saveObject(level);
-            levels.computeIfAbsent(g.getId(), k -> new ConcurrentHashMap<>()).put(level.getUser_id(), level);
-        }
+        DatabaseUtil.updateObject(level);
     }
 
     @SuppressWarnings("ConstantConditions")
@@ -143,14 +128,11 @@ public class Levels extends ListenerAdapter implements Module {
 
     @Nonnull
     public static UserLevel getUserLevel(Guild g, User user) {
-        UserLevel l =  levels.computeIfAbsent(g.getId(), k -> new ConcurrentHashMap<>()).getOrDefault(user.getId(),
-            null);
-        if (l == null) {
-            l = new UserLevel(g.getId(), user.getId());
-            levels.get(g.getId()).put(l.getUser_id(), l);
+        return levels.computeIfAbsent(g.getId(), k -> new ConcurrentHashMap<>()).computeIfAbsent(user.getId(), v -> {
+            UserLevel l = new UserLevel(g.getId(), user.getId());
             DatabaseUtil.saveObject(l);
-        }
-        return l;
+            return l;
+        });
     }
 
     public static Collection<UserLevel> getLevels(Guild g) {
@@ -166,13 +148,11 @@ public class Levels extends ListenerAdapter implements Module {
     }
 
     public static LevelConfig getConfig(Guild g) {
-        LevelConfig config = configs.getOrDefault(g.getId(), null);
-        if (config == null) {
-            config = new LevelConfig(g.getId(), false);
-            configs.put(g.getId(), config);
+        return configs.computeIfAbsent(g.getId(), v -> {
+            LevelConfig config = new LevelConfig(g.getId(), false);
             DatabaseUtil.saveObject(config);
-        }
-        return config;
+            return config;
+        });
     }
 
     public static void clearGuildCache(Guild g) {
@@ -190,7 +170,7 @@ public class Levels extends ListenerAdapter implements Module {
     }
 
     public static int calcExp(int lvl) {
-        return (int) (5.0/6.0 * lvl * (2 * Math.pow(lvl, 2) + 27 * lvl + 91));
+        return (int) (5.0 / 6.0 * lvl * (2 * Math.pow(lvl, 2) + 27 * lvl + 91));
     }
 
 }

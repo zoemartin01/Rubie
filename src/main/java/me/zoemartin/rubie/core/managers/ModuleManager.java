@@ -5,6 +5,7 @@ import me.zoemartin.rubie.core.*;
 import me.zoemartin.rubie.core.annotations.*;
 import me.zoemartin.rubie.core.interfaces.*;
 import me.zoemartin.rubie.core.interfaces.Module;
+import me.zoemartin.rubie.core.util.DatabaseUtil;
 import org.jetbrains.annotations.NotNull;
 import org.reflections8.Reflections;
 import org.reflections8.scanners.SubTypesScanner;
@@ -45,9 +46,14 @@ public class ModuleManager {
             }
         });
 
-        modules.forEach(module -> {
-            new Thread(() -> loadModule(module)).start();
-        });
+        ExecutorService es = Executors.newCachedThreadPool();
+        modules.forEach(module -> es.execute(() -> loadModule(module)));
+        es.shutdown();
+        try {
+            es.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     }
 
     private static void loadModule(Class<?> module) {
@@ -59,10 +65,11 @@ public class ModuleManager {
             e.printStackTrace();
         }
         if (m == null) return;
+        loadModuleMappings(m);
         m.init();
         loadModuleCommands(m);
         ModuleManager.modules.add(m);
-        System.out.printf("Loaded Module '%s'\n", module.getName());
+        System.out.printf("\u001B[95m[Module Loader] Loaded '%s'\u001B[0m\n", module.getName());
     }
 
     @SuppressWarnings("unchecked")
@@ -89,13 +96,25 @@ public class ModuleManager {
 
                 sub(command);
                 CommandManager.register(command);
-                System.out.printf("Loaded Module '%s' command '%s'\n", m.getClass().getName(), command.name());
+                System.out.printf("\u001B[95m[Command Loader] Loaded '%s' command '%s'\u001B[0m\n", m.getClass().getName(), command.name());
+            });
+    }
+
+    private static void loadModuleMappings(Module m) {
+        Reflections reflections = new Reflections(m.getClass().getPackageName(), new TypeAnnotationsScanner(), new SubTypesScanner());
+
+        Set<Class<?>> commandReflect = reflections.getTypesAnnotatedWith(Mapped.class);
+
+        commandReflect.stream()
+            .filter(c -> c.getAnnotationsByType(Disabled.class).length == 0)
+            .forEach(c -> {
+                DatabaseUtil.setMapped(c);
+                System.out.printf("\u001B[95m[Database Mapper] Mapped '%s':'%s'\u001B[0m\n", m.getClass().getName(), c.getName());
             });
     }
 
 
     private static void sub(AbstractCommand c) {
-        System.out.printf("Searched for scab in %s\n%s\n\n", c.name(), Arrays.toString(c.getClass().getAnnotations()));
         if (c.getClass().getAnnotationsByType(SubCommand.AsBase.class).length != 0) {
             if (c instanceof GuildCommand)
                 CommandManager.register(new SubcommandAdapter<>((GuildCommand) c));

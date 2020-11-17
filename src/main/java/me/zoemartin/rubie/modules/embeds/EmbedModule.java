@@ -12,8 +12,6 @@ import me.zoemartin.rubie.modules.embeds.triggerEmbeds.*;
 public class EmbedModule implements Module {
     @Override
     public void init() {
-        DatabaseUtil.setMapped(PineEntity.class);
-        DatabaseUtil.setMapped(Tee.class);
         Bot.addListener(new TeeController());
     }
 

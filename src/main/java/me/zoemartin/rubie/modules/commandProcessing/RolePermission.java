@@ -1,10 +1,12 @@
 package me.zoemartin.rubie.modules.commandProcessing;
 
 import me.zoemartin.rubie.core.CommandPerm;
+import me.zoemartin.rubie.core.annotations.Mapped;
 
 import javax.persistence.*;
 import java.util.UUID;
 
+@Mapped
 @Entity
 @Table(name = "role_permission")
 public class RolePermission {

@@ -1,9 +1,12 @@
 package me.zoemartin.rubie.modules.embeds.pinnedEmbeds;
 
 
+import me.zoemartin.rubie.core.annotations.Mapped;
+
 import javax.persistence.*;
 import java.util.UUID;
 
+@Mapped
 @Entity
 @Table(name = "pinned_embeds")
 public class PineEntity {

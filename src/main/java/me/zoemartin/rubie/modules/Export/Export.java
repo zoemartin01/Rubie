@@ -5,7 +5,4 @@ import me.zoemartin.rubie.core.interfaces.Module;
 
 @LoadModule
 public class Export implements Module {
-    @Override
-    public void init() {
-    }
 }

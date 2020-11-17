@@ -1,11 +1,13 @@
 package me.zoemartin.rubie.modules.levels;
 
+import me.zoemartin.rubie.core.annotations.Mapped;
 import me.zoemartin.rubie.core.util.DatabaseConverter;
 
 import javax.persistence.*;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
+@Mapped
 @Entity
 @Table(name = "level_config")
 public class LevelConfig {
@@ -59,6 +61,10 @@ public class LevelConfig {
     }
 
     protected LevelConfig() {
+    }
+
+    public UUID getUUID() {
+        return uuid;
     }
 
     public String getGuild_id() {

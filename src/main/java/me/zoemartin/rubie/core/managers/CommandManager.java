@@ -36,8 +36,6 @@ public class CommandManager {
     }
 
     public static void process(MessageReceivedEvent event, String input) {
-        CommandManager.getCommands().forEach(System.out::println);
-        System.out.println(CommandManager.getCommands().size());
         new Thread(() -> {
             try {
                 processor.process(event, input);

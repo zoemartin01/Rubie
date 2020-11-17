@@ -1,10 +1,12 @@
 package me.zoemartin.rubie.modules.embeds.triggerEmbeds;
 
 import me.zoemartin.rubie.core.CommandPerm;
+import me.zoemartin.rubie.core.annotations.Mapped;
 
 import javax.persistence.*;
 import java.util.UUID;
 
+@Mapped
 @Entity
 @Table(name = "trigger_embeds")
 public class Tee {

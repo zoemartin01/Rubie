@@ -7,13 +7,15 @@ import me.zoemartin.rubie.core.exceptions.CommandArgumentException;
 import me.zoemartin.rubie.core.exceptions.ReplyError;
 import me.zoemartin.rubie.core.interfaces.GuildCommand;
 import me.zoemartin.rubie.core.util.*;
+import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.*;
 import org.jetbrains.annotations.NotNull;
 
+import java.time.Instant;
+import java.time.OffsetDateTime;
 import java.util.concurrent.TimeUnit;
 
-@Disabled
 @Command
 @CommandOptions(
     name = "role",
@@ -25,6 +27,44 @@ public class RoleManagement extends GuildCommand {
     @Override
     public void run(GuildCommandEvent event) {
         throw new CommandArgumentException();
+    }
+
+    @SubCommand(RoleManagement.class)
+    @CommandOptions(
+        name = "info",
+        description = "Shows information about a Role",
+        usage = "<role>",
+        perm = CommandPerm.BOT_MODERATOR
+    )
+    @SubCommand.AsBase(name = "roleinfo")
+    private static class RoleInfo extends GuildCommand {
+        @Override
+        public void run(GuildCommandEvent event) {
+            Check.check(!event.getArgs().isEmpty(), CommandArgumentException::new);
+
+            String roleRef = lastArg(0, event);
+            Role role = Parser.Role.getRole(event.getGuild(), roleRef);
+            Check.entityReferenceNotNull(role, Role.class, roleRef);
+
+            EmbedBuilder eb =
+                new EmbedBuilder()
+                    .addField("Name", role.getName(), true)
+                    .addField("ID", role.getId(), true)
+                    .addField("Color", role.getColor() != null ? "#" + Integer.toHexString(
+                        role.getColor().getRGB()).substring(2) : "n/a", true)
+                    .addField("Mention", role.getAsMention(), true)
+                    .addField("Member Count", String.valueOf(role.getGuild().getMembersWithRoles(role).size()), true)
+                    .addField("Position", String.valueOf(role.getPositionRaw()), true)
+                    .addField("Hoisted", String.valueOf(role.isHoisted()), true)
+                    .addField("Mentionable", String.valueOf(role.isMentionable()), true)
+                    .addField("Created ago", TimeUtils.dateAgo(role.getTimeCreated(), OffsetDateTime.now()), false)
+
+                    .setFooter("ID: " + role.getId())
+                    .setTimestamp(Instant.now())
+                    .setColor(role.getColor());
+
+            event.getChannel().sendMessage(eb.build()).queue();
+        }
     }
 
     @SubCommand(RoleManagement.class)

@@ -7,9 +7,4 @@ import me.zoemartin.rubie.core.util.DatabaseUtil;
 
 @LoadModule
 public class Moderation implements Module {
-    @Override
-    public void init() {
-        DatabaseUtil.setMapped(ModLogEntity.class);
-        DatabaseUtil.setMapped(NoteEntity.class);
-    }
 }

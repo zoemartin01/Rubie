@@ -18,7 +18,6 @@ public class Log implements Module {
     public void init() {
         CommandManager.setCommandLogger(new Logger());
         Bot.addListener(new Delete());
-        DatabaseUtil.setMapped(LMessage.class);
     }
 
     @Override

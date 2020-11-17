@@ -172,7 +172,7 @@ public class Permission extends GuildCommand {
                 if (cp.equals(CommandPerm.EVERYONE))
                     PermissionHandler.removeRolePerm(event.getGuild().getId(), r.getId());
                 else
-                    PermissionHandler.addRolePerm(event.getGuild().getId(), r.getId(), cp);
+                    PermissionHandler.setRolePerm(event.getGuild().getId(), r.getId(), cp);
                 embedReply(event, null, "Set `[%d] %s` to %s", cp.raw(), cp.toString(),
                     r.getAsMention()).queue();
             }

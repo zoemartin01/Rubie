@@ -24,7 +24,7 @@ import java.util.stream.Collectors;
     name = "transcript",
     description = "Create a channel transcript",
     usage = "[channel]",
-    perm = CommandPerm.OWNER
+    perm = CommandPerm.BOT_ADMIN
 )
 public class Transcript extends GuildCommand {
     @Override
@@ -101,6 +101,8 @@ public class Transcript extends GuildCommand {
                 e.printStackTrace();
             }
         }
+
+        event.getChannel().sendFile(f, "transcript.json").queue();
 
         mem.shutdown();
         embedReply(event, "Transcript",

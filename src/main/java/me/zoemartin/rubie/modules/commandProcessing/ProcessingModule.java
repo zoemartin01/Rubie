@@ -12,10 +12,6 @@ public class ProcessingModule implements Module {
     public void init() {
         Bot.addListener(new CommandListener());
         CommandManager.setCommandProcessor(new CommandHandler());
-        DatabaseUtil.setMapped(MemberPermission.class);
-        DatabaseUtil.setMapped(RolePermission.class);
-        DatabaseUtil.setMapped(Prefixes.class);
-        DatabaseUtil.setMapped(LoggedError.class);
     }
 
     @Override

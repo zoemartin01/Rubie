@@ -1,5 +1,6 @@
 package me.zoemartin.rubie.modules.moderation;
 
+import me.zoemartin.rubie.core.annotations.Mapped;
 import me.zoemartin.rubie.modules.levels.LevelConfig;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
@@ -8,7 +9,9 @@ import javax.persistence.*;
 import java.util.Set;
 import java.util.UUID;
 
-@Entity(name = "modactions")
+@Mapped
+@Entity
+@Table(name = "modactions")
 public class ModLogEntity {
 
     @Id

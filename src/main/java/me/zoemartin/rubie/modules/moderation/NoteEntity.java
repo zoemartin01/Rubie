@@ -1,11 +1,13 @@
 package me.zoemartin.rubie.modules.moderation;
 
+import me.zoemartin.rubie.core.annotations.Mapped;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 
 import javax.persistence.*;
 import java.util.UUID;
 
+@Mapped
 @Entity
 @Table(name = "notes")
 public class NoteEntity {

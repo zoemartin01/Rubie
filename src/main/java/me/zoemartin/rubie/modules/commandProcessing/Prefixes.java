@@ -1,6 +1,7 @@
 package me.zoemartin.rubie.modules.commandProcessing;
 
 import me.zoemartin.rubie.Bot;
+import me.zoemartin.rubie.core.annotations.Mapped;
 import me.zoemartin.rubie.core.util.DatabaseConverter;
 import me.zoemartin.rubie.core.util.DatabaseUtil;
 import org.hibernate.Session;
@@ -11,6 +12,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+@Mapped
 @Entity
 @Table(name = "prefixes")
 public class Prefixes {
