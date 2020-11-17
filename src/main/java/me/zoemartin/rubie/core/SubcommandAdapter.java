@@ -2,25 +2,32 @@ package me.zoemartin.rubie.core;
 
 import me.zoemartin.rubie.core.annotations.*;
 import me.zoemartin.rubie.core.interfaces.AbstractCommand;
+import me.zoemartin.rubie.core.interfaces.GuildCommand;
 import net.dv8tion.jda.api.Permission;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
 
-public class SubcommandAdapter extends AbstractCommand {
-    private final AbstractCommand c;
+public class SubcommandAdapter<C extends AbstractCommand> extends AbstractCommand {
+    private final C c;
 
     @Override
     public void run(CommandEvent event) {
         c.run(event);
     }
 
-    public SubcommandAdapter(AbstractCommand c) {
+    public SubcommandAdapter(C c) {
         if (c.getClass().getAnnotationsByType(SubCommand.AsBase.class).length == 0)
             throw new IllegalStateException(
                 "Command Class missing @SubCommand.AsBase annotation to be used with the SubcommandAdapter");
 
         this.c = c;
+    }
+
+    @NotNull
+    @Override
+    public Set<AbstractCommand> subCommands() {
+        return c.subCommands();
     }
 
     @NotNull

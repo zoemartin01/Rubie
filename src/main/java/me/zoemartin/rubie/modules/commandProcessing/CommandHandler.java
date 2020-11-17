@@ -83,9 +83,9 @@ public class CommandHandler implements CommandProcessor {
         GuildCommandEvent ce = null;
         try {
             //command.run(user, channel, Collections.unmodifiableList(arguments), event.getMessage(), inputs.get(commands.size() - 1));
-            if (command instanceof GuildCommand) {
+            if (event.isFromGuild()) {
                 GuildCommandEvent e = new GuildCommandEvent(event.getMessage(), arguments, invoked);
-                ((GuildCommand) command).run(e);
+                command.run(e);
             } else {
                 CommandEvent e = new CommandEvent(event.getMessage(), arguments, invoked);
                 command.run(e);

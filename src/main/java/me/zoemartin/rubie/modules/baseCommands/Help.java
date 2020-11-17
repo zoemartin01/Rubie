@@ -30,64 +30,62 @@ import java.util.stream.Collectors;
 public class Help extends GuildCommand {
     @Override
     public void run(GuildCommandEvent event) {
-        // TODO: command help
-        Guild guild = event.getGuild();
-        Member member = event.getMember();
+        if (event.getArgs().size() != 0) commandHelp(event);
+        else {
+            Guild guild = event.getGuild();
+            Member member = event.getMember();
 
-        PagedEmbed p = new PagedEmbed(EmbedUtil.pagedDescription(new EmbedBuilder()
-                                                                     .setTitle("Help").setColor(0xdf136c).build(),
-            CommandManager.getCommands().stream()
-                .filter(
-                    command -> PermissionHandler.getHighestFromUser(guild, member).raw() >= command.commandPerm().raw())
-                .sorted(Comparator.comparing(AbstractCommand::name))
-                .map(command -> String.format("`%s` | %s\n\n", command.name(), command.description()))
-                .collect(Collectors.toList())), event);
+            PagedEmbed p = new PagedEmbed(EmbedUtil.pagedDescription(new EmbedBuilder()
+                                                                         .setTitle("Help").setColor(0xdf136c).build(),
+                CommandManager.getCommands().stream()
+                    .filter(
+                        command -> PermissionHandler.getHighestFromUser(guild, member).raw() >= command.commandPerm().raw())
+                    .sorted(Comparator.comparing(AbstractCommand::name))
+                    .map(command -> String.format("`%s` | %s\n\n", command.name(), command.description()))
+                    .collect(Collectors.toList())), event);
 
-        PageListener.add(p);
+            PageListener.add(p);
+        }
     }
 
     public static void commandHelp(CommandEvent event) {
-        String invoked = event.getInvoked().getLast();
-        AtomicReference<AbstractCommand> command = new AtomicReference<>(
-            CommandManager.getCommands().stream()
-                .filter(c -> invoked.matches(c.regex().toLowerCase()))
-                .findFirst().orElseThrow(() -> new ConsoleError("Command '%s' not found", invoked)));
-        Check.notNull(command.get(), () -> new ReplyError("No such command!"));
-
-        List<AbstractCommand> hierarchy = new LinkedList<>();
-        hierarchy.add(command.get());
+        LinkedList<AbstractCommand> hierarchy = new LinkedList<>();
 
         event.getArgs().forEach(s -> {
-            AbstractCommand subCommand = command.get().subCommands().stream()
-                                     .filter(sc -> s.matches(sc.regex().toLowerCase()))
-                                     .findFirst().orElse(null);
-
-            if (subCommand != null) {
-                command.set(subCommand);
-                hierarchy.add(command.get());
+            if (hierarchy.isEmpty()) {
+                AbstractCommand cmd = CommandManager.getCommands().stream()
+                                          .filter(c -> s.matches(c.regex().toLowerCase()))
+                                          .findFirst().orElse(null);
+                hierarchy.add(cmd);
+            } else if (hierarchy.getLast() != null) {
+                hierarchy.getLast().subCommands().stream()
+                    .filter(sc -> s.matches(sc.regex().toLowerCase()))
+                    .findFirst().ifPresent(hierarchy::add);
             }
         });
 
+        Check.check(!hierarchy.isEmpty() && hierarchy.getLast() != null, () -> new ReplyError("No such command!"));
+
         String name = hierarchy.stream().map(AbstractCommand::name)
                           .collect(Collectors.joining(" "));
-        AbstractCommand cmd = command.get();
+        AbstractCommand cmd = hierarchy.getLast();
         EmbedBuilder eb = new EmbedBuilder();
         eb.setTitle("`" + name.toUpperCase() + "`")
             .setColor(0xdf136c);
         eb.addField("Description:", cmd.description(), false);
         if (!cmd.detailedHelp().isEmpty()) eb.addField("Detailed Help:", cmd.detailedHelp(), false);
-        eb.addField("Usage: ", cmd.name().equals(cmd.usage()) ?
+        eb.addField("Usage: ", cmd.usage().isEmpty() ?
                                    String.format("`%s`", name) : String.format("`%s %s`", name, cmd.usage()),
             false);
 
 
-        CommandPerm perm = command.get().commandPerm();
+        CommandPerm perm = cmd.commandPerm();
         if (perm != CommandPerm.EVERYONE)
             eb.addField("Permission Level:", String.format("`[%d] %s`", perm.raw(), perm.toString()), false);
 
         StringBuilder aliases = new StringBuilder();
-        for (String s : command.get().regex().split("\\|")) {
-            if (s.equals(command.get().name())) continue;
+        for (String s : cmd.regex().split("\\|")) {
+            if (s.equals(cmd.name())) continue;
             aliases.append(s).append(", ");
         }
 
@@ -96,7 +94,7 @@ public class Help extends GuildCommand {
         eb.addField("Aliases:", String.format("`%s`", aliases.length() > 0 ? aliases : "n/a"), false);
 
         StringBuilder sub = new StringBuilder();
-        Iterator<AbstractCommand> iterator = command.get().subCommands().iterator();
+        Iterator<AbstractCommand> iterator = cmd.subCommands().iterator();
 
         while (iterator.hasNext()) {
             AbstractCommand c = iterator.next();

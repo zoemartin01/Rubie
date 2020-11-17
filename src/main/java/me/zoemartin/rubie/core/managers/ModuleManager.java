@@ -97,7 +97,10 @@ public class ModuleManager {
     private static void sub(AbstractCommand c) {
         System.out.printf("Searched for scab in %s\n%s\n\n", c.name(), Arrays.toString(c.getClass().getAnnotations()));
         if (c.getClass().getAnnotationsByType(SubCommand.AsBase.class).length != 0) {
-            CommandManager.register(new SubcommandAdapter(c));
+            if (c instanceof GuildCommand)
+                CommandManager.register(new SubcommandAdapter<>((GuildCommand) c));
+            else
+                CommandManager.register(new SubcommandAdapter<>(c));
         }
 
         if (!c.subCommands().isEmpty()) {
