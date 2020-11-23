@@ -17,7 +17,6 @@ public class CommandManager {
 
     private static CommandProcessor processor;
     private static CommandLogger logger = null;
-    private static ErrorProcessor errorProcessor = null;
 
     public static void register(AbstractCommand c) {
         registered.add(c);
@@ -31,9 +30,6 @@ public class CommandManager {
         logger = cl;
     }
 
-    public static void setErrorHandler(ErrorProcessor errorProcessor) {
-        CommandManager.errorProcessor = errorProcessor;
-    }
 
     public static void process(MessageReceivedEvent event, String input) {
         new Thread(() -> {
@@ -58,9 +54,5 @@ public class CommandManager {
 
     public static CommandLogger getCommandLogger() {
         return logger;
-    }
-
-    public static ErrorProcessor getErrorHandler() {
-        return errorProcessor;
     }
 }
