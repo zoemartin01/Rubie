@@ -1,59 +1,40 @@
 package me.zoemartin.rubie.modules.debug;
 
 import me.zoemartin.rubie.Bot;
+import me.zoemartin.rubie.core.CommandEvent;
 import me.zoemartin.rubie.core.CommandPerm;
-import me.zoemartin.rubie.core.interfaces.Command;
-import net.dv8tion.jda.api.entities.*;
+import me.zoemartin.rubie.core.annotations.*;
+import me.zoemartin.rubie.core.interfaces.AbstractCommand;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.*;
-
-public class Shutdown implements Command {
+@Command
+@CommandOptions(
+    name = "shutdown",
+    description = "Shut down the bot",
+    perm = CommandPerm.OWNER
+)
+public class Shutdown extends AbstractCommand {
     private static final int EXIT_CODE_PROPER_SHUTDOWN = 0;
     private static final int EXIT_CODE_RESTART = 10;
     private static final int EXIT_CODE_UPGRADE = 20;
 
     @Override
-    public @NotNull Set<Command> subCommands() {
-        return Set.of(new Force(), new Upgrade(), new Restart());
-    }
-
-    @Override
-    public @NotNull String name() {
-        return "shutdown";
-    }
-
-    @Override
-    public void run(User user, MessageChannel channel, List<String> args, Message original, String invoked) {
-        channel.sendMessageFormat("Shutting down soon! :)").complete();
+    public void run(CommandEvent event) {
+        event.getChannel().sendMessageFormat("Shutting down soon! :)").complete();
         Bot.shutdownWithCode(EXIT_CODE_PROPER_SHUTDOWN, false);
     }
 
-    @Override
-    public @NotNull CommandPerm commandPerm() {
-        return CommandPerm.OWNER;
-    }
-
-    @Override
-    public @NotNull String description() {
-        return "Shuts down the bot after all RestActions have finished";
-    }
-
-    private static class Force implements Command {
-
+    @SubCommand(Shutdown.class)
+    @CommandOptions(
+        name = "force",
+        description = "Forces the bot to shut down and cancels RestActions",
+        perm = CommandPerm.OWNER,
+        alias = "now"
+    )
+    private static class Force extends AbstractCommand {
         @Override
-        public @NotNull String name() {
-            return "force";
-        }
-
-        @Override
-        public @NotNull String regex() {
-            return "--force|-f|now";
-        }
-
-        @Override
-        public void run(User user, MessageChannel channel, List<String> args, Message original, String invoked) {
-            channel.sendMessageFormat("Shutting down now!").complete();
+        public void run(CommandEvent event) {
+            event.getChannel().sendMessageFormat("Shutting down now!").complete();
             Bot.shutdownWithCode(EXIT_CODE_PROPER_SHUTDOWN, true);
         }
 
@@ -61,68 +42,37 @@ public class Shutdown implements Command {
         public @NotNull CommandPerm commandPerm() {
             return CommandPerm.OWNER;
         }
-
-        @Override
-        public @NotNull String description() {
-            return "Forces the bot to shut down and cancels RestActions";
-        }
     }
 
-    private static class Upgrade implements Command {
-
+    @SubCommand(Shutdown.class)
+    @CommandOptions(
+        name = "update",
+        description = "Updates the bot to the newest version and restarts",
+        perm = CommandPerm.OWNER,
+                       alias = "upgrade"
+    )
+    @SubCommand.AsBase(name = "update", alias = "upgrade")
+    private static class Upgrade extends AbstractCommand {
         @Override
-        public @NotNull String name() {
-            return "upgrade";
-        }
-
-        @Override
-        public @NotNull String regex() {
-            return "--upgrade|-u";
-        }
-
-        @Override
-        public void run(User user, MessageChannel channel, List<String> args, Message original, String invoked) {
-            channel.sendMessageFormat("Upgrading the bot and rebooting!").complete();
+        public void run(CommandEvent event) {
+            event.getChannel().sendMessageFormat("Upgrading the bot and rebooting!").complete();
             Bot.shutdownWithCode(EXIT_CODE_UPGRADE, true);
         }
-
-        @Override
-        public @NotNull CommandPerm commandPerm() {
-            return CommandPerm.OWNER;
-        }
-
-        @Override
-        public @NotNull String description() {
-            return "Upgrades the bot to the current version and restarts";
-        }
     }
 
-    private static class Restart implements Command {
-
+    @SubCommand(Shutdown.class)
+    @CommandOptions(
+        name = "restart",
+        description = "Restarts the bot",
+        perm = CommandPerm.OWNER,
+                       alias = "reboot"
+    )
+    @SubCommand.AsBase(name = "restart", alias = "reboot")
+    private static class Restart extends AbstractCommand {
         @Override
-        public @NotNull String name() {
-            return "restart";
-        }
-
-        @Override
-        public @NotNull String regex() {
-            return "--restart|-r|--reboot";
-        }
-
-        @Override
-        public void run(User user, MessageChannel channel, List<String> args, Message original, String invoked) {
-            channel.sendMessageFormat("Restarting the bot!").complete();
+        public void run(CommandEvent event) {
+            event.getChannel().sendMessageFormat("Restarting the bot!").complete();
             Bot.shutdownWithCode(EXIT_CODE_RESTART, true);
-        }
-
-        @Override
-        public @NotNull CommandPerm commandPerm() {
-            return CommandPerm.OWNER;
-        }
-
-        @Override
-        public @NotNull String description() {
-            return "Upgrades the bot to the current version and restarts";
         }
     }
 }

@@ -1,25 +1,31 @@
 package me.zoemartin.rubie.modules.embeds.pinnedEmbeds;
 
 import com.sun.istack.Nullable;
+import me.zoemartin.rubie.core.util.CollectorsUtil;
 import me.zoemartin.rubie.core.util.DatabaseUtil;
+import me.zoemartin.rubie.modules.embeds.triggerEmbeds.Tee;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.TextChannel;
 import org.hibernate.Session;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 public class PineController {
-    private static final Map<String, Set<PineEntity>> pines = new ConcurrentHashMap<>();
+    private static final Map<String, Collection<PineEntity>> pines = new ConcurrentHashMap<>();
+    private static final Logger log = LoggerFactory.getLogger(PineController.class);
 
     public static void init() {
-        try (Session session = DatabaseUtil.getSessionFactory().openSession()) {
-            List<PineEntity> load = session.createQuery("from PineEntity", PineEntity.class).list();
-            load.forEach(l -> pines.computeIfAbsent(l.getGuild_id(),
-                s -> Collections.newSetFromMap(new ConcurrentHashMap<>())).add(l));
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        pines.putAll(DatabaseUtil.loadGroupedCollection("from PineEntity", PineEntity.class,
+            PineEntity::getGuild_id,
+            Function.identity(),
+            CollectorsUtil.toConcurrentSet()));
+        pines.forEach((s, e) -> log.info("Loaded '{}' pines for '{}'",
+            e.size(), s));
     }
 
     public static Collection<PineEntity> getPines(Guild g) {

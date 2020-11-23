@@ -8,6 +8,10 @@ import org.hibernate.cfg.Configuration;
 import javax.persistence.criteria.*;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Function;
+import java.util.function.Predicate;
+import java.util.stream.Collector;
+import java.util.stream.Collectors;
 
 public class DatabaseUtil {
     private static final Collection<Class<?>> mapped = Collections.newSetFromMap(new ConcurrentHashMap<>());
@@ -19,7 +23,6 @@ public class DatabaseUtil {
     public static void setConfig(Configuration configuration) {
         config = configuration;
         mapped.forEach(configuration::addAnnotatedClass);
-        System.out.println(mapped.toString());
     }
 
     public static SessionFactory getSessionFactory() {
@@ -88,7 +91,7 @@ public class DatabaseUtil {
         }
     }
 
-    public static <T> List<T> find(Class<T> clazz, Predicate... predicates) {
+    public static <T> List<T> find(Class<T> clazz, javax.persistence.criteria.Predicate... predicates) {
         Session s = getSessionFactory().openSession();
         CriteriaBuilder cb = s.getCriteriaBuilder();
 
@@ -103,7 +106,97 @@ public class DatabaseUtil {
         }
     }
 
-    public static void setMapped(Class<?> aClass){
+    public static void setMapped(Class<?> aClass) {
         mapped.add(aClass);
+    }
+
+    private static <T, R> Collection<R> loadCollection(String queryString, Class<T> tClass, Function<? super T, ? extends R> mapper) {
+        Session session = getSessionFactory().openSession();
+        Collection<T> load = session.createQuery(queryString, tClass).list();
+        return load.stream().map(mapper).collect(Collectors.toList());
+    }
+
+    public static <T, K, V> Map<K, V> loadMap(String queryString, Class<T> tClass,
+                                              Function<? super T, ? extends K> keyMapper,
+                                              Function<? super T, ? extends V> valueMapper) {
+        try (Session session = getSessionFactory().openSession()) {
+            Collection<T> load = session.createQuery(queryString, tClass).list();
+            return load.stream().collect(Collectors.toConcurrentMap(keyMapper, valueMapper));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return Collections.emptyMap();
+        }
+    }
+
+    public static <T, K, V> Map<K, V> loadMap(String queryString, Class<T> tClass,
+                                              Function<? super T, ? extends K> keyMapper,
+                                              Function<? super T, ? extends V> valueMapper,
+                                              Function<? super T, ?> distinctKey) {
+        try (Session session = getSessionFactory().openSession()) {
+            Collection<T> load = session.createQuery(queryString, tClass).list();
+            return load.stream().filter(distinct(distinctKey))
+                       .collect(Collectors.toConcurrentMap(keyMapper, valueMapper));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return Collections.emptyMap();
+        }
+    }
+
+    public static <T, R, K, V> Map<R, ? extends Map<K, V>> loadGroupedMap(String queryString, Class<T> tClass,
+                                                                          Function<? super T, ? extends R> groupingBy,
+                                                                          Function<? super T, ? extends K> keyMapper,
+                                                                          Function<? super T, ? extends V> valueMapper) {
+
+        try (Session session = getSessionFactory().openSession()) {
+            Collection<T> load = session.createQuery(queryString, tClass).list();
+
+            return load.stream().collect(Collectors.groupingByConcurrent(groupingBy,
+                Collectors.mapping(Function.identity(),
+                    Collectors.toConcurrentMap(keyMapper, valueMapper))));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return Collections.emptyMap();
+        }
+    }
+
+    public static <T, R, K, V> Map<R, ? extends Map<K, V>> loadGroupedMap(String queryString, Class<T> tClass,
+                                                                          Function<? super T, ? extends R> groupingBy,
+                                                                          Function<? super T, ? extends K> keyMapper,
+                                                                          Function<? super T, ? extends V> valueMapper,
+                                                                          Function<? super T, ?> distinctKey) {
+
+        try (Session session = getSessionFactory().openSession()) {
+            Collection<T> load = session.createQuery(queryString, tClass).list();
+
+            return load.stream().filter(distinct(distinctKey)).collect(Collectors.groupingByConcurrent(groupingBy,
+                Collectors.mapping(Function.identity(),
+                    Collectors.toConcurrentMap(keyMapper, valueMapper))));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return Collections.emptyMap();
+        }
+    }
+
+    public static <T, R, K> Map<R, ? extends Collection<K>> loadGroupedCollection(String queryString, Class<T> tClass,
+                                                                                  Function<? super T, ? extends R> groupingBy,
+                                                                                  Function<? super T, ? extends K> mapper,
+                                                                                  Collector<K, ?, ? extends Collection<K>> collector) {
+
+        try (Session session = getSessionFactory().openSession()) {
+            Collection<T> load = session.createQuery(queryString, tClass).list();
+
+            return load.stream().collect(Collectors.groupingByConcurrent(groupingBy,
+                Collectors.mapping(mapper, collector)));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return Collections.emptyMap();
+        }
+
+
+    }
+
+    public static <T> Predicate<T> distinct(Function<? super T, ?> key) {
+        Map<Object, Boolean> seen = new ConcurrentHashMap<>();
+        return t -> seen.putIfAbsent(key.apply(t), Boolean.TRUE) == null;
     }
 }

@@ -1,7 +1,8 @@
 package me.zoemartin.rubie.modules.embeds;
 
-import me.zoemartin.rubie.core.CommandPerm;
-import me.zoemartin.rubie.core.Embed;
+import me.zoemartin.rubie.core.*;
+import me.zoemartin.rubie.core.annotations.Command;
+import me.zoemartin.rubie.core.annotations.CommandOptions;
 import me.zoemartin.rubie.core.exceptions.*;
 import me.zoemartin.rubie.core.interfaces.GuildCommand;
 import me.zoemartin.rubie.core.util.Check;
@@ -9,7 +10,6 @@ import me.zoemartin.rubie.core.util.Parser;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.*;
 import net.dv8tion.jda.api.exceptions.ErrorResponseException;
-import org.jetbrains.annotations.NotNull;
 import org.json.JSONObject;
 
 import java.io.IOException;
@@ -17,9 +17,17 @@ import java.net.URI;
 import java.net.http.*;
 import java.util.List;
 
-public class EmbedSource implements GuildCommand {
+@Command
+@CommandOptions(
+    name = "embedsource",
+    description = "Get an embeds source code",
+    usage = "<message id> [channel]",
+    perm = CommandPerm.BOT_USER
+)
+public class EmbedSource extends GuildCommand {
     @Override
-    public void run(Member user, TextChannel channel, List<String> args, Message original, String invoked) {
+    public void run(GuildCommandEvent event) {
+        List<String> args = event.getArgs();
         Check.check(!args.isEmpty(), CommandArgumentException::new);
 
         String messageId = args.get(0);
@@ -29,16 +37,16 @@ public class EmbedSource implements GuildCommand {
         TextChannel c;
 
         if (args.size() == 1) {
-            c = channel;
+            c = event.getTextChannel();
         } else {
             String cRef = args.get(1);
-            c = Parser.Channel.getTextChannel(original.getGuild(), cRef);
+            c = Parser.Channel.getTextChannel(event.getGuild(), cRef);
             Check.entityReferenceNotNull(c, TextChannel.class, cRef);
         }
 
-        Check.check(user.hasPermission(c, Permission.MESSAGE_READ),
+        Check.check(event.getMember().hasPermission(c, Permission.MESSAGE_READ),
             () -> new ConsoleError("Member '%s' doesn't have read permissions in channel '%s'",
-                user.getId(), c.getId()));
+                event.getMember().getId(), c.getId()));
 
         Message message;
         try {
@@ -51,44 +59,21 @@ public class EmbedSource implements GuildCommand {
         }
 
         message.getEmbeds().stream().map(Embed::new).forEach(embed -> {
-            if (embed.toJson().length() >= 2000) {
+            if (embed.toJson().length() >= 1990) {
                 try {
-                    channel.sendMessageFormat("Embed source over 2k characters: %s", haste(embed.toJson())).queue();
+                    event.getChannel().sendMessageFormat("Embed source over 2k characters: %s", haste(embed.toJson())).queue();
                 } catch (IOException | InterruptedException e) {
                     throw new UnexpectedError();
                 }
-            } else channel.sendMessageFormat("```%s```", embed.toJson()).queue();
+            } else
+                event.reply("Embed Source", embed.toJson().isEmpty() ? "%s" : "```%s```", embed.toJson()).queue();
         });
-    }
-
-    @NotNull
-    @Override
-    public String name() {
-        return "embedsource";
-    }
-
-    @NotNull
-    @Override
-    public CommandPerm commandPerm() {
-        return CommandPerm.BOT_USER;
-    }
-
-    @NotNull
-    @Override
-    public String usage() {
-        return "<message id> [channel]";
-    }
-
-    @NotNull
-    @Override
-    public String description() {
-        return "Get an embeds source code";
     }
 
     public static String haste(String content) throws IOException, InterruptedException {
         final HttpClient client = HttpClient.newHttpClient();
         final HttpRequest request = HttpRequest.newBuilder(URI.create("https://hastebin.com/documents"))
-                                       .POST(HttpRequest.BodyPublishers.ofString(content)).build();
+                                        .POST(HttpRequest.BodyPublishers.ofString(content)).build();
 
         final HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
         final String responseContent = response.body();

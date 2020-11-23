@@ -1,8 +1,11 @@
 package me.zoemartin.rubie.modules.levels;
 
+import me.zoemartin.rubie.core.annotations.Mapped;
+
 import javax.persistence.*;
 import java.util.UUID;
 
+@Mapped
 @Entity
 @Table(name = "levels")
 public class UserLevel {

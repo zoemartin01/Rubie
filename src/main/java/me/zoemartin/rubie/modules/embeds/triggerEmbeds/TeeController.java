@@ -4,6 +4,7 @@ import com.google.gson.JsonSyntaxException;
 import com.sun.istack.Nullable;
 import me.zoemartin.rubie.core.CommandPerm;
 import me.zoemartin.rubie.core.Embed;
+import me.zoemartin.rubie.core.util.CollectorsUtil;
 import me.zoemartin.rubie.core.util.DatabaseUtil;
 import me.zoemartin.rubie.modules.commandProcessing.PermissionHandler;
 import net.dv8tion.jda.api.entities.Guild;
@@ -12,21 +13,25 @@ import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import org.hibernate.Session;
 import org.jetbrains.annotations.NotNull;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 public class TeeController extends ListenerAdapter {
-    private static final Map<String, Set<Tee>> triggers = new ConcurrentHashMap<>();
+    // guild id | tee
+    private static final Map<String, Collection<Tee>> triggers = new ConcurrentHashMap<>();
+    private static final Logger log = LoggerFactory.getLogger(TeeController.class);
 
     public static void init() {
-        try (Session session = DatabaseUtil.getSessionFactory().openSession()) {
-            List<Tee> load = session.createQuery("from Tee", Tee.class).list();
-            load.forEach(l -> triggers.computeIfAbsent(l.getGuild_id(),
-                s -> Collections.newSetFromMap(new ConcurrentHashMap<>())).add(l));
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        triggers.putAll(DatabaseUtil.loadGroupedCollection("from Tee", Tee.class,
+            Tee::getGuild_id,
+            Function.identity(),
+            CollectorsUtil.toConcurrentSet()));
+        triggers.forEach((s, e) -> log.info("Loaded '{}' tees for '{}'", e.size(), s));
     }
 
     @SuppressWarnings("ConstantConditions")

@@ -1,7 +1,7 @@
 package me.zoemartin.rubie.modules.pagedEmbeds;
 
 import me.zoemartin.rubie.Bot;
-import me.zoemartin.rubie.core.LoadModule;
+import me.zoemartin.rubie.core.annotations.LoadModule;
 import me.zoemartin.rubie.core.interfaces.Module;
 import net.dv8tion.jda.api.events.message.guild.react.GuildMessageReactionAddEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;

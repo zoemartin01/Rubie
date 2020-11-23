@@ -5,13 +5,16 @@ import com.google.gson.annotations.SerializedName;
 import com.google.gson.reflect.TypeToken;
 import me.zoemartin.rubie.Bot;
 import me.zoemartin.rubie.core.CommandPerm;
+import me.zoemartin.rubie.core.GuildCommandEvent;
+import me.zoemartin.rubie.core.annotations.CommandOptions;
+import me.zoemartin.rubie.core.annotations.SubCommand;
 import me.zoemartin.rubie.core.exceptions.*;
-import me.zoemartin.rubie.core.interfaces.Command;
 import me.zoemartin.rubie.core.interfaces.GuildCommand;
 import me.zoemartin.rubie.modules.pagedEmbeds.PageListener;
 import me.zoemartin.rubie.modules.pagedEmbeds.PagedEmbed;
 import me.zoemartin.rubie.core.util.*;
 import net.dv8tion.jda.api.EmbedBuilder;
+import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.*;
 import org.jetbrains.annotations.NotNull;
 
@@ -25,52 +28,39 @@ import java.util.function.ToIntFunction;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-class Config implements GuildCommand {
+@SubCommand(Level.class)
+@CommandOptions(
+    name = "config",
+    description = "Level Configuration",
+    perm = CommandPerm.BOT_ADMIN,
+    alias = "conf"
+)
+@SubCommand.AsBase(name = "levelconfig", alias = "lvlconf")
+class Config extends GuildCommand {
     @Override
-    public @NotNull Set<Command> subCommands() {
-        return Set.of(new Enable(), new RoleRewards(), new Import(), new BlackList(), new Disable(), new Announce(),
-            new SetExp(), new Clear());
+    public void run(GuildCommandEvent event) {
+        throw new CommandArgumentException();
     }
 
-    @Override
-    public @NotNull String name() {
-        return "config";
-    }
-
-    @Override
-    public @NotNull String regex() {
-        return "config|conf";
-    }
-
-    @Override
-    public void run(Member user, TextChannel channel, List<String> args, Message original, String invoked) {
-        help(user, channel, List.of("level", name()), original);
-    }
-
-    @Override
-    public @NotNull CommandPerm commandPerm() {
-        return CommandPerm.BOT_ADMIN;
-    }
-
-    @Override
-    public @NotNull String description() {
-        return "Level Configuration";
-    }
-
-    private static class Enable implements GuildCommand {
-
+    @SubCommand(Config.class)
+    @CommandOptions(
+        name = "enable",
+        description = "Enable the Leveling System",
+        perm = CommandPerm.BOT_ADMIN
+    )
+    private static class Enable extends GuildCommand {
         @Override
         public @NotNull String name() {
             return "enable";
         }
 
         @Override
-        public void run(Member user, TextChannel channel, List<String> args, Message original, String invoked) {
-            LevelConfig c = Levels.getConfig(original.getGuild());
+        public void run(GuildCommandEvent event) {
+            LevelConfig c = Levels.getConfig(event.getGuild());
             c.setEnabled(true);
             DatabaseUtil.updateObject(c);
-            addCheckmark(original);
-            embedReply(original, channel, "Levels", "Enabled Leveling System").queue();
+            event.addCheckmark();
+            event.reply("Levels", "Enabled Leveling System").queue();
         }
 
         @Override
@@ -84,109 +74,73 @@ class Config implements GuildCommand {
         }
     }
 
-    private static class Disable implements GuildCommand {
-
+    @SubCommand(Config.class)
+    @CommandOptions(
+        name = "disable",
+        description = "Disable the Leveling System",
+        perm = CommandPerm.BOT_ADMIN
+    )
+    private static class Disable extends GuildCommand {
         @Override
-        public @NotNull String name() {
-            return "disable";
-        }
-
-        @Override
-        public void run(Member user, TextChannel channel, List<String> args, Message original, String invoked) {
-            LevelConfig c = Levels.getConfig(original.getGuild());
+        public void run(GuildCommandEvent event) {
+            LevelConfig c = Levels.getConfig(event.getGuild());
             c.setEnabled(false);
             DatabaseUtil.updateObject(c);
-            addCheckmark(original);
-            embedReply(original, channel, "Levels", "Disabled Leveling System").queue();
-        }
-
-        @Override
-        public @NotNull CommandPerm commandPerm() {
-            return CommandPerm.BOT_ADMIN;
-        }
-
-        @Override
-        public @NotNull String description() {
-            return "Disable the Leveling System";
+            event.addCheckmark();
+            event.reply("Levels", "Disabled Leveling System").queue();
         }
     }
 
-    private static class Announce implements GuildCommand {
-
+    @SubCommand(Config.class)
+    @CommandOptions(
+        name = "announce",
+        description = "Announce level up ALWAYS/REWARD/NEVER",
+        usage = "<always/reward/never>",
+        perm = CommandPerm.BOT_ADMIN
+    )
+    private static class Announce extends GuildCommand {
         @Override
-        public @NotNull String name() {
-            return "announce";
-        }
-
-        @Override
-        public void run(Member user, TextChannel channel, List<String> args, Message original, String invoked) {
-            Check.check(args.size() == 1 && args.get(0).toLowerCase().matches("always|reward|never"),
+        public void run(GuildCommandEvent event) {
+            Check.check(event.getArgs().size() == 1 && event.getArgs().get(0).toLowerCase().matches("always|reward|never"),
                 CommandArgumentException::new);
 
-            LevelConfig config = Levels.getConfig(original.getGuild());
+            LevelConfig config = Levels.getConfig(event.getGuild());
 
-            switch (args.get(0).toLowerCase()) {
-                case "always":
-                    config.setAnnouncements(LevelConfig.Announcements.ALL);
-                    break;
-
-                case "reward":
-                    config.setAnnouncements(LevelConfig.Announcements.REWARDS);
-                    break;
-
-                case "never":
-                    config.setAnnouncements(LevelConfig.Announcements.NONE);
-                    break;
+            switch (event.getArgs().get(0).toLowerCase()) {
+                case "always" -> config.setAnnouncements(LevelConfig.Announcements.ALL);
+                case "reward" -> config.setAnnouncements(LevelConfig.Announcements.REWARDS);
+                case "never" -> config.setAnnouncements(LevelConfig.Announcements.NONE);
             }
 
             DatabaseUtil.updateObject(config);
-            addCheckmark(original);
-            embedReply(original, channel, "Levels", "Level up announcements set to `%s`",
+            event.addCheckmark();
+            event.reply("Levels", "Level up announcements set to `%s`",
                 config.getAnnouncements().toString()).queue();
-        }
-
-        @Override
-        public @NotNull CommandPerm commandPerm() {
-            return CommandPerm.BOT_ADMIN;
-        }
-
-        @Override
-        public @NotNull String description() {
-            return "Announce level up ALWAYS/REWARD/NEVER";
         }
     }
 
-    private static class SetExp implements GuildCommand {
-
+    @SubCommand(Config.class)
+    @CommandOptions(
+        name = "setxp",
+        description = "Sets a users exp",
+        usage = "<xp> <user>",
+        perm = CommandPerm.BOT_ADMIN
+    )
+    private static class SetExp extends GuildCommand {
         @Override
-        public @NotNull String name() {
-            return "setxp";
-        }
+        public void run(GuildCommandEvent event) {
+            Check.check(event.getArgs().size() == 2 && Parser.Int.isParsable(event.getArgs().get(0))
+                            && Parser.User.isParsable(event.getArgs().get(1)), CommandArgumentException::new);
 
-        @Override
-        public void run(Member user, TextChannel channel, List<String> args, Message original, String invoked) {
-            Check.check(args.size() == 2 && Parser.Int.isParsable(args.get(0))
-                            && Parser.User.isParsable(args.get(1)), CommandArgumentException::new);
-
-            int xp = Parser.Int.parse(args.get(0));
-            User u = CacheUtils.getUserExplicit(args.get(1));
+            int xp = Parser.Int.parse(event.getArgs().get(0));
+            User u = CacheUtils.getUserExplicit(event.getArgs().get(1));
 
             Check.check(xp >= 0, () -> new ReplyError("Xp must be above 0"));
-            UserLevel level = Levels.getUserLevel(original.getGuild(), u);
+            UserLevel level = Levels.getUserLevel(event.getGuild(), u);
             level.setExp(xp);
             DatabaseUtil.updateObject(level);
-            addCheckmark(original);
-            embedReply(original, channel, "Levels", "Set %s's xp to `%s`", u.getAsMention(), xp).queue();
-        }
-
-        @Override
-        public @NotNull CommandPerm commandPerm() {
-            return CommandPerm.BOT_ADMIN;
-        }
-
-        @Override
-        public @NotNull String description() {
-            return "Set's a users exp";
+            event.addCheckmark();
+            event.reply("Levels", "Set %s's xp to `%s`", u.getAsMention(), xp).queue();
         }
     }
 
@@ -195,26 +149,27 @@ class Config implements GuildCommand {
      * <p>
      * [ { "Userid": id, "Exp": exp }, ... ]
      */
-    private static class Import implements GuildCommand {
+    @SubCommand(Config.class)
+    @CommandOptions(
+        name = "import",
+        description = "Import Levels from an Attachment",
+        perm = CommandPerm.BOT_ADMIN
 
-        @Override
-        public @NotNull String name() {
-            return "import";
-        }
-
+    )
+    private static class Import extends GuildCommand {
         @SuppressWarnings("unchecked")
         @Override
-        public void run(Member user, TextChannel channel, List<String> args, Message original, String invoked) {
-            Check.check(args.isEmpty(), CommandArgumentException::new);
-            Check.check(original.getAttachments().size() == 1, CommandArgumentException::new);
-            Message m = channel.sendMessage("Okay... this might take a while").complete();
+        public void run(GuildCommandEvent event) {
+            Check.check(event.getArgs().isEmpty(), CommandArgumentException::new);
+            Check.check(event.getAttachments().size() == 1, CommandArgumentException::new);
+            Message m = event.getChannel().sendMessage("Okay... this might take a while").complete();
             Instant start = Instant.now();
 
-            String guildId = original.getGuild().getId();
+            String guildId = event.getGuild().getId();
             Type listType = new TypeToken<ArrayList<ImportLevel>>() {
             }.getType();
             Map<String, Integer> levels;
-            try (InputStreamReader ir = new InputStreamReader(original.getAttachments()
+            try (InputStreamReader ir = new InputStreamReader(event.getAttachments()
                                                                   .get(0)
                                                                   .retrieveInputStream()
                                                                   .get(1, TimeUnit.MINUTES))) {
@@ -226,7 +181,7 @@ class Config implements GuildCommand {
             }
 
             levels.forEach((s, integer) -> Levels.importLevel(new UserLevel(guildId, s, integer)));
-            addCheckmark(original);
+            event.addCheckmark();
             m.delete().complete();
 
             PagedEmbed p = new PagedEmbed(EmbedUtil.pagedDescription(
@@ -234,30 +189,19 @@ class Config implements GuildCommand {
                 Stream.concat(
                     Stream.of(String.format("Time taken: %s seconds\n",
                         Duration.between(start, Instant.now()).toSeconds())),
-                levels.entrySet().stream()
-                    .sorted(Comparator.comparingInt((ToIntFunction<Map.Entry<String, Integer>>) Map.Entry::getValue)
-                                .reversed())
-                    .map(e -> {
-                            User u = Bot.getJDA().getUserById(e.getKey());
-                            if (u == null) return String.format("User: `%s` - Level: `%s` - Exp: `%s`\n", e.getKey(),
-                                Levels.calcLevel(e.getValue()), e.getValue());
-                            return String.format("User: %s - Level: `%s` - Exp: `%s`\n", u.getAsMention(),
-                                Levels.calcLevel(e.getValue()), e.getValue());
-                        }
-                    )).collect(Collectors.toList())),
-                channel, user.getUser());
+                    levels.entrySet().stream()
+                        .sorted(Comparator.comparingInt((ToIntFunction<Map.Entry<String, Integer>>) Map.Entry::getValue)
+                                    .reversed())
+                        .map(e -> {
+                                User u = Bot.getJDA().getUserById(e.getKey());
+                                if (u == null) return String.format("User: `%s` - Level: `%s` - Exp: `%s`\n", e.getKey(),
+                                    Levels.calcLevel(e.getValue()), e.getValue());
+                                return String.format("User: %s - Level: `%s` - Exp: `%s`\n", u.getAsMention(),
+                                    Levels.calcLevel(e.getValue()), e.getValue());
+                            }
+                        )).collect(Collectors.toList())), event);
 
             PageListener.add(p);
-        }
-
-        @Override
-        public @NotNull CommandPerm commandPerm() {
-            return CommandPerm.BOT_ADMIN;
-        }
-
-        @Override
-        public @NotNull String description() {
-            return "Import Levels";
         }
 
         private static class ImportLevel implements Serializable {
@@ -282,168 +226,116 @@ class Config implements GuildCommand {
         }
     }
 
-    private static class Clear implements GuildCommand {
+    @SubCommand(Config.class)
+    @CommandOptions(
+        name = "clear",
+        description = "WARNING: CLEARS ALL LEVELS FROM THE DATABASE",
+        perm = CommandPerm.BOT_ADMIN
+    )
+    private static class Clear extends GuildCommand {
         @Override
-        public void run(Member user, TextChannel channel, List<String> args, Message original, String invoked) {
-            Check.check(args.size() >= 1 && args.get(0).matches("--agree"),
+        public void run(GuildCommandEvent event) {
+            Check.check(event.getArgs().size() >= 1 && event.getArgs().get(0).matches("--agree"),
                 () -> new ReplyError("This action will clear the entire level database for this server. " +
                                          "To confirm this action rerun this command with the argument `--agree`!"));
             Instant start = Instant.now();
 
-            Message m = channel.sendMessage("Okay... this might take a while").complete();
-            Levels.getLevels(original.getGuild()).forEach(DatabaseUtil::deleteObject);
-            Levels.clearGuildCache(original.getGuild());
-            addCheckmark(original);
+            Message m = event.getChannel().sendMessage("Okay... this might take a while").complete();
+            Levels.getLevels(event.getGuild()).forEach(DatabaseUtil::deleteObject);
+            Levels.clearGuildCache(event.getGuild());
+            event.addCheckmark();
             m.delete().complete();
-            embedReply(original, channel, "Level Config",
+            event.reply("Level Config",
                 "Successfully cleared all Levels\nTime taken: %s seconds",
                 Duration.between(start, Instant.now()).toSeconds()).queue();
         }
-
-        @NotNull
-        @Override
-        public String name() {
-            return "clear";
-        }
-
-        @NotNull
-        @Override
-        public CommandPerm commandPerm() {
-            return CommandPerm.BOT_ADMIN;
-        }
-
-        @NotNull
-        @Override
-        public String description() {
-            return "WARNING: CLEARS ALL LEVELS FROM THE DATABASE";
-        }
     }
 
-    private static class RoleRewards implements GuildCommand {
-
+    @SubCommand(Config.class)
+    @CommandOptions(
+        name = "rewards",
+        description = "Manage Role Rewards",
+        perm = CommandPerm.BOT_ADMIN,
+        alias = "rolerewards",
+        botPerms = Permission.MANAGE_ROLES
+    )
+    private static class RoleRewards extends GuildCommand {
         @Override
-        public @NotNull Set<Command> subCommands() {
-            return Set.of(new RoleRewards.Add(), new RoleRewards.Remove(), new RoleRewards.list());
+        public void run(GuildCommandEvent event) {
+            throw new CommandArgumentException();
         }
 
-        @Override
-        public @NotNull String name() {
-            return "rewards";
-        }
-
-        @Override
-        public void run(Member user, TextChannel channel, List<String> args, Message original, String invoked) {
-            help(user, channel, List.of("level", "config", name()), original);
-        }
-
-        @Override
-        public @NotNull CommandPerm commandPerm() {
-            return CommandPerm.BOT_ADMIN;
-        }
-
-        @Override
-        public @NotNull String description() {
-            return "Manage Role Rewards";
-        }
-
-        private static class Add implements GuildCommand {
-
+        @SubCommand(RoleRewards.class)
+        @CommandOptions(
+            name = "add",
+            description = "Adds a role reward",
+            usage = "<level> <role>",
+            perm = CommandPerm.BOT_ADMIN,
+            botPerms = Permission.MANAGE_ROLES
+        )
+        private static class Add extends GuildCommand {
             @Override
-            public @NotNull String name() {
-                return "add";
-            }
-
-            @Override
-            public void run(Member user, TextChannel channel, List<String> args, Message original, String invoked) {
-                Check.check(args.size() > 1 && Parser.Int.isParsable(args.get(0)),
+            public void run(GuildCommandEvent event) {
+                Check.check(event.getArgs().size() > 1 && Parser.Int.isParsable(event.getArgs().get(0)),
                     CommandArgumentException::new);
 
-                String rRef = lastArg(1, args, original);
-                Role r = Parser.Role.getRole(original.getGuild(), rRef);
-                int level = Parser.Int.parse(args.get(0));
+                String rRef = lastArg(1, event);
+                Role r = Parser.Role.getRole(event.getGuild(), rRef);
+                int level = Parser.Int.parse(event.getArgs().get(0));
 
                 Check.entityReferenceNotNull(r, Role.class, rRef);
                 Check.check(level > 0, () -> new ReplyError("Error, Level must be bigger than 0"));
 
-                LevelConfig config = Levels.getConfig(original.getGuild());
+                LevelConfig config = Levels.getConfig(event.getGuild());
                 config.addRewardRole(r.getId(), level);
 
                 DatabaseUtil.updateObject(config);
-                addCheckmark(original);
-                embedReply(original, channel, "Level Rewards", "Added %s to Level %s",
+                event.addCheckmark();
+                event.reply("Level Rewards", "Added %s to Level %s",
                     r.getAsMention(), level).queue();
-            }
-
-            @Override
-            public @NotNull CommandPerm commandPerm() {
-                return CommandPerm.BOT_ADMIN;
-            }
-
-            @Override
-            public @NotNull String usage() {
-                return "<level> <role>";
-            }
-
-            @Override
-            public @NotNull String description() {
-                return "Adds Role Rewards";
             }
         }
 
-        private static class Remove implements GuildCommand {
-
+        @SubCommand(RoleRewards.class)
+        @CommandOptions(
+            name = "remove",
+            description = "Removes a role reward",
+            usage = "<level> <role>",
+            perm = CommandPerm.BOT_ADMIN
+        )
+        private static class Remove extends GuildCommand {
             @Override
-            public @NotNull String name() {
-                return "remove";
-            }
+            public void run(GuildCommandEvent event) {
+                Check.check(event.getArgs().size() > 1, CommandArgumentException::new);
 
-            @Override
-            public void run(Member user, TextChannel channel, List<String> args, Message original, String invoked) {
-                Check.check(args.size() > 1, CommandArgumentException::new);
-
-                String rRef = lastArg(1, args, original);
-                Role r = Parser.Role.getRole(original.getGuild(), rRef);
-                int level = Parser.Int.parse(args.get(0));
+                String rRef = lastArg(1, event);
+                Role r = Parser.Role.getRole(event.getGuild(), rRef);
+                int level = Parser.Int.parse(event.getArgs().get(0));
                 Check.entityReferenceNotNull(r, Role.class, rRef);
                 Check.check(level > 0, () -> new ReplyError("Error, Level must be bigger than 0"));
 
-                LevelConfig config = Levels.getConfig(original.getGuild());
+                LevelConfig config = Levels.getConfig(event.getGuild());
                 if (!config.removeRewardRole(level, r.getId())) return;
 
                 DatabaseUtil.updateObject(config);
-                addCheckmark(original);
-                embedReply(original, channel, "Level Rewards", "Removed %s from Level %s",
+                event.addCheckmark();
+                event.reply("Level Rewards", "Removed %s from Level %s",
                     r.getAsMention(), level).queue();
-            }
-
-            @Override
-            public @NotNull String usage() {
-                return "<level> <role>";
-            }
-
-            @Override
-            public @NotNull CommandPerm commandPerm() {
-                return CommandPerm.BOT_ADMIN;
-            }
-
-            @Override
-            public @NotNull String description() {
-                return "Removes Role Rewards";
             }
         }
 
-        private static class list implements GuildCommand {
-
+        @SubCommand(RoleRewards.class)
+        @CommandOptions(
+            name = "list",
+            description = "Lists all role rewards",
+            perm = CommandPerm.BOT_ADMIN
+        )
+        private static class list extends GuildCommand {
             @Override
-            public @NotNull String name() {
-                return "list";
-            }
+            public void run(GuildCommandEvent event) {
+                Check.check(event.getArgs().isEmpty(), CommandArgumentException::new);
 
-            @Override
-            public void run(Member user, TextChannel channel, List<String> args, Message original, String invoked) {
-                Check.check(args.isEmpty(), CommandArgumentException::new);
-
-                LevelConfig config = Levels.getConfig(original.getGuild());
+                LevelConfig config = Levels.getConfig(event.getGuild());
 
                 PagedEmbed p = new PagedEmbed(EmbedUtil.pagedDescription(
                     new EmbedBuilder().setTitle("Role Rewards").build(),
@@ -451,25 +343,14 @@ class Config implements GuildCommand {
                         .map(e ->
                                  String.format("Level: `%d` - Role(s): %s\n", e.getKey(),
                                      e.getValue().stream().map(s -> {
-                                         Role r = original.getGuild().getRoleById(s);
+                                         Role r = event.getGuild().getRoleById(s);
                                          return r == null ? s : r.getAsMention();
                                      }).collect(Collectors.joining(", "))
                                  )
-                        ).collect(Collectors.toList())),
-                    channel, user.getUser());
+                        ).collect(Collectors.toList())), event);
 
                 PageListener.add(p);
-                addCheckmark(original);
-            }
-
-            @Override
-            public @NotNull CommandPerm commandPerm() {
-                return CommandPerm.BOT_ADMIN;
-            }
-
-            @Override
-            public @NotNull String description() {
-                return "Lists Role Rewards";
+                event.addCheckmark();
             }
         }
     }

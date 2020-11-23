@@ -1,34 +1,34 @@
 package me.zoemartin.rubie.modules.baseCommands;
 
 import de.androidpit.colorthief.ColorThief;
-import me.zoemartin.rubie.core.CommandPerm;
+import me.zoemartin.rubie.core.GuildCommandEvent;
+import me.zoemartin.rubie.core.annotations.Command;
+import me.zoemartin.rubie.core.annotations.CommandOptions;
 import me.zoemartin.rubie.core.exceptions.CommandArgumentException;
 import me.zoemartin.rubie.core.interfaces.GuildCommand;
 import me.zoemartin.rubie.core.util.Check;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.*;
-import org.jetbrains.annotations.NotNull;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
 import java.io.IOException;
 import java.net.URL;
 import java.util.EnumSet;
-import java.util.List;
 
-public class ServerInfo implements GuildCommand {
-    @Override
-    public @NotNull String name() {
-        return "serverinfo";
-    }
-
+@Command
+@CommandOptions(
+    name = "serverinfo",
+    description = "Shows information about the Server"
+)
+public class ServerInfo extends GuildCommand {
     @SuppressWarnings("ConstantConditions")
     @Override
-    public void run(Member user, TextChannel channel, List<String> args, Message original, String invoked) {
-        Check.check(args.isEmpty(), CommandArgumentException::new);
+    public void run(GuildCommandEvent event) {
+        Check.check(event.getArgs().isEmpty(), CommandArgumentException::new);
 
-        Guild guild = original.getGuild();
+        Guild guild = event.getGuild();
 
         EmbedBuilder eb = new EmbedBuilder()
                               .setAuthor(guild.getName(), null, guild.getIconUrl())
@@ -75,16 +75,6 @@ public class ServerInfo implements GuildCommand {
             .setFooter("ID: " + guild.getId() + " | Created")
             .setTimestamp(guild.getTimeCreated());
 
-        channel.sendMessage(eb.build()).queue();
-    }
-
-    @Override
-    public @NotNull CommandPerm commandPerm() {
-        return CommandPerm.EVERYONE;
-    }
-
-    @Override
-    public @NotNull String description() {
-        return "Shows info about the server";
+        event.getChannel().sendMessage(eb.build()).queue();
     }
 }

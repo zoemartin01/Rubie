@@ -1,10 +1,14 @@
 package me.zoemartin.rubie.modules.logging;
 
+import me.zoemartin.rubie.core.annotations.Disabled;
+import me.zoemartin.rubie.core.annotations.Mapped;
 import net.dv8tion.jda.api.entities.Message;
 
 import javax.persistence.*;
 import java.util.UUID;
 
+@Disabled
+@Mapped
 @Entity
 @Table(name = "messages")
 public class LMessage {

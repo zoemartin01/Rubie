@@ -1,41 +1,37 @@
 package me.zoemartin.rubie.modules.baseCommands;
 
 import me.zoemartin.rubie.Bot;
-import me.zoemartin.rubie.core.CommandPerm;
-import me.zoemartin.rubie.core.interfaces.Command;
-import net.dv8tion.jda.api.*;
-import net.dv8tion.jda.api.entities.*;
-import org.jetbrains.annotations.NotNull;
-import org.joda.time.DateTime;
-import org.joda.time.Duration;
+import me.zoemartin.rubie.core.CommandEvent;
+import me.zoemartin.rubie.core.annotations.Command;
+import me.zoemartin.rubie.core.annotations.CommandOptions;
+import me.zoemartin.rubie.core.interfaces.AbstractCommand;
+import net.dv8tion.jda.api.EmbedBuilder;
+import org.joda.time.*;
 import org.joda.time.format.PeriodFormatter;
 import org.joda.time.format.PeriodFormatterBuilder;
 
 import java.io.IOException;
 import java.net.URL;
-import java.util.*;
+import java.util.Enumeration;
 import java.util.jar.Manifest;
 
-public class About implements Command {
+@Command
+@CommandOptions(
+    name = "about",
+    description = "Shows info about the bot",
+    alias = "botinfo"
+)
+public class About extends AbstractCommand {
     private String JDA_VERSION = null;
     private static DateTime STARTUP;
+    private static String OWNER_TAG = null;
 
     public About() {
         STARTUP = DateTime.now();
     }
 
     @Override
-    public @NotNull String name() {
-        return "about";
-    }
-
-    @Override
-    public @NotNull String regex() {
-        return "about|botinfo";
-    }
-
-    @Override
-    public void run(User user, MessageChannel channel, List<String> args, Message original, String invoked) {
+    public void run(CommandEvent event) {
         EmbedBuilder eb = new EmbedBuilder();
         eb.setTitle("About").setColor(0xdf136c);
 
@@ -56,7 +52,7 @@ public class About implements Command {
                                         .appendSeconds()
                                         .appendSuffix(" seconds")
                                         .toFormatter();
-        eb.addField("Uptime", formatter.print(new Duration(STARTUP, DateTime.now()).toPeriod()), true);
+        eb.addField("Uptime", formatter.print(new Duration(STARTUP, DateTime.now()).toPeriodFrom(STARTUP)), true);
         Runtime rt = Runtime.getRuntime();
         long usedMB = (rt.totalMemory() - rt.freeMemory()) / 1024 / 1024;
         eb.addField("Memory Usage", usedMB + " MB", true);
@@ -66,24 +62,14 @@ public class About implements Command {
         eb.setFooter("Made with JDA",
             "https://raw.githubusercontent.com/DV8FromTheWorld/JDA/assets/assets/readme/logo.png");
 
-        channel.sendMessage(eb.build()).queue();
-    }
-
-    @Override
-    public @NotNull CommandPerm commandPerm() {
-        return CommandPerm.EVERYONE;
-    }
-
-    @Override
-    public @NotNull String description() {
-        return "Shows info about the bot";
+        event.getChannel().sendMessage(eb.build()).queue();
     }
 
     private void findVersion() {
         Enumeration<URL> resources;
         try {
             resources = getClass().getClassLoader()
-                                             .getResources("META-INF/MANIFEST.MF");
+                            .getResources("META-INF/MANIFEST.MF");
             while (resources.hasMoreElements()) {
                 Manifest manifest = new Manifest(resources.nextElement().openStream());
                 JDA_VERSION = manifest.getMainAttributes().getValue("jda-version");

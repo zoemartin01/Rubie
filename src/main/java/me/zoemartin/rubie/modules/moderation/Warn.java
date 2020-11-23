@@ -4,8 +4,9 @@ import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import me.zoemartin.rubie.Bot;
 import me.zoemartin.rubie.core.CommandPerm;
+import me.zoemartin.rubie.core.GuildCommandEvent;
+import me.zoemartin.rubie.core.annotations.*;
 import me.zoemartin.rubie.core.exceptions.*;
-import me.zoemartin.rubie.core.interfaces.Command;
 import me.zoemartin.rubie.core.interfaces.GuildCommand;
 import me.zoemartin.rubie.core.util.*;
 import me.zoemartin.rubie.modules.pagedEmbeds.PageListener;
@@ -13,7 +14,6 @@ import me.zoemartin.rubie.modules.pagedEmbeds.PagedEmbed;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.*;
 import org.hibernate.Session;
-import org.jetbrains.annotations.NotNull;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.format.DateTimeFormat;
@@ -23,33 +23,33 @@ import javax.persistence.criteria.*;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.lang.reflect.Type;
+import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.stream.Collectors;
 
-public class Warn implements GuildCommand {
+@Disabled
+@Command
+@CommandOptions(
+    name = "warn",
+    description = "Warn a user",
+    usage = "<user> <reason>",
+    perm = CommandPerm.BOT_MODERATOR
+)
+public class Warn extends GuildCommand {
     @Override
-    public @NotNull Set<Command> subCommands() {
-        return Set.of(new list(), new Remove(), new BulkImportFile());
-    }
-
-    @Override
-    public @NotNull String name() {
-        return "warn";
-    }
-
-    @Override
-    public void run(Member user, TextChannel channel, List<String> args, Message original, String invoked) {
-        Check.check(args.size() > 1 && Parser.User.isParsable(args.get(0)), CommandArgumentException::new);
-        String userId = args.get(0);
+    public void run(GuildCommandEvent event) {
+        Check.check(event.getArgs().size() > 1 && Parser.User.isParsable(event.getArgs().get(0)),
+            CommandArgumentException::new);
+        String userId = event.getArgs().get(0);
 
         User u = Bot.getJDA().getUserById(Parser.User.parse(userId));
         Check.notNull(u, UserNotFoundException::new);
 
-        String reason = lastArg(1, args, original);
+        String reason = lastArg(1, event);
 
         ModLogEntity warnEntity = new ModLogEntity(
-            original.getGuild().getId(), u.getId(), user.getId(), reason, original.getTimeCreated().toInstant().toEpochMilli(),
+            event.getGuild().getId(), u.getId(), event.getMember().getId(), reason, Instant.now().toEpochMilli(),
             ModLogEntity.ModLogType.WARN);
 
         DatabaseUtil.saveObject(warnEntity);
@@ -61,37 +61,23 @@ public class Warn implements GuildCommand {
         if (!u.isBot())
             u.openPrivateChannel().complete()
                 .sendMessageFormat("You have received a warning from a Moderator on `%s`. \n**Reason**:\n\n%s",
-                    original.getGuild().getName(), warnEntity.getReason()).queue();
+                    event.getGuild().getName(), warnEntity.getReason()).queue();
 
-        channel.sendMessage(eb.build()).queue();
+        event.getChannel().sendMessage(eb.build()).queue();
     }
 
-    @Override
-    public @NotNull CommandPerm commandPerm() {
-        return CommandPerm.BOT_MODERATOR;
-    }
-
-    @Override
-    public @NotNull String usage() {
-        return "<user> <reason>";
-    }
-
-    @Override
-    public @NotNull String description() {
-        return "Warn a user";
-    }
-
-    private static class list implements GuildCommand {
-
+    @SubCommand(Warn.class)
+    @CommandOptions(
+        name = "list",
+        description = "Lists a users warns",
+        usage = "<user>",
+        perm = CommandPerm.BOT_MODERATOR
+    )
+    private static class list extends GuildCommand {
         @Override
-        public @NotNull String name() {
-            return "list";
-        }
-
-        @Override
-        public void run(Member user, TextChannel channel, List<String> args, Message original, String invoked) {
-            String userId = args.get(0);
-            Check.check(args.size() == 1 && Parser.User.isParsable(userId), CommandArgumentException::new);
+        public void run(GuildCommandEvent event) {
+            Check.check(event.getArgs().size() == 1 && Parser.User.isParsable(event.getArgs().get(0)), CommandArgumentException::new);
+            String userId = event.getArgs().get(0);
 
             User u = Bot.getJDA().getUserById(Parser.User.parse(userId));
             Check.notNull(u, UserNotFoundException::new);
@@ -103,7 +89,7 @@ public class Warn implements GuildCommand {
             Root<ModLogEntity> r = q.from(ModLogEntity.class);
             List<ModLogEntity> warns = s.createQuery(q.select(r).where(
                 cb.equal(r.get("type"), ModLogEntity.ModLogType.WARN.raw()),
-                cb.equal(r.get("guild_id"), original.getGuild().getId()),
+                cb.equal(r.get("guild_id"), event.getGuild().getId()),
                 cb.equal(r.get("user_id"), userId))).getResultList();
 
             List<MessageEmbed> pages = EmbedUtil.pagedFieldEmbed(
@@ -123,36 +109,23 @@ public class Warn implements GuildCommand {
                 }).collect(Collectors.toList())
             );
 
-            PageListener.add(new PagedEmbed(pages, channel, user.getUser()));
-        }
-
-        @Override
-        public @NotNull CommandPerm commandPerm() {
-            return CommandPerm.BOT_MODERATOR;
-        }
-
-        @Override
-        public @NotNull String usage() {
-            return "<user>";
-        }
-
-        @Override
-        public @NotNull String description() {
-            return "Lists a users warns";
+            PageListener.add(new PagedEmbed(pages, event));
         }
     }
 
-    private static class Remove implements GuildCommand {
+    @SubCommand(Warn.class)
+    @CommandOptions(
+        name = "remove",
+        description = "Remove a warning",
+        usage = "<uuid>",
+        perm = CommandPerm.BOT_MODERATOR
+    )
+    private static class Remove extends GuildCommand {
         @Override
-        public @NotNull String name() {
-            return "remove";
-        }
+        public void run(GuildCommandEvent event) {
+            Check.check(event.getArgs().size() == 1, CommandArgumentException::new);
 
-        @Override
-        public void run(Member user, TextChannel channel, List<String> args, Message original, String invoked) {
-            Check.check(args.size() == 1, CommandArgumentException::new);
-
-            UUID uuid = UUID.fromString(args.get(0));
+            UUID uuid = UUID.fromString(event.getArgs().get(0));
 
             Session s = DatabaseUtil.getSessionFactory().openSession();
             CriteriaBuilder cb = s.getCriteriaBuilder();
@@ -161,7 +134,7 @@ public class Warn implements GuildCommand {
             Root<ModLogEntity> r = q.from(ModLogEntity.class);
             List<ModLogEntity> warns = s.createQuery(q.select(r).where(
                 cb.equal(r.get("type"), ModLogEntity.ModLogType.WARN.raw()),
-                cb.equal(r.get("guild_id"), original.getGuild().getId()),
+                cb.equal(r.get("guild_id"), event.getGuild().getId()),
                 cb.equal(r.get("uuid"), uuid))).getResultList();
 
             ModLogEntity warn = warns.isEmpty() ? null : warns.get(0);
@@ -178,43 +151,29 @@ public class Warn implements GuildCommand {
             if (u != null)
                 eb.setAuthor(String.format("%s / %s", u.getAsTag(), u.getId()), null, u.getEffectiveAvatarUrl());
 
-            channel.sendMessage(eb.build()).queue();
-        }
-
-        @Override
-        public @NotNull CommandPerm commandPerm() {
-            return CommandPerm.BOT_MANAGER;
-        }
-
-        @Override
-        public @NotNull String usage() {
-            return "<uuid>";
-        }
-
-        @Override
-        public @NotNull String description() {
-            return "Remove a warning";
+            event.getChannel().sendMessage(eb.build()).queue();
         }
     }
 
-    private static class BulkImportFile implements GuildCommand {
+    @SubCommand(Warn.class)
+    @CommandOptions(
+        name = "import",
+        description = "Bulk import user warns from an attachment",
+        perm = CommandPerm.BOT_ADMIN
+    )
+    private static class BulkImportFile extends GuildCommand {
         private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormat.forPattern("yyyy-MM-dd'T'HH:mm:ss.SSSSSS");
 
         @Override
-        public @NotNull String name() {
-            return "import";
-        }
-
-        @Override
-        public void run(Member user, TextChannel channel, List<String> args, Message original, String invoked) {
-            Check.check(args.isEmpty(), CommandArgumentException::new);
-            Check.check(original.getAttachments().size() == 1, CommandArgumentException::new);
-            Message m = channel.sendMessage("Okay... this might take a while").complete();
+        public void run(GuildCommandEvent event) {
+            Check.check(event.getArgs().isEmpty(), CommandArgumentException::new);
+            Check.check(event.getAttachments().size() == 1, CommandArgumentException::new);
+            Message m = event.getChannel().sendMessage("Okay... this might take a while").complete();
 
             InputStreamReader ir;
             BufferedReader br;
             try {
-                ir = new InputStreamReader(original.getAttachments().get(0).retrieveInputStream().get(1, TimeUnit.MINUTES));
+                ir = new InputStreamReader(event.getAttachments().get(0).retrieveInputStream().get(1, TimeUnit.MINUTES));
                 br = new BufferedReader(ir);
             } catch (InterruptedException | ExecutionException | TimeoutException e) {
                 throw new UnexpectedError(e);
@@ -226,17 +185,17 @@ public class Warn implements GuildCommand {
             CriteriaQuery<ModLogEntity> q = cb.createQuery(ModLogEntity.class);
             Root<ModLogEntity> r = q.from(ModLogEntity.class);
             List<ModLogEntity> existing = s.createQuery(q.select(r).where(
-                cb.equal(r.get("guild_id"), original.getGuild().getId()))).getResultList();
+                cb.equal(r.get("guild_id"), event.getGuild().getId()))).getResultList();
 
             Type listType = new TypeToken<ArrayList<ModLogs.ModLogEntry>>() {
             }.getType();
             List<ModLogs.ModLogEntry> toImport = new Gson().fromJson(br, listType);
 
-            String guildId = original.getGuild().getId();
+            String guildId = event.getGuild().getId();
             List<ModLogEntity> modlogs = toImport.stream().filter(e -> e.getAction().equals("warn"))
                                              .map(e ->
-                                                     new ModLogEntity(guildId, e.getOffender_id(), e.getModerator_id(), e.getReason(),
-                                                         DateTime.parse(e.getTimestamp(), TIME_FORMATTER).getMillis(), ModLogEntity.ModLogType.WARN)
+                                                      new ModLogEntity(guildId, e.getOffender_id(), e.getModerator_id(), e.getReason(),
+                                                          DateTime.parse(e.getTimestamp(), TIME_FORMATTER).getMillis(), ModLogEntity.ModLogType.WARN)
 
                                              ).filter(e -> existing.stream().noneMatch(e::equals))
                                              .collect(Collectors.toList());
@@ -248,17 +207,7 @@ public class Warn implements GuildCommand {
             EmbedBuilder eb = new EmbedBuilder().setTitle("Bulk Warn Import");
             eb.setDescription("Imported warns:\n" + String.join("\n", users));
             m.delete().complete();
-            channel.sendMessage(eb.build()).queue();
-        }
-
-        @Override
-        public @NotNull CommandPerm commandPerm() {
-            return CommandPerm.BOT_ADMIN;
-        }
-
-        @Override
-        public @NotNull String description() {
-            return "Bulk Import Warns. These warns are added silently. Attach a text file with one Line for each warn.";
+            event.getChannel().sendMessage(eb.build()).queue();
         }
     }
 }

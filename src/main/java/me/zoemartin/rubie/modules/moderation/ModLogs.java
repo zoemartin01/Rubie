@@ -4,17 +4,16 @@ import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import me.zoemartin.rubie.Bot;
 import me.zoemartin.rubie.core.CommandPerm;
+import me.zoemartin.rubie.core.GuildCommandEvent;
+import me.zoemartin.rubie.core.annotations.*;
 import me.zoemartin.rubie.core.exceptions.*;
-import me.zoemartin.rubie.core.interfaces.Command;
 import me.zoemartin.rubie.core.interfaces.GuildCommand;
 import me.zoemartin.rubie.core.util.*;
-import me.zoemartin.rubie.modules.Export.Notes;
 import me.zoemartin.rubie.modules.pagedEmbeds.PageListener;
 import me.zoemartin.rubie.modules.pagedEmbeds.PagedEmbed;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.*;
 import org.hibernate.Session;
-import org.jetbrains.annotations.NotNull;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.format.*;
@@ -26,52 +25,35 @@ import java.util.*;
 import java.util.concurrent.*;
 import java.util.stream.Collectors;
 
-public class ModLogs implements GuildCommand {
+@Disabled
+@Command
+@CommandOptions(
+    name = "modlogs",
+    description = "Lists a user's modlogs",
+    usage = "<user>",
+    perm = CommandPerm.BOT_MODERATOR
+)
+public class ModLogs extends GuildCommand {
     @Override
-    public @NotNull Set<Command> subCommands() {
-        return Set.of(new list(), new Remove(), new BulkImportFile(), new Clear());
+    public void run(GuildCommandEvent event) {
+        new list().run(event);
     }
 
-    @Override
-    public @NotNull String name() {
-        return "modlogs";
-    }
-
-    @Override
-    public void run(Member user, TextChannel channel, List<String> args, Message original, String invoked) {
-        new list().run(user, channel, args, original, "list");
-    }
-
-    @Override
-    public @NotNull CommandPerm commandPerm() {
-        return CommandPerm.BOT_MODERATOR;
-    }
-
-    @NotNull
-    @Override
-    public String usage() {
-        return "<user>";
-    }
-
-    @Override
-    public @NotNull String description() {
-        return "Modlogs";
-    }
-
-    private static class list implements GuildCommand {
-
+    @SubCommand(ModLogs.class)
+    @CommandOptions(
+        name = "list",
+        description = "Lists a user's modlogs",
+        usage = "<user>",
+        perm = CommandPerm.BOT_MODERATOR
+    )
+    private static class list extends GuildCommand {
         @Override
-        public @NotNull String name() {
-            return "list";
-        }
-
-        @Override
-        public void run(Member user, TextChannel channel, List<String> args, Message original, String invoked) {
-            Check.check(!args.isEmpty(), CommandArgumentException::new);
+        public void run(GuildCommandEvent event) {
+            Check.check(!event.getArgs().isEmpty(), CommandArgumentException::new);
             String userId = null;
             User u = null;
             String arg;
-            if (Parser.User.isParsable(arg = args.get(0))) {
+            if (Parser.User.isParsable(arg = event.getArgs().get(0))) {
                 u = CacheUtils.getUser(arg);
                 userId = u == null ? Parser.User.parse(arg) : u.getId();
             } else if (Parser.User.tagIsParsable(arg)) {
@@ -87,7 +69,7 @@ public class ModLogs implements GuildCommand {
             CriteriaQuery<ModLogEntity> q = cb.createQuery(ModLogEntity.class);
             Root<ModLogEntity> r = q.from(ModLogEntity.class);
             List<ModLogEntity> modlogs = s.createQuery(q.select(r).where(
-                cb.equal(r.get("guild_id"), original.getGuild().getId()),
+                cb.equal(r.get("guild_id"), event.getGuild().getId()),
                 cb.equal(r.get("user_id"), userId))).getResultList();
 
             List<MessageEmbed> pages = EmbedUtil.pagedFieldEmbed(
@@ -108,36 +90,23 @@ public class ModLogs implements GuildCommand {
                 }).collect(Collectors.toList()), 1000
             );
 
-            PageListener.add(new PagedEmbed(pages, channel, user.getUser()));
-        }
-
-        @Override
-        public @NotNull CommandPerm commandPerm() {
-            return CommandPerm.BOT_MODERATOR;
-        }
-
-        @Override
-        public @NotNull String usage() {
-            return "<user>";
-        }
-
-        @Override
-        public @NotNull String description() {
-            return "Lists a users modlogs";
+            PageListener.add(new PagedEmbed(pages, event));
         }
     }
 
-    private static class Remove implements GuildCommand {
+    @SubCommand(ModLogs.class)
+    @CommandOptions(
+        name = "remove",
+        description = "Remove a user's modlog",
+        usage = "<uuid>",
+        perm = CommandPerm.BOT_ADMIN
+    )
+    private static class Remove extends GuildCommand {
         @Override
-        public @NotNull String name() {
-            return "remove";
-        }
+        public void run(GuildCommandEvent event) {
+            Check.check(event.getArgs().size() == 1, CommandArgumentException::new);
 
-        @Override
-        public void run(Member user, TextChannel channel, List<String> args, Message original, String invoked) {
-            Check.check(args.size() == 1, CommandArgumentException::new);
-
-            UUID uuid = UUID.fromString(args.get(0));
+            UUID uuid = UUID.fromString(event.getArgs().get(0));
 
             Session s = DatabaseUtil.getSessionFactory().openSession();
             CriteriaBuilder cb = s.getCriteriaBuilder();
@@ -145,7 +114,7 @@ public class ModLogs implements GuildCommand {
             CriteriaQuery<ModLogEntity> q = cb.createQuery(ModLogEntity.class);
             Root<ModLogEntity> r = q.from(ModLogEntity.class);
             List<ModLogEntity> notes = s.createQuery(q.select(r).where(
-                cb.equal(r.get("guild_id"), original.getGuild().getId()),
+                cb.equal(r.get("guild_id"), event.getGuild().getId()),
                 cb.equal(r.get("uuid"), uuid))).getResultList();
 
             ModLogEntity modlog = notes.isEmpty() ? null : notes.get(0);
@@ -162,33 +131,24 @@ public class ModLogs implements GuildCommand {
             if (u != null)
                 eb.setAuthor(String.format("%s / %s", u.getAsTag(), u.getId()), null, u.getEffectiveAvatarUrl());
 
-            channel.sendMessage(eb.build()).queue();
-        }
-
-        @Override
-        public @NotNull CommandPerm commandPerm() {
-            return CommandPerm.BOT_ADMIN;
-        }
-
-        @Override
-        public @NotNull String usage() {
-            return "<uuid>";
-        }
-
-        @Override
-        public @NotNull String description() {
-            return "Remove a warning";
+            event.getChannel().sendMessage(eb.build()).queue();
         }
     }
 
-    private static class Clear implements GuildCommand {
-
+    @SubCommand(ModLogs.class)
+    @CommandOptions(
+        name = "clear",
+        description = "Clears a user's modlogs",
+        usage = "<user>",
+        perm = CommandPerm.BOT_ADMIN
+    )
+    private static class Clear extends GuildCommand {
         @Override
-        public void run(Member user, TextChannel channel, List<String> args, Message original, String invoked) {
+        public void run(GuildCommandEvent event) {
             String userId = null;
             User u = null;
             String arg;
-            if (Parser.User.isParsable(arg = args.get(0))) {
+            if (Parser.User.isParsable(arg = event.getArgs().get(0))) {
                 u = CacheUtils.getUser(arg);
                 userId = u == null ? Parser.User.parse(arg) : u.getId();
             } else if (Parser.User.tagIsParsable(arg)) {
@@ -204,52 +164,34 @@ public class ModLogs implements GuildCommand {
             CriteriaQuery<ModLogEntity> q = cb.createQuery(ModLogEntity.class);
             Root<ModLogEntity> r = q.from(ModLogEntity.class);
             List<ModLogEntity> modlog = s.createQuery(q.select(r).where(
-                cb.equal(r.get("guild_id"), original.getGuild().getId()),
+                cb.equal(r.get("guild_id"), event.getGuild().getId()),
                 cb.equal(r.get("user_id"), userId))).getResultList();
 
             modlog.forEach(DatabaseUtil::deleteObject);
-            embedReply(original, channel, "Notes", "Cleared all modlogs for %s",
+            event.reply("Notes", "Cleared all modlogs for %s",
                 u == null ? userId : u.getAsMention()).queue();
-        }
-
-        @NotNull
-        @Override
-        public String name() {
-            return "clear";
-        }
-
-        @NotNull
-        @Override
-        public CommandPerm commandPerm() {
-            return CommandPerm.BOT_ADMIN;
-        }
-
-        @NotNull
-        @Override
-        public String description() {
-            return "Clears a users notes";
         }
     }
 
-    private static class BulkImportFile implements GuildCommand {
-
+    @SubCommand(ModLogs.class)
+    @CommandOptions(
+        name = "import",
+        description = "Bulk import user modlogs from an attachment",
+        perm = CommandPerm.BOT_ADMIN
+    )
+    private static class BulkImportFile extends GuildCommand {
         private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormat.forPattern("yyyy-MM-dd'T'HH:mm:ss.SSSSSS");
 
         @Override
-        public @NotNull String name() {
-            return "import";
-        }
-
-        @Override
-        public void run(Member user, TextChannel channel, List<String> args, Message original, String invoked) {
-            Check.check(args.isEmpty(), CommandArgumentException::new);
-            Check.check(original.getAttachments().size() == 1, CommandArgumentException::new);
-            Message m = channel.sendMessage("Okay... this might take a while").complete();
+        public void run(GuildCommandEvent event) {
+            Check.check(event.getArgs().isEmpty(), CommandArgumentException::new);
+            Check.check(event.getAttachments().size() == 1, CommandArgumentException::new);
+            Message m = event.getChannel().sendMessage("Okay... this might take a while").complete();
 
             InputStreamReader ir;
             BufferedReader br;
             try {
-                ir = new InputStreamReader(original.getAttachments().get(0).retrieveInputStream().get(1, TimeUnit.MINUTES));
+                ir = new InputStreamReader(event.getAttachments().get(0).retrieveInputStream().get(1, TimeUnit.MINUTES));
                 br = new BufferedReader(ir);
             } catch (InterruptedException | ExecutionException | TimeoutException e) {
                 throw new UnexpectedError(e);
@@ -261,30 +203,30 @@ public class ModLogs implements GuildCommand {
             CriteriaQuery<ModLogEntity> q = cb.createQuery(ModLogEntity.class);
             Root<ModLogEntity> r = q.from(ModLogEntity.class);
             List<ModLogEntity> existing = s.createQuery(q.select(r).where(
-                cb.equal(r.get("guild_id"), original.getGuild().getId()))).getResultList();
+                cb.equal(r.get("guild_id"), event.getGuild().getId()))).getResultList();
 
             Type listType = new TypeToken<ArrayList<ModLogEntry>>() {
             }.getType();
             List<ModLogEntry> toImport = new Gson().fromJson(br, listType);
 
-            String guildId = original.getGuild().getId();
+            String guildId = event.getGuild().getId();
             List<ModLogEntity> modlogs = toImport.stream()
-                                           .map(e -> {
-                                                   ModLogEntity.ModLogType type = switch (e.getAction()) {
-                                                       case "warn" -> ModLogEntity.ModLogType.WARN;
-                                                       case "ban" -> ModLogEntity.ModLogType.BAN;
-                                                       case "mute" -> ModLogEntity.ModLogType.MUTE;
-                                                       case "unban" -> ModLogEntity.ModLogType.UNBAN;
-                                                       case "unmute" -> ModLogEntity.ModLogType.UNMUTE;
-                                                       case "kick" -> ModLogEntity.ModLogType.KICK;
-                                                       default -> ModLogEntity.ModLogType.NONE;
-                                                   };
+                                             .map(e -> {
+                                                     ModLogEntity.ModLogType type = switch (e.getAction()) {
+                                                         case "warn" -> ModLogEntity.ModLogType.WARN;
+                                                         case "ban" -> ModLogEntity.ModLogType.BAN;
+                                                         case "mute" -> ModLogEntity.ModLogType.MUTE;
+                                                         case "unban" -> ModLogEntity.ModLogType.UNBAN;
+                                                         case "unmute" -> ModLogEntity.ModLogType.UNMUTE;
+                                                         case "kick" -> ModLogEntity.ModLogType.KICK;
+                                                         default -> ModLogEntity.ModLogType.NONE;
+                                                     };
 
-                                                   return new ModLogEntity(guildId, e.offender_id, e.moderator_id, e.reason,
-                                                       DateTime.parse(e.getTimestamp(), TIME_FORMATTER).getMillis(), type);
-                                               }
-                                           ).filter(e -> existing.stream().noneMatch(e::equals))
-                                           .collect(Collectors.toList());
+                                                     return new ModLogEntity(guildId, e.offender_id, e.moderator_id, e.reason,
+                                                         DateTime.parse(e.getTimestamp(), TIME_FORMATTER).getMillis(), type);
+                                                 }
+                                             ).filter(e -> existing.stream().noneMatch(e::equals))
+                                             .collect(Collectors.toList());
 
             modlogs.forEach(DatabaseUtil::saveObject);
             Set<String> users = modlogs.stream().map(ModLogEntity::getUser_id)
@@ -293,17 +235,7 @@ public class ModLogs implements GuildCommand {
             EmbedBuilder eb = new EmbedBuilder().setTitle("Bulk Note Import");
             eb.setDescription("Imported Notes:\n" + String.join("\n", users));
             m.delete().complete();
-            channel.sendMessage(eb.build()).queue();
-        }
-
-        @Override
-        public @NotNull CommandPerm commandPerm() {
-            return CommandPerm.BOT_ADMIN;
-        }
-
-        @Override
-        public @NotNull String description() {
-            return "Bulk Import Notes. Attach a text file with one Line for each warn.";
+            event.getChannel().sendMessage(eb.build()).queue();
         }
     }
 

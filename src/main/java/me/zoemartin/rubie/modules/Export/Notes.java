@@ -4,12 +4,14 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import me.zoemartin.rubie.Bot;
 import me.zoemartin.rubie.core.CommandPerm;
+import me.zoemartin.rubie.core.GuildCommandEvent;
+import me.zoemartin.rubie.core.annotations.Command;
+import me.zoemartin.rubie.core.annotations.CommandOptions;
 import me.zoemartin.rubie.core.exceptions.CommandArgumentException;
 import me.zoemartin.rubie.core.interfaces.GuildCommand;
 import me.zoemartin.rubie.core.util.Check;
 import me.zoemartin.rubie.core.util.Parser;
 import net.dv8tion.jda.api.entities.*;
-import org.jetbrains.annotations.NotNull;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
@@ -22,20 +24,27 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-public class Notes implements GuildCommand {
+@Command
+@CommandOptions(
+    name = "export-notes",
+    description = "Export notes from supported bots by parsing the `notes` command output. (Carl-Bot, Dyno, Auttaja)",
+    usage = "<channel...>",
+    perm = CommandPerm.BOT_ADMIN
+)
+public class Notes extends GuildCommand {
     private static final String CARL_ID = "235148962103951360";
     private static final String DYNO_ID = "155149108183695360";
     private static final String AUTTAJA_ID = "242730576195354624";
 
     @Override
-    public void run(Member user, TextChannel channel, List<String> args, Message original, String invoked) {
-        Check.check(!args.isEmpty(), CommandArgumentException::new);
+    public void run(GuildCommandEvent event) {
+        Check.check(!event.getArgs().isEmpty(), CommandArgumentException::new);
         ScheduledExecutorService se = new ScheduledThreadPoolExecutor(1);
-        se.scheduleAtFixedRate(() -> channel.sendTyping().complete(), 0, 10, TimeUnit.SECONDS);
+        se.scheduleAtFixedRate(() -> event.getChannel().sendTyping().complete(), 0, 10, TimeUnit.SECONDS);
 
-        original.getGuild().loadMembers().get();
+        event.getGuild().loadMembers().get();
 
-        List<TextChannel> channels = args.stream().map(s -> Parser.Channel.getTextChannel(original.getGuild(), s))
+        List<TextChannel> channels = event.getArgs().stream().map(s -> Parser.Channel.getTextChannel(event.getGuild(), s))
                                          .collect(Collectors.toList());
 
         Collection<NoteEntry> notes = new ArrayList<>();
@@ -52,26 +61,8 @@ public class Notes implements GuildCommand {
                                   }));
 
         Gson gson = new GsonBuilder().setPrettyPrinting().create();
-        channel.sendFile(gson.toJson(notes).getBytes(), "notes_" + Instant.now() + ".json").complete();
+        event.getChannel().sendFile(gson.toJson(notes).getBytes(), "notes_" + Instant.now() + ".json").complete();
         se.shutdown();
-    }
-
-    @NotNull
-    @Override
-    public String name() {
-        return "export-notes";
-    }
-
-    @NotNull
-    @Override
-    public CommandPerm commandPerm() {
-        return CommandPerm.BOT_ADMIN;
-    }
-
-    @NotNull
-    @Override
-    public String description() {
-        return "Export notes from supported bots by parsing the `notes` command output. (Carl-Bot, Dyno, Auttaja)";
     }
 
     private static final Pattern CARL_NOTE_PATTERN = Pattern.compile("(?:From <@!?)(\\d{16,19})(?:> at )(.*)(?::\\n)(.*)");

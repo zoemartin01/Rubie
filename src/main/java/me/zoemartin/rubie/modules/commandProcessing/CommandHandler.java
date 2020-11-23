@@ -1,85 +1,99 @@
 package me.zoemartin.rubie.modules.commandProcessing;
 
 import me.zoemartin.rubie.Bot;
-import me.zoemartin.rubie.core.CommandPerm;
+import me.zoemartin.rubie.core.*;
 import me.zoemartin.rubie.core.exceptions.*;
-import me.zoemartin.rubie.core.interfaces.Command;
-import me.zoemartin.rubie.core.interfaces.CommandProcessor;
+import me.zoemartin.rubie.core.interfaces.*;
 import me.zoemartin.rubie.core.managers.CommandManager;
 import me.zoemartin.rubie.core.util.*;
-import net.dv8tion.jda.api.EmbedBuilder;
-import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.*;
-import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent;
+import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import java.awt.*;
-import java.time.Instant;
 import java.util.*;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public class CommandHandler implements CommandProcessor {
+    private final Logger log = LoggerFactory.getLogger(CommandHandler.class);
+
     @Override
-    public void process(GuildMessageReceivedEvent event, String input) {
+    public void process(MessageReceivedEvent event, String input) {
         User user = event.getAuthor();
         MessageChannel channel = event.getChannel();
 
-        List<String> inputs = new ArrayList<>();
-        Matcher m = Pattern.compile("([^\"]\\S*|\".+?\")\\s*").matcher(input);
-        while (m.find())
-            inputs.add(m.group(1).replace("\"", ""));
-
-        LinkedList<Command> commands = new LinkedList<>();
-        inputs.forEach(s -> {
-            if (commands.isEmpty()) commands.add(CommandManager.getCommands().stream()
-                                                     .filter(c -> s.matches(c.regex().toLowerCase()))
-                                                     .findFirst().orElse(null));
-            else if (commands.getLast() != null) commands.getLast().subCommands().stream()
-                                                     .filter(sc -> s.matches(sc.regex().toLowerCase()))
-                                                     .findFirst().ifPresent(commands::add);
-
-        });
-
-        if (commands.isEmpty() || commands.getLast() == null) return;
-
-        int commandLevel = commands.size();
-        Command command = commands.getLast();
-
-        Guild guild = event.getGuild();
-        Member member = guild.getMember(user);
-        Check.notNull(member, () -> new ConsoleError("member is null"));
-
-        if (command.commandPerm() != CommandPerm.EVERYONE) {
-            Check.check(PermissionHandler.getHighestFromUser(guild, member).raw() >= command.commandPerm().raw(),
-                () -> new ConsoleError("Member '%s' doesn't have the required permission rank for Command '%s'",
-                member.getId(), command.name()));
+        Matcher cMatcher = Pattern.compile("(\\w*)").matcher(input);
+        LinkedList<AbstractCommand> commands = new LinkedList<>();
+        LinkedList<String> invoked = new LinkedList<>();
+        int lastIndex = 0;
+        while (cMatcher.find()) {
+            String s = cMatcher.group().toLowerCase();
+            if (commands.isEmpty()) {
+                AbstractCommand cmd = CommandManager.getCommands().stream()
+                                          .filter(c -> c.alias().contains(s))
+                                          .findFirst().orElse(null);
+                if (cmd == null) return;
+                commands.add(cmd);
+                invoked.add(s);
+                lastIndex = cMatcher.end();
+            } else if (commands.getLast() != null) {
+                AbstractCommand cmd = commands.getLast().subCommands().stream()
+                                          .filter(sc -> sc.alias().contains(s))
+                                          .findFirst().orElse(null);
+                if (cmd != null) {
+                    commands.add(cmd);
+                    invoked.add(s);
+                    lastIndex = cMatcher.end();
+                }
+            }
         }
 
-        Check.check((command.required().size() == 1 && command.required().contains(Permission.UNKNOWN))
-                        || member.hasPermission(Permission.ADMINISTRATOR)
-                        || command.required().stream().allMatch(member::hasPermission),
-            () -> new ConsoleError("Member '%s' doesn't have the required permission for Command '%s'",
-                member.getId(), command.name()));
+        LinkedList<String> arguments = new LinkedList<>();
+        String argString = input.substring(lastIndex).strip();
 
-        List<String> arguments;
+        Matcher argMatcher = Pattern.compile("((?:[^\"]\\S*)|(?:\"(?:.+?[^\\\\])\"))\\s*").matcher(argString);
+        while (argMatcher.find()) {
+            arguments.add(argMatcher.group().strip().replaceAll("(?:\"(.*[^\\\\])\")", "$1"));
+        }
 
-        arguments = inputs.subList(commandLevel, inputs.size());
-
-
+        AbstractCommand command = commands.getLast();
         try {
-            command.run(user, channel, Collections.unmodifiableList(arguments), event.getMessage(), inputs.get(commands.size() - 1));
+            if (event.isFromGuild()) {
+                GuildCommandEvent e = new GuildCommandEvent(event.getMessage(), arguments, invoked, argString);
+                if (command instanceof GuildCommand) {
+                    Check.check(((GuildCommand) command).checkGuildPerms(e),
+                        () -> new CommandPermissionException(
+                            "Error, you are missing the necessary guild permissions for this command!"));
+                    Check.check(((GuildCommand) command).checkChannelPerms(e),
+                        () -> new CommandPermissionException(
+                            "Error, you are missing the necessary permissions in this channel for this command!"));
+                    Check.check(((GuildCommand) command).checkNecessaryPerms(e),
+                        () -> new CommandPermissionException(
+                            "Error, I seem to be missing the necessary permissions to run this command!"));
+                }
+                Check.check(PermissionHandler.checkUserPerms(command, e),
+                    () -> new ConsoleError(
+                        "[Permission Error] Member 'U:%s(%s)' doesn't have the required permission rank for Command '%s' on '%s'",
+                        e.getUser().getAsTag(), e.getUser().getId(), command.name(), e.getGuild()));
+                command.run(e);
+            } else {
+                CommandEvent e = new CommandEvent(event.getMessage(), arguments, invoked, argString);
+                Check.check(PermissionHandler.checkUserPerms(command, e),
+                    () -> new ReplyError("It looks like you dont have permissions for this command!"));
+                command.run(e);
+            }
         } catch (CommandArgumentException e) {
-            Help.getHelper().send(user, channel,
-                commands.stream().map(Command::name).collect(Collectors.toList()),
-                event.getMessage(), commands.getFirst().name());
+            if (event.isFromGuild())
+                Help.getHelper().send(new GuildCommandEvent(event.getMessage(), invoked, List.of(invoked.getFirst()), argString));
+            else channel.sendMessageFormat("Sorry, I had an error trying to understand that command.").queue();
         } catch (ReplyError e) {
             channel.sendMessage(e.getMessage()).queue(message -> message.delete().queueAfter(10, TimeUnit.SECONDS));
-        } catch (ConsoleError e) {
-            throw new ConsoleError(String.format("[Command Error] %s: %s", command.getClass().getName(), e.getMessage()));
+        } /*catch (ConsoleError e) {
+            throw e;
+            //throw new ConsoleError(String.format("[Command Error] %s: %s", command.getClass().getName(), e.getMessage()));
         } catch (Exception e) {
             LoggedError error = new LoggedError(event.getGuild().getId(), event.getChannel().getId(), event.getAuthor().getId(),
                 event.getMessageId(), event.getMessage().getContentRaw(), e.getMessage(), e.getStackTrace(), System.currentTimeMillis());
@@ -95,11 +109,17 @@ public class CommandHandler implements CommandProcessor {
                            .setFooter(error.getUuid().toString())
                            .setTimestamp(Instant.now())
                            .build()).queue();
-
             throw e;
-        }
+        }*/
+        if (event.isFromGuild())
+            log.info("{}/({}) used {} in {}-{}({})", user.getAsTag(), user.getId(), command.getClass().getName(),
+                event.getGuild(), event.getChannel().getName(), event.getChannel().getId());
+        else
+            log.info("{}/({}) used {} in DMs {}", user.getAsTag(), user.getId(), command.getClass().getName(),
+                event.getChannel().getId());
+    }
 
-        System.out.printf("[Command used] %s used command %s in %s\n", user.getId(), command.getClass().getCanonicalName(),
-            event.getGuild().getId());
+    private boolean isGuildCommand(AbstractCommand c) {
+        return Arrays.asList(c.getClass().getClasses()).contains(GuildCommand.class);
     }
 }

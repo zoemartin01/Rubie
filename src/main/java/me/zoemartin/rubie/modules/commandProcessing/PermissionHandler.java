@@ -1,37 +1,56 @@
 package me.zoemartin.rubie.modules.commandProcessing;
 
-import me.zoemartin.rubie.core.CommandPerm;
+import me.zoemartin.rubie.Bot;
+import me.zoemartin.rubie.core.*;
+import me.zoemartin.rubie.core.interfaces.AbstractCommand;
+import me.zoemartin.rubie.core.util.CollectorsUtil;
 import me.zoemartin.rubie.core.util.DatabaseUtil;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
 import org.hibernate.Session;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Function;
 
 public class PermissionHandler {
-    private static final Map<String, Set<MemberPermission>> memberPerms = new ConcurrentHashMap<>();
-    private static final Map<String, Set<RolePermission>> rolePerms = new ConcurrentHashMap<>();
+    private static final Map<String, Collection<MemberPermission>> memberPerms = new ConcurrentHashMap<>();
+    private static final Map<String, Collection<RolePermission>> rolePerms = new ConcurrentHashMap<>();
+
+    private static final Logger log = LoggerFactory.getLogger(PermissionHandler.class);
 
     public static void initPerms() {
-        try (Session session = DatabaseUtil.getSessionFactory().openSession()) {
-            List<MemberPermission> load = session.createQuery("from MemberPermission", MemberPermission.class).list();
-            load.forEach(m -> memberPerms.computeIfAbsent(m.getGuild_id(),
-                s -> Collections.newSetFromMap(new ConcurrentHashMap<>())).add(m));
-            session.close();
-        } catch (Exception e) {
-            e.printStackTrace();
+        memberPerms.putAll(DatabaseUtil.loadGroupedCollection(
+            "from MemberPermission", MemberPermission.class,
+            MemberPermission::getGuild_id,
+            Function.identity(),
+            CollectorsUtil.toConcurrentSet()
+        ));
+
+        memberPerms.forEach((s, e) -> log.info("Loaded '{}' member perm overrides for '{}'", e.size(), s));
+
+        rolePerms.putAll(DatabaseUtil.loadGroupedCollection(
+            "from RolePermission", RolePermission.class,
+            RolePermission::getGuild_id,
+            Function.identity(),
+            CollectorsUtil.toConcurrentSet()
+        ));
+
+        rolePerms.forEach((s, e) -> log.info("Loaded '{}' role perm overrides for '{}'", e.size(), s));
+    }
+
+    public static boolean checkUserPerms(AbstractCommand command, CommandEvent event) {
+        if (command.commandPerm() == CommandPerm.EVERYONE) return true;
+        if (event.getUser().getId().equals(Bot.getOWNER())) return true;
+
+        if (event instanceof GuildCommandEvent) {
+            return getHighestFromUser(((GuildCommandEvent) event).getGuild(), ((GuildCommandEvent) event).getMember()).raw() >= command.commandPerm().raw();
         }
 
-        try (Session session = DatabaseUtil.getSessionFactory().openSession()) {
-            List<RolePermission> load = session.createQuery("from RolePermission", RolePermission.class).list();
-            load.forEach(r -> rolePerms.computeIfAbsent(r.getGuild_id(),
-                s -> Collections.newSetFromMap(new ConcurrentHashMap<>())).add(r));
-            session.close();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        return false;
     }
 
     public static MemberPermission getMemberPerm(String guildId, String memberId) {
@@ -57,7 +76,7 @@ public class PermissionHandler {
         else return CommandPerm.fromNum(perm);
     }
 
-    public static void addRolePerm(String guildId, String roleId, CommandPerm perm) {
+    public static void setRolePerm(String guildId, String roleId, CommandPerm perm) {
         RolePermission rp;
         if (!getMemberPerm(guildId, roleId).getPerm().equals(CommandPerm.EVERYONE)) {
             rp = getRolePerm(guildId, roleId);

@@ -14,12 +14,21 @@ import net.dv8tion.jda.api.utils.Compression;
 import net.dv8tion.jda.api.utils.MemberCachePolicy;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
+import org.joda.time.DateTime;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nonnull;
 import javax.security.auth.login.LoginException;
-import java.util.*;
+import java.io.*;
+import java.time.Instant;
+import java.util.EnumSet;
+import java.util.Properties;
 
 public class Bot extends ListenerAdapter {
+    private static final Logger log = LoggerFactory.getLogger(Bot.class);
+    private static Properties properties;
+
     private static JDABuilder builder;
     private static JDA jda = null;
     private static final String OWNER = "212591138945630213";
@@ -27,7 +36,29 @@ public class Bot extends ListenerAdapter {
     private static int exitCode = 0;
 
     public static void main(String[] args) throws LoginException {
-        builder = JDABuilder.createDefault(args[0]);
+        System.setProperty("logFilename", "rubie_" + DateTime.now().toString("yyyy-MM-dd_hh-mm-ss") + ".log");
+
+        File configFile;
+        properties = new Properties();
+
+        if (args.length == 0) {
+            configFile = new File(".env");
+        } else {
+            configFile = new File(args[0]);
+        }
+
+        if (!configFile.exists()) {
+            log.error("Env Configuration file does not exist!");
+        }
+
+        try {
+            properties.load(new FileReader(configFile));
+        } catch (IOException e) {
+            log.error("Error loading configuration file!");
+        }
+
+
+        builder = JDABuilder.createDefault(properties.getProperty("bot.token"));
 
         ModuleManager.init();
 
@@ -35,9 +66,9 @@ public class Bot extends ListenerAdapter {
         Properties settings = new Properties();
 
         settings.put(Environment.DRIVER, "org.postgresql.Driver");
-        settings.put(Environment.URL, args[1]);
-        settings.put(Environment.USER, args[2]);
-        settings.put(Environment.PASS, args[3]);
+        settings.put(Environment.URL, properties.getProperty("database.url"));
+        settings.put(Environment.USER, properties.getProperty("database.username"));
+        settings.put(Environment.PASS, properties.getProperty("database.password"));
         settings.put(Environment.DIALECT, "org.hibernate.dialect.PostgreSQL82Dialect");
         settings.put(Environment.POOL_SIZE, 10);
         settings.put(Environment.SHOW_SQL, true);
@@ -52,7 +83,7 @@ public class Bot extends ListenerAdapter {
         builder.setMemberCachePolicy(MemberCachePolicy.ALL);
         builder.setBulkDeleteSplittingEnabled(false);
         builder.setCompression(Compression.NONE);
-        builder.setActivity(Activity.playing("n'yaa"));
+        builder.setActivity(Activity.listening(properties.getProperty("bot.status")));
         builder.addEventListeners(new Bot());
 
         EnumSet<Message.MentionType> deny = EnumSet.of(Message.MentionType.EVERYONE, Message.MentionType.HERE,
@@ -60,6 +91,10 @@ public class Bot extends ListenerAdapter {
         MessageAction.setDefaultMentions(EnumSet.complementOf(deny));
 
         jda = builder.build();
+    }
+
+    public static Properties getProperties() {
+        return properties;
     }
 
     public static void addListener(Object... listeners) {

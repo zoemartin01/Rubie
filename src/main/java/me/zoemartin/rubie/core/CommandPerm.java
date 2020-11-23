@@ -6,12 +6,12 @@ import java.util.*;
 
 @Converter
 public enum CommandPerm  {
-    EVERYONE(0, "ALL"),
+    EVERYONE(0, "EVERYONE"),
     BOT_USER(1, "USER"),
     BOT_MODERATOR(2, "MODERATOR"),
     BOT_MANAGER(3, "MANAGER"),
     BOT_ADMIN(4, "ADMIN"),
-    OWNER(5, "BOT OWNER");
+    OWNER(5, "OWNER");
 
     private final int num;
     private final String name;
@@ -35,7 +35,8 @@ public enum CommandPerm  {
     public static CommandPerm fromString(String name) {
         if (name == null) return null;
 
-        return EnumSet.allOf(CommandPerm.class).stream().filter(perm -> name.equals(perm.name())).findAny()
+        return EnumSet.allOf(CommandPerm.class).stream().filter(perm -> name.equalsIgnoreCase(perm.name)
+                                                                            || name.equalsIgnoreCase(perm.name())).findAny()
                    .orElse(null);
     }
 

@@ -1,50 +1,71 @@
 package me.zoemartin.rubie.core.interfaces;
 
-import me.zoemartin.rubie.Bot;
+import me.zoemartin.rubie.core.*;
+import me.zoemartin.rubie.core.annotations.Checks;
+import me.zoemartin.rubie.core.annotations.CommandOptions;
 import me.zoemartin.rubie.core.util.Help;
-import me.zoemartin.rubie.core.util.MessageUtils;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.*;
 import net.dv8tion.jda.api.requests.restaction.MessageAction;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
 
-public interface GuildCommand extends Command {
-    default MessageAction embedReply(@NotNull Message original, @NotNull MessageChannel channel,
-                                     @Nullable String title, @NotNull String replyFormat, @Nullable Object... args) {
-        EmbedBuilder eb = new EmbedBuilder();
-        eb.setColor(original.getGuild().getSelfMember().getColor());
-        if (title != null) eb.setTitle(title);
-        eb.setDescription(String.format(replyFormat, args));
-        return channel.sendMessage(eb.build());
+public abstract class GuildCommand extends AbstractCommand {
+    public GuildCommand() {
+        super();
     }
 
-    default String lastArg(int expectedIndex, List<String> args, Message original) {
-        if (args.size() == expectedIndex + 1) return args.get(expectedIndex);
-
-        String orig = original.getContentRaw();
-        if (expectedIndex > 0) for (String s : new ArrayList<>(args.subList(0, expectedIndex)))
-            orig = orig.replace(s, "");
-
-        return MessageUtils.getArgsFrom(orig, args.get(expectedIndex));
+    public GuildCommand(CommandConfiguration configuration) {
+        super(configuration);
     }
 
-    void run(Member user, TextChannel channel, List<String> args, Message original, String invoked);
-
-    default void run(User user, MessageChannel channel, List<String> args, Message original, String invoked) {
-        run(original.getMember(), original.getTextChannel(), args, original, invoked);
+    public boolean checkChannelPerms(GuildCommandEvent event) {
+        return checkChannelPerms(event, event.getTextChannel());
     }
 
-    @SuppressWarnings("ConstantConditions")
-    default void addCheckmark(Message message) {
-        message.addReaction(Bot.getJDA().getEmoteById("762424762412040192")).queue();
+    public boolean checkChannelPerms(GuildCommandEvent event, TextChannel custom) {
+        if (event.getMember() == null || event.getGuild() == null || custom == null) return false;
+        Checks.Permissions.Channel[] options = this.getClass().getAnnotationsByType(Checks.Permissions.Channel.class);
+
+        return Arrays.stream(options)
+                   .allMatch(o -> event.getMember().hasPermission(custom, o.value()));
     }
 
-    default void help(Member user, MessageChannel channel, List<String> args, Message original) {
-        if (Help.getHelper() != null) Help.getHelper().send(user.getUser(), channel, args, original, args.get(0));
+    public boolean checkGuildPerms(GuildCommandEvent event) {
+        if (event.getMember() == null || event.getGuild() == null) return false;
+        Checks.Permissions.Guild[] options = this.getClass().getAnnotationsByType(Checks.Permissions.Guild.class);
+
+        return Arrays.stream(options)
+                   .allMatch(o -> event.getMember().hasPermission(event.getTextChannel(), o.value()));
+    }
+
+    public boolean checkNecessaryPerms(GuildCommandEvent event) {
+        return checkNecessaryPerms(event, event.getTextChannel());
+    }
+
+    public boolean checkNecessaryPerms(GuildCommandEvent event, TextChannel custom) {
+        if (event.getGuild() == null || event.getTextChannel() == null || custom == null) return false;
+        CommandOptions[] options = this.getClass().getAnnotationsByType(CommandOptions.class);
+
+        return Arrays.stream(options)
+                   .allMatch(o -> event.getGuild().getSelfMember().hasPermission(custom, o.botPerms()));
+    }
+
+    public abstract void run(GuildCommandEvent event);
+
+    @Override
+    public void run(CommandEvent event) {
+        if (event instanceof GuildCommandEvent) {
+            run((GuildCommandEvent) event);
+        } else {
+            throw new IllegalStateException("Command Event not from a Guild!");
+        }
+    }
+
+    public void sendHelp(GuildCommandEvent event) {
+        if (Help.getHelper() != null) Help.getHelper().send(event);
     }
 }

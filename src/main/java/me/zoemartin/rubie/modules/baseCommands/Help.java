@@ -1,157 +1,117 @@
 package me.zoemartin.rubie.modules.baseCommands;
 
-import me.zoemartin.rubie.core.CommandPerm;
-import me.zoemartin.rubie.core.exceptions.ConsoleError;
+import me.zoemartin.rubie.core.*;
+import me.zoemartin.rubie.core.annotations.*;
 import me.zoemartin.rubie.core.exceptions.ReplyError;
-import me.zoemartin.rubie.core.interfaces.Command;
+import me.zoemartin.rubie.core.interfaces.AbstractCommand;
 import me.zoemartin.rubie.core.interfaces.GuildCommand;
 import me.zoemartin.rubie.core.managers.CommandManager;
+import me.zoemartin.rubie.core.util.Check;
+import me.zoemartin.rubie.core.util.EmbedUtil;
 import me.zoemartin.rubie.modules.commandProcessing.PermissionHandler;
 import me.zoemartin.rubie.modules.pagedEmbeds.PageListener;
 import me.zoemartin.rubie.modules.pagedEmbeds.PagedEmbed;
-import me.zoemartin.rubie.core.util.Check;
-import me.zoemartin.rubie.core.util.EmbedUtil;
 import net.dv8tion.jda.api.EmbedBuilder;
-import net.dv8tion.jda.api.entities.*;
-import org.jetbrains.annotations.NotNull;
+import net.dv8tion.jda.api.entities.Guild;
+import net.dv8tion.jda.api.entities.Member;
 
 import java.util.*;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
-public class Help implements GuildCommand {
+@Command
+@CommandOptions(
+    name = "help",
+    description = "Shows commands help or a list of all available commands",
+    usage = "[command]"
+)
+@Arguments()
+@Arguments(Command.class)
+public class Help extends GuildCommand {
     @Override
-    public @NotNull String name() {
-        return "help";
-    }
+    public void run(GuildCommandEvent event) {
+        if (event.getArgs().size() != 0) commandHelp(event);
+        else {
+            Guild guild = event.getGuild();
+            Member member = event.getMember();
 
-    @Override
-    public @NotNull Set<Command> subCommands() {
-        return Set.of(new Cmd());
-    }
-
-    @SuppressWarnings("ConstantConditions")
-    @Override
-    public void run(Member user, TextChannel channel, List<String> args, Message original, String invoked) {
-        Guild guild = original.getGuild();
-        Member member = original.getMember();
-
-        PagedEmbed p = new PagedEmbed(EmbedUtil.pagedDescription(new EmbedBuilder()
-                                                                     .setTitle("Help").setColor(0xdf136c).build(),
-            CommandManager.getCommands().stream()
-                .filter(
-                    command -> PermissionHandler.getHighestFromUser(guild, member).raw() >= command.commandPerm().raw())
-                .sorted(Comparator.comparing(Command::name))
-                .map(command -> String.format("`%s` | %s\n\n", command.name(), command.description()))
-                .collect(Collectors.toList())),
-            channel, user.getUser());
-
-        PageListener.add(p);
-    }
-
-    @Override
-    public @NotNull CommandPerm commandPerm() {
-        return CommandPerm.EVERYONE;
-    }
-
-    @Override
-    public @NotNull String description() {
-        return "Sending help :3";
-    }
-
-    private static class Cmd implements GuildCommand {
-
-        @Override
-        public @NotNull String name() {
-            return "<command>";
-        }
-
-        @Override
-        public @NotNull String regex() {
-            StringBuilder sb = new StringBuilder();
-            CommandManager.getCommands().forEach(command -> sb.append(command.regex()).append("|"));
-            sb.deleteCharAt(sb.lastIndexOf("|"));
-            return sb.toString();
-        }
-
-        @Override
-        public void run(Member user, TextChannel channel, List<String> args, Message original, String invoked) {
-            AtomicReference<Command> command = new AtomicReference<>(
+            PagedEmbed p = new PagedEmbed(EmbedUtil.pagedDescription(new EmbedBuilder()
+                                                                         .setTitle("Help").setColor(0xdf136c).build(),
                 CommandManager.getCommands().stream()
-                    .filter(c -> invoked.matches(c.regex().toLowerCase()))
-                    .findFirst().orElseThrow(() -> new ConsoleError("Command '%s' not found", invoked)));
-            Check.notNull(command.get(), () -> new ReplyError("No such command!"));
+                    .filter(
+                        command -> PermissionHandler.getHighestFromUser(guild, member).raw() >= command.commandPerm().raw())
+                    .sorted(Comparator.comparing(AbstractCommand::name))
+                    .map(command -> String.format("`%s` | %s\n\n", command.name(), command.description()))
+                    .collect(Collectors.toList())), event);
 
-            List<Command> hierarchy = new LinkedList<>();
-            hierarchy.add(command.get());
+            PageListener.add(p);
+        }
+    }
 
-            args.forEach(s -> {
-                Command subCommand = command.get().subCommands().stream()
-                                         .filter(sc -> s.matches(sc.regex().toLowerCase()))
-                                         .findFirst().orElse(null);
+    private static void commandHelp(CommandEvent event) {
+        LinkedList<AbstractCommand> hierarchy = new LinkedList<>();
 
-                if (subCommand != null) {
-                    command.set(subCommand);
-                    hierarchy.add(command.get());
-                }
-            });
-
-            String name = hierarchy.stream().map(Command::name)
-                              .collect(Collectors.joining(" "));
-            Command cmd = command.get();
-            EmbedBuilder eb = new EmbedBuilder();
-            eb.setTitle("`" + name.toUpperCase() + "`")
-                .setColor(0xdf136c);
-            eb.addField("Description:", cmd.description(), false);
-            if (!cmd.detailedHelp().isEmpty()) eb.addField("Detailed Help:", cmd.detailedHelp(), false);
-            eb.addField("Usage: ", cmd.name().equals(cmd.usage()) ?
-                                       String.format("`%s`", name) : String.format("`%s %s`", name, cmd.usage()),
-                false);
-
-
-            CommandPerm perm = command.get().commandPerm();
-            if (perm != CommandPerm.EVERYONE)
-                eb.addField("Permission Level:", String.format("`[%d] %s`", perm.raw(), perm.toString()), false);
-
-            StringBuilder aliases = new StringBuilder();
-            for (String s : command.get().regex().split("\\|")) {
-                if (s.equals(command.get().name())) continue;
-                aliases.append(s).append(", ");
+        event.getArgs().forEach(s -> {
+            if (hierarchy.isEmpty()) {
+                AbstractCommand cmd = CommandManager.getCommands().stream()
+                                          .filter(c -> c.alias().contains(s.toLowerCase()))
+                                          .findFirst().orElse(null);
+                hierarchy.add(cmd);
+            } else if (hierarchy.getLast() != null) {
+                hierarchy.getLast().subCommands().stream()
+                    .filter(sc -> sc.alias().contains(s.toLowerCase()))
+                    .findFirst().ifPresent(hierarchy::add);
             }
+        });
 
-            if (aliases.length() > 0) aliases.deleteCharAt(aliases.lastIndexOf(","))
-                                          .deleteCharAt(aliases.lastIndexOf(" "));
-            eb.addField("Aliases:", String.format("`%s`", aliases.length() > 0 ? aliases : "n/a"), false);
+        Check.check(!hierarchy.isEmpty() && hierarchy.getLast() != null, () -> new ReplyError("No such command!"));
 
-            StringBuilder sub = new StringBuilder();
-            Iterator<Command> iterator = command.get().subCommands().iterator();
+        String name = hierarchy.stream().map(AbstractCommand::name)
+                          .collect(Collectors.joining(" "));
+        AbstractCommand cmd = hierarchy.getLast();
+        EmbedBuilder eb = new EmbedBuilder();
+        eb.setTitle("`" + name.toUpperCase() + "`")
+            .setColor(0xdf136c);
+        eb.addField("Description:", cmd.description(), false);
+        //if (!cmd.help().isEmpty()) eb.addField("Detailed Help:", cmd.help(), false);
+        eb.addField("Usage: ", cmd.usage().isEmpty() ?
+                                   String.format("`%s`", name) : String.format("`%s %s`", name, cmd.usage()),
+            false);
 
-            while (iterator.hasNext()) {
-                Command c = iterator.next();
 
-                if (iterator.hasNext()) sub.append("`├─ ").append(c.name()).append("`\n");
-                else sub.append("`└─ ").append(c.name()).append("`");
-            }
+        if (!cmd.help().isBlank()) eb.setDescription(cmd.help());
 
-            if (sub.length() > 0)
-                eb.addField("Subcommand(s)", sub.toString(), false);
+        CommandPerm perm = cmd.commandPerm();
+        if (perm != CommandPerm.EVERYONE)
+            eb.addField("Permission Level:", String.format("`[%d] %s`", perm.raw(), perm.toString()), false);
 
-            channel.sendMessage(eb.build()).queue();
+        eb.addField("Aliases:", String.format("`%s`",
+            cmd.alias().size() > 1 ?
+                cmd.alias().stream().filter(s -> !s.equalsIgnoreCase(cmd.name()))
+                    .collect(Collectors.joining(", "))
+                : "n/a"), false);
+
+        StringBuilder sub = new StringBuilder();
+        Iterator<AbstractCommand> iterator = cmd.subCommands().iterator();
+
+        while (iterator.hasNext()) {
+            AbstractCommand c = iterator.next();
+
+            if (iterator.hasNext())
+                sub.append("`├─ ")
+                    .append(c.commandPerm() != CommandPerm.EVERYONE ? "[" + c.commandPerm().raw() + "] " : "")
+                    .append(c.name()).append("`\n");
+            else sub.append("`└─ ")
+                     .append(c.commandPerm() != CommandPerm.EVERYONE ? "[" + c.commandPerm().raw() + "] " : "")
+                     .append(c.name()).append("`");
         }
 
-        @Override
-        public @NotNull CommandPerm commandPerm() {
-            return CommandPerm.EVERYONE;
-        }
+        if (sub.length() > 0)
+            eb.addField("Subcommand(s)", sub.toString(), false);
 
-        @Override
-        public @NotNull String description() {
-            return "Shows a command help page";
-        }
+        event.getChannel().sendMessage(eb.build()).queue();
     }
 
     public static void helper() {
-        me.zoemartin.rubie.core.util.Help.setHelper(
-            (user, channel, args, original, invoked) -> new Cmd().run(user, channel, args, original, invoked));
+        me.zoemartin.rubie.core.util.Help.setHelper(Help::commandHelp);
     }
 }

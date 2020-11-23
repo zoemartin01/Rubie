@@ -1,25 +1,33 @@
 package me.zoemartin.rubie.modules.funCommands;
 
-import me.zoemartin.rubie.Bot;
 import me.zoemartin.rubie.core.CommandPerm;
+import me.zoemartin.rubie.core.GuildCommandEvent;
+import me.zoemartin.rubie.core.annotations.*;
 import me.zoemartin.rubie.core.exceptions.ReplyError;
 import me.zoemartin.rubie.core.exceptions.UnexpectedError;
 import me.zoemartin.rubie.core.interfaces.GuildCommand;
 import me.zoemartin.rubie.core.util.Check;
-import net.dv8tion.jda.api.entities.*;
-import org.jetbrains.annotations.NotNull;
+import net.dv8tion.jda.api.entities.Guild;
+import net.dv8tion.jda.api.entities.Role;
 
 import java.awt.*;
-import java.util.*;
 import java.util.List;
+import java.util.*;
 import java.util.concurrent.*;
 
-public class RGB implements GuildCommand {
+@Disabled
+@Command
+@CommandOptions(
+    name = "rgb",
+    description = "RGBifys the bot",
+    perm = CommandPerm.BOT_ADMIN
+)
+public class RGB extends GuildCommand {
     private static final Map<String, GuildSetting> guilds = new ConcurrentHashMap<>();
 
     @Override
-    public void run(Member user, TextChannel channel, List<String> args, Message original, String invoked) {
-        Guild g = original.getGuild();
+    public void run(GuildCommandEvent event) {
+        Guild g = event.getGuild();
         GuildSetting gs = guilds.computeIfAbsent(g.getId(),
             k -> new GuildSetting(false, null));
 
@@ -48,25 +56,7 @@ public class RGB implements GuildCommand {
             gs.service = null;
         }
 
-        addCheckmark(original);
-    }
-
-    @NotNull
-    @Override
-    public String name() {
-        return "rgb";
-    }
-
-    @NotNull
-    @Override
-    public CommandPerm commandPerm() {
-        return CommandPerm.BOT_ADMIN;
-    }
-
-    @NotNull
-    @Override
-    public String description() {
-        return "RGBifys the bot";
+        event.addCheckmark();
     }
 
     private static class GuildSetting {
