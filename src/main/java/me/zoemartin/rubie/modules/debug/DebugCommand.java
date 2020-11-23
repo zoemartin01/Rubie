@@ -8,17 +8,18 @@ import me.zoemartin.rubie.core.interfaces.GuildCommand;
 import me.zoemartin.rubie.core.managers.CommandManager;
 import me.zoemartin.rubie.core.util.Check;
 import me.zoemartin.rubie.core.util.Parser;
+import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.*;
 import org.apache.commons.cli.*;
-import org.jetbrains.annotations.NotNull;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-@Disabled
 @Command
 @CommandOptions(
     name = "debug",
@@ -46,13 +47,13 @@ public class DebugCommand extends AbstractCommand {
         Arrays.stream(command.getOptionValues("c")).forEach(s -> {
             if (commands.isEmpty()) {
                 AbstractCommand cmd = CommandManager.getCommands().stream()
-                                  .filter(c -> s.matches(c.regex().toLowerCase()))
+                                  .filter(c -> c.alias().contains(s.toLowerCase()))
                                   .findFirst().orElseThrow(() -> new ReplyError("No valid command"));
                 commands.add(cmd);
                 invoked.add(s);
             } else {
                 AbstractCommand cmd = commands.getLast().subCommands().stream()
-                                  .filter(sc -> s.matches(sc.regex().toLowerCase()))
+                                  .filter(sc -> sc.alias().contains(s.toLowerCase()))
                                   .findFirst().orElse(null);
                 if (cmd != null) {
                     commands.add(cmd);
@@ -74,7 +75,8 @@ public class DebugCommand extends AbstractCommand {
         Guild guild = event.getJDA().getGuildById(guildId);
         Check.entityReferenceNotNull(guild, Guild.class, guildId);
 
-        Member member = guild.getSelfMember();
+        Member member = command.hasOption("u") ? guild.getMemberById(command.getOptionValue("u")) : guild.getSelfMember();
+        Check.entityNotNull(member, Member.class);
 
         String content;
         List<String> args;
@@ -87,48 +89,51 @@ public class DebugCommand extends AbstractCommand {
             content = String.join(" ", command.getOptionValues("c"));
         }
 
+        Constructor<GuildCommandEvent> debugConstructor;
+        try {
+            debugConstructor = GuildCommandEvent.class.getDeclaredConstructor(
+                User.class,MessageChannel.class, String.class,
+                JDA.class, List.class, List.class, Message.class,
+                Member.class, Guild.class, TextChannel.class, String.class);
+        } catch (NoSuchMethodException e) {
+            e.printStackTrace();
+            return;
+        }
+
+        debugConstructor.setAccessible(true);
+
         GuildCommandEvent guildEvent;
         if (command.hasOption("tc")) {
             String channelRef = command.getOptionValue("tc");
             TextChannel channel = Parser.Channel.getTextChannel(guild, channelRef);
             Check.entityReferenceNotNull(channel, TextChannel.class, channelRef);
-            guildEvent = new GuildCommandEvent(member, channel, content, event.getJDA(), args, invoked);
+            guildEvent = new GuildCommandEvent(member, channel, content, event.getJDA(), args, invoked, String.join(" ", args));
         } else {
-            guildEvent = new GuildCommandEvent(member.getUser(), event.getChannel(), content, event.getJDA(),
-                args, invoked, null, member, guild, null);
+            try {
+                guildEvent = debugConstructor.newInstance(member.getUser(), event.getChannel(), content, event.getJDA(),
+                    args, invoked, null, member, guild, null, String.join(" ", args));
+            } catch (InstantiationException | IllegalAccessException | InvocationTargetException e) {
+                e.printStackTrace();
+                debugConstructor.setAccessible(false);
+                return;
+            }
         }
 
 
         try {
             commands.getLast().run(guildEvent);
         } catch (ReplyError e) {
-            new GuildCommand() {
-                @NotNull
-                @Override
-                @SuppressWarnings("ConstantConditions")
-                public String name() {
-                    return null;
-                }
-
-                @NotNull
-                @Override
-                @SuppressWarnings("ConstantConditions")
-                public CommandPerm commandPerm() {
-                    return null;
-                }
-
-                @NotNull
-                @Override
-                @SuppressWarnings("ConstantConditions")
-                public String description() {
-                    return null;
-                }
-
-                @Override
-                public void run(GuildCommandEvent event) {
-                }
-            }.help(new GuildCommandEvent(member.getUser(), event.getChannel(), content, event.getJDA(),
-                invoked, List.of(invoked.getFirst()), null, member, guild, null));
+            try {
+                new GuildCommand() {
+                    @Override
+                    public void run(GuildCommandEvent event) {
+                    }
+                }.sendHelp(debugConstructor.newInstance(member.getUser(), event.getChannel(), content, event.getJDA(),
+                    invoked, List.of(invoked.getFirst()), null, member, guild, null, String.join(" ", args)));
+            } catch (InstantiationException | IllegalAccessException | InvocationTargetException instantiationException) {
+                instantiationException.printStackTrace();
+                debugConstructor.setAccessible(false);
+            }
         }
 
     }
@@ -163,6 +168,15 @@ public class DebugCommand extends AbstractCommand {
                 .required(false)
                 .build()
         );
+
+        options.addOption(
+            Option.builder("u")
+                .longOpt("user")
+                .hasArg().numberOfArgs(1)
+                .required(false)
+                .build()
+        );
+
 
         options.addOption(
             Option.builder("c")

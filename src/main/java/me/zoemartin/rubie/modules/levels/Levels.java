@@ -8,17 +8,23 @@ import net.dv8tion.jda.api.entities.*;
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.jodah.expiringmap.ExpiringMap;
+import org.apache.logging.log4j.util.Strings;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nonnull;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @LoadModule
 public class Levels extends ListenerAdapter implements Module {
     private static final Map<String, Map<String, UserLevel>> levels = new ConcurrentHashMap<>();
     private static final Map<String, LevelConfig> configs = new ConcurrentHashMap<>();
     private static final Map<String, Set<String>> timeout = new ConcurrentHashMap<>();
+
+    private final Logger log = LoggerFactory.getLogger(Levels.class);
 
     @Override
     public void init() {
@@ -34,19 +40,19 @@ public class Levels extends ListenerAdapter implements Module {
     private void initLevels() {
         levels.putAll(DatabaseUtil.loadGroupedMap("from UserLevel", UserLevel.class,
             UserLevel::getGuild_id, UserLevel::getUser_id, Function.identity()));
-        levels.forEach((s, stringUserLevelMap) -> System.out.printf(
-            "\u001B[36m[Level] Loaded '%d' levels for '%s'\u001B[0m\n",
+        levels.forEach((s, stringUserLevelMap) -> log.info(
+            "Loaded '{}' levels for '{}'",
             stringUserLevelMap.keySet().size(), s));
     }
 
     private void initConfigs() {
         configs.putAll(DatabaseUtil.loadMap("from LevelConfig", LevelConfig.class,
-            LevelConfig::getGuild_id, Function.identity()));
-        configs.forEach((s, levelConfig) -> System.out.printf(
-            "\u001B[36m[Level] Loaded config for '%s' with UUID `%s`\u001B[0m\n",
+            LevelConfig::getGuild_id, Function.identity(), LevelConfig::getGuild_id));
+        configs.forEach((s, levelConfig) -> log.info(
+            "Loaded config for '{}' with UUID `{}`",
             levelConfig.getGuild_id(),
             levelConfig.getUUID()));
-        System.out.printf("\u001B[36m[Level] Loaded '%d' configuration files\u001B[0m\n", configs.keySet().size());
+        log.info("Loaded '{}' configuration files", configs.keySet().size());
     }
 
     @Override
@@ -124,6 +130,9 @@ public class Levels extends ListenerAdapter implements Module {
                     ).queue();
                 break;
         }
+
+        log.info("User {}/({}) leveled up on {}. Reward Roles {}",
+            event.getAuthor().getAsTag(), event.getAuthor().getId(), g, String.join(", ", roles));
     }
 
     @Nonnull

@@ -35,7 +35,7 @@ public class MVCRefresh extends GuildCommand {
             g.removeRoleFromMember(member, mvc).queue();
         });
 
-        embedReply(event, "MVC Refresh", "Refreshed MVC! Previous mvc count was %d",
+        event.reply("MVC Refresh", "Refreshed MVC! Previous mvc count was %d",
             mvcMembers.size()).queue();
     }
 }

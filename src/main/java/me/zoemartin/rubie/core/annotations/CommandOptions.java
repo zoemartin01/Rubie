@@ -14,9 +14,15 @@ public @interface CommandOptions {
 
     String usage() default "";
 
+    String help() default "";
+
+    String category() default "unsorted";
+
     String description();
 
     Permission[] botPerms() default {};
 
     String[] alias() default {};
+
+    int maxArguments() default -1;
 }

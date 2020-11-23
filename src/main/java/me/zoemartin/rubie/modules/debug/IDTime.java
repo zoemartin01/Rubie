@@ -1,10 +1,12 @@
 package me.zoemartin.rubie.modules.debug;
 
+import me.zoemartin.rubie.core.CommandEvent;
 import me.zoemartin.rubie.core.GuildCommandEvent;
 import me.zoemartin.rubie.core.annotations.Command;
 import me.zoemartin.rubie.core.annotations.CommandOptions;
 import me.zoemartin.rubie.core.exceptions.CommandArgumentException;
 import me.zoemartin.rubie.core.exceptions.ReplyError;
+import me.zoemartin.rubie.core.interfaces.AbstractCommand;
 import me.zoemartin.rubie.core.interfaces.GuildCommand;
 import me.zoemartin.rubie.core.util.Check;
 import org.joda.time.Instant;
@@ -15,9 +17,9 @@ import org.joda.time.Instant;
     description = "Outputs the creation time of a discord id",
     usage = "<id entity>"
 )
-public class IDTime extends GuildCommand {
+public class IDTime extends AbstractCommand {
     @Override
-    public void run(GuildCommandEvent event) {
+    public void run(CommandEvent event) {
         Check.check(event.getArgs().size() == 1, CommandArgumentException::new);
         String ref = event.getArgs().get(0).replaceAll("\\D", "");
         Check.check(ref.matches("\\d{17,19}"),
@@ -26,6 +28,6 @@ public class IDTime extends GuildCommand {
         long id = Long.parseLong(ref);
         long time = (id >> 22) + 1420070400000L;
 
-        embedReply(event, "Timestamp of `" + id + "`", Instant.ofEpochMilli(time).toString()).queue();
+        event.reply("Timestamp of `" + id + "`", Instant.ofEpochMilli(time).toString()).queue();
     }
 }

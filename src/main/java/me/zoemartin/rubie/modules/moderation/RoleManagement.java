@@ -97,7 +97,7 @@ public class RoleManagement extends GuildCommand {
             g.addRoleToMember(m, r).queue();
 
             event.addCheckmark();
-            embedReply(event, "Role Management", "Added %s to %s", m.getAsMention(),
+            event.reply("Role Management", "Added %s to %s", m.getAsMention(),
                 r.getAsMention()).queue(message -> message.delete().queueAfter(10, TimeUnit.SECONDS));
         }
     }
@@ -127,7 +127,7 @@ public class RoleManagement extends GuildCommand {
             g.removeRoleFromMember(m, r).queue();
 
             event.addCheckmark();
-            embedReply(event, "Role Management", "Removed %s from %s", m.getAsMention(),
+            event.reply("Role Management", "Removed %s from %s", m.getAsMention(),
                 r.getAsMention()).queue(message -> message.delete().queueAfter(10, TimeUnit.SECONDS));
         }
     }

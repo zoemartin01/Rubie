@@ -7,6 +7,8 @@ import me.zoemartin.rubie.modules.embeds.triggerEmbeds.Tee;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.TextChannel;
 import org.hibernate.Session;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -15,14 +17,14 @@ import java.util.stream.Collectors;
 
 public class PineController {
     private static final Map<String, Collection<PineEntity>> pines = new ConcurrentHashMap<>();
+    private static final Logger log = LoggerFactory.getLogger(PineController.class);
 
     public static void init() {
         pines.putAll(DatabaseUtil.loadGroupedCollection("from PineEntity", PineEntity.class,
             PineEntity::getGuild_id,
             Function.identity(),
             CollectorsUtil.toConcurrentSet()));
-        pines.forEach((s, e) -> System.out.printf(
-            "\u001B[36m[Level] Loaded '%d' pines for '%s'\u001B[0m\n",
+        pines.forEach((s, e) -> log.info("Loaded '{}' pines for '{}'",
             e.size(), s));
     }
 

@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration status="WARN">
+    <appenders>
+        <Console name="Console" target="SYSTEM_OUT">
+            <PatternLayout pattern="%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n"/>
+            <LevelRangeFilter minLevel="WARN" maxLevel="WARN" onMatch="DENY" onMismatch="NEUTRAL"/>
+        </Console>
+
+        <File name="MyFile" fileName="logs/${sys:logFilename}">
+            <PatternLayout pattern="%d{yyyy-mm-dd HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n"/>
+            <LevelRangeFilter minLevel="WARN" maxLevel="WARN" onMatch="DENY" onMismatch="NEUTRAL"/>
+        </File>
+    </appenders>
+
+    <loggers>
+        <root level="debug">
+            <AppenderRef ref="Console" level="info"/>
+            <AppenderRef ref="MyFile" level="info"/>
+        </root>
+
+        <!-- Log everything in hibernate -->
+        <Logger name="org.hibernate" level="info" additivity="false">
+            <AppenderRef ref="Console" />
+            <AppenderRef ref="MyFile" />
+        </Logger>
+
+        <!-- Log all SQL statements -->
+        <Logger name="org.hibernate.SQL" level="debug" additivity="false">
+            <AppenderRef ref="Console" />
+            <AppenderRef ref="MyFile" />
+        </Logger>
+    </loggers>
+</configuration>

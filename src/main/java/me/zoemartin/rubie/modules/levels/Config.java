@@ -60,7 +60,7 @@ class Config extends GuildCommand {
             c.setEnabled(true);
             DatabaseUtil.updateObject(c);
             event.addCheckmark();
-            embedReply(event, "Levels", "Enabled Leveling System").queue();
+            event.reply("Levels", "Enabled Leveling System").queue();
         }
 
         @Override
@@ -87,7 +87,7 @@ class Config extends GuildCommand {
             c.setEnabled(false);
             DatabaseUtil.updateObject(c);
             event.addCheckmark();
-            embedReply(event, "Levels", "Disabled Leveling System").queue();
+            event.reply("Levels", "Disabled Leveling System").queue();
         }
     }
 
@@ -114,7 +114,7 @@ class Config extends GuildCommand {
 
             DatabaseUtil.updateObject(config);
             event.addCheckmark();
-            embedReply(event, "Levels", "Level up announcements set to `%s`",
+            event.reply("Levels", "Level up announcements set to `%s`",
                 config.getAnnouncements().toString()).queue();
         }
     }
@@ -140,7 +140,7 @@ class Config extends GuildCommand {
             level.setExp(xp);
             DatabaseUtil.updateObject(level);
             event.addCheckmark();
-            embedReply(event, "Levels", "Set %s's xp to `%s`", u.getAsMention(), xp).queue();
+            event.reply("Levels", "Set %s's xp to `%s`", u.getAsMention(), xp).queue();
         }
     }
 
@@ -245,7 +245,7 @@ class Config extends GuildCommand {
             Levels.clearGuildCache(event.getGuild());
             event.addCheckmark();
             m.delete().complete();
-            embedReply(event, "Level Config",
+            event.reply("Level Config",
                 "Successfully cleared all Levels\nTime taken: %s seconds",
                 Duration.between(start, Instant.now()).toSeconds()).queue();
         }
@@ -291,7 +291,7 @@ class Config extends GuildCommand {
 
                 DatabaseUtil.updateObject(config);
                 event.addCheckmark();
-                embedReply(event, "Level Rewards", "Added %s to Level %s",
+                event.reply("Level Rewards", "Added %s to Level %s",
                     r.getAsMention(), level).queue();
             }
         }
@@ -319,7 +319,7 @@ class Config extends GuildCommand {
 
                 DatabaseUtil.updateObject(config);
                 event.addCheckmark();
-                embedReply(event, "Level Rewards", "Removed %s from Level %s",
+                event.reply("Level Rewards", "Removed %s from Level %s",
                     r.getAsMention(), level).queue();
             }
         }

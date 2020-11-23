@@ -28,6 +28,8 @@ class BlackList extends GuildCommand {
         throw new CommandArgumentException();
     }
 
+    // TODO: Blacklist USER
+
     @SubCommand(BlackList.class)
     @CommandOptions(
         name = "list",
@@ -108,7 +110,7 @@ class BlackList extends GuildCommand {
                 if (!config.removeBlacklistedChannel(c.getId())) return;
                 DatabaseUtil.updateObject(config);
                 event.addCheckmark();
-                embedReply(event, "Level Blacklist", "Unblacklisted %s",
+                event.reply("Level Blacklist", "Unblacklisted %s",
                     c.getAsMention()).queue();
             }
         }
@@ -134,7 +136,7 @@ class BlackList extends GuildCommand {
             config.addBlacklistedRole(r.getId());
             DatabaseUtil.updateObject(config);
             event.addCheckmark();
-            embedReply(event, "Level Blacklist", "Blacklisted %s",
+            event.reply("Level Blacklist", "Blacklisted %s",
                 r.getAsMention()).queue();
         }
 
@@ -158,7 +160,7 @@ class BlackList extends GuildCommand {
                 if (!config.removeBlacklistedRole(r.getId())) return;
                 DatabaseUtil.updateObject(config);
                 event.addCheckmark();
-                embedReply(event, "Level Blacklist", "Unblacklisted %s",
+                event.reply("Level Blacklist", "Unblacklisted %s",
                     r.getAsMention()).queue();
             }
         }

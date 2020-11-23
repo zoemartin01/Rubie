@@ -105,7 +105,7 @@ public class Transcript extends GuildCommand {
         event.getChannel().sendFile(f, "transcript.json").queue();
 
         mem.shutdown();
-        embedReply(event, "Transcript",
+        event.reply("Transcript",
             "Saved a transcript with %s messages\n\n" +
                 "Chunk size: %d\n" +
                 "Memory Used: %d MB\n" +

@@ -117,7 +117,7 @@ public class PineCommand extends GuildCommand {
             }
 
             message.editMessage(e.toDiscordEmbed()).complete();
-            embedReply(event, "Pine Updates",
+            event.reply("Pine Updates",
                 "Updated Pine [%s](%s) in %s", mRef, message.getJumpUrl(), c.getAsMention()).queue();
         }
     }
@@ -197,9 +197,9 @@ public class PineCommand extends GuildCommand {
             DatabaseUtil.deleteObject(pine);
             PineController.removePine(pine);
 
-            if (message == null) embedReply(event, "Pine Deletion",
+            if (message == null) event.reply("Pine Deletion",
                 "Deleted Pine `%s` in %s", mRef, c.getAsMention()).queue();
-            else embedReply(event, "Pine Deletion",
+            else event.reply("Pine Deletion",
                 "Deleted Pine [%s](%s) in %s", mRef, message.getJumpUrl(), c.getAsMention()).queue();
         }
     }

@@ -32,10 +32,10 @@ public class Output extends GuildCommand {
         LinkedList<AbstractCommand> commands = new LinkedList<>();
         args.subList(1, args.size()).forEach(s -> {
             if (commands.isEmpty()) commands.add(CommandManager.getCommands().stream()
-                                                     .filter(c -> s.matches(c.regex().toLowerCase()))
+                                                     .filter(c -> c.alias().contains(s.toLowerCase()))
                                                      .findFirst().orElse(null));
             else if (commands.getLast() != null) commands.getLast().subCommands().stream()
-                                                     .filter(sc -> s.matches(sc.regex().toLowerCase()))
+                                                     .filter(sc -> sc.alias().contains(s.toLowerCase()))
                                                      .findFirst().ifPresent(commands::add);
 
         });
@@ -44,7 +44,7 @@ public class Output extends GuildCommand {
         AbstractCommand command = commands.getLast();
 
         command.run(new GuildCommandEvent(event.getMember(), outputChannel, event.getContent(), event.getJDA(),
-            arguments, event.getInvoked()));
+            arguments, event.getInvoked(), event.getArgString()));
         event.addCheckmark();
     }
 }

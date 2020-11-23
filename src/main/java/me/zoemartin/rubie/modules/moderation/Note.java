@@ -217,7 +217,7 @@ public class Note extends GuildCommand {
                 cb.equal(r.get("user_id"), userId))).getResultList();
 
             notes.forEach(DatabaseUtil::deleteObject);
-            embedReply(event, "Notes", "Cleared all notes for %s",
+            event.reply("Notes", "Cleared all notes for %s",
                 u == null ? userId : u.getAsMention()).queue();
         }
     }

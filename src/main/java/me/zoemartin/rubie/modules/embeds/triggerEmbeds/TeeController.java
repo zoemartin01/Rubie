@@ -13,6 +13,8 @@ import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import org.hibernate.Session;
 import org.jetbrains.annotations.NotNull;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -22,15 +24,14 @@ import java.util.stream.Collectors;
 public class TeeController extends ListenerAdapter {
     // guild id | tee
     private static final Map<String, Collection<Tee>> triggers = new ConcurrentHashMap<>();
+    private static final Logger log = LoggerFactory.getLogger(TeeController.class);
 
     public static void init() {
         triggers.putAll(DatabaseUtil.loadGroupedCollection("from Tee", Tee.class,
             Tee::getGuild_id,
             Function.identity(),
             CollectorsUtil.toConcurrentSet()));
-        triggers.forEach((s, e) -> System.out.printf(
-            "\u001B[36m[Level] Loaded '%d' tees for '%s'\u001B[0m\n",
-            e.size(), s));
+        triggers.forEach((s, e) -> log.info("Loaded '{}' tees for '{}'", e.size(), s));
     }
 
     @SuppressWarnings("ConstantConditions")

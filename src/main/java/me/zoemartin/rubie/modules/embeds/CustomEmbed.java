@@ -19,9 +19,10 @@ import java.util.stream.Collectors;
     description = "Creates a custom embed",
     usage = "[channel] <json|url>",
     perm = CommandPerm.BOT_MANAGER,
-    alias = "cembed"
+    alias = "cembed",
+    botPerms = {Permission.MESSAGE_WRITE, Permission.MESSAGE_EMBED_LINKS}
 )
-@Checks.Permissions.Channel({Permission.MESSAGE_WRITE, Permission.MESSAGE_READ})
+@Checks.Permissions.Channel({Permission.MESSAGE_WRITE, Permission.MESSAGE_READ, Permission.MESSAGE_EMBED_LINKS})
 public class CustomEmbed extends GuildCommand {
     @Override
     public void run(GuildCommandEvent event) {
@@ -41,8 +42,7 @@ public class CustomEmbed extends GuildCommand {
 
                     json = EmbedUtil.jsonFromUrl(args.get(0));
                 } else {
-                    json = event.getContent()
-                               .substring(event.getContent().indexOf(event.getInvoked().getLast()) + event.getInvoked().getLast().length() + 1);
+                    json = lastArg(0, event);
                 }
             } else {
                 c = tc;
@@ -51,8 +51,7 @@ public class CustomEmbed extends GuildCommand {
 
                     json = EmbedUtil.jsonFromUrl(args.get(1));
                 } else {
-                    json = event.getContent()
-                               .substring(event.getContent().indexOf(cRef) + cRef.length() + 1);
+                    json = lastArg(1, event);
                 }
             }
         } else {
@@ -62,20 +61,18 @@ public class CustomEmbed extends GuildCommand {
 
                 json = EmbedUtil.jsonFromUrl(args.get(0));
             } else {
-                json = event.getContent()
-                           .substring(event.getContent().indexOf(event.getInvoked().getLast()) + event.getInvoked().getLast().length() + 1);
+                json = lastArg(0, event);
             }
         }
 
-        Check.check(event.getMember().hasPermission(c, Permission.MESSAGE_WRITE,
-            Permission.MESSAGE_READ, Permission.MESSAGE_EMBED_LINKS),
-            () -> new ReplyError("Error, looks like you don't have all the necessary permissions to post embeds in %s",
-                c.getAsMention()));
-
-        Check.check(event.getGuild().getSelfMember().hasPermission(c, Permission.MESSAGE_WRITE,
-            Permission.MESSAGE_READ, Permission.MESSAGE_EMBED_LINKS),
-            () -> new ReplyError("Error, looks like I don't have all the necessary permissions to post embeds in %s",
-                c.getAsMention()));
+        if (c != event.getTextChannel()) {
+            Check.check(this.checkChannelPerms(event, c),
+                () -> new CommandPermissionException(
+                    "Error, you are missing the necessary permissions in this channel for this command!"));
+            Check.check(this.checkNecessaryPerms(event, c),
+                () -> new CommandPermissionException(
+                    "Error, I seem to be missing the necessary permissions to run this command!"));
+        }
 
         Embed e;
         try {
@@ -93,10 +90,12 @@ public class CustomEmbed extends GuildCommand {
         name = "bulk",
         description = "Send multiple custom embeds at once",
         usage = "<channel> <urls...>",
-        perm = CommandPerm.BOT_ADMIN
+        perm = CommandPerm.BOT_ADMIN,
+        botPerms = {Permission.MESSAGE_WRITE, Permission.MESSAGE_READ, Permission.MESSAGE_EMBED_LINKS}
     )
     @Checks.Permissions.Guild(Permission.MESSAGE_MANAGE)
-    @Checks.Permissions.Channel({Permission.MESSAGE_WRITE, Permission.MESSAGE_READ, Permission.MANAGE_CHANNEL})
+    @Checks.Permissions.Channel({Permission.MESSAGE_WRITE, Permission.MESSAGE_READ,
+        Permission.MANAGE_CHANNEL, Permission.MESSAGE_EMBED_LINKS})
     private static class Bulk extends GuildCommand {
 
         @Override
@@ -106,15 +105,12 @@ public class CustomEmbed extends GuildCommand {
             TextChannel c = Parser.Channel.getTextChannel(event.getGuild(), args.get(0));
             Check.entityReferenceNotNull(c, TextChannel.class, args.get(0));
 
-            Check.check(event.getMember().hasPermission(c, Permission.MESSAGE_WRITE,
-                Permission.MESSAGE_READ, Permission.MESSAGE_EMBED_LINKS),
-                () -> new ReplyError("Error, looks like you don't have all the necessary permissions to post embeds in %s",
-                    c.getAsMention()));
-
-            Check.check(event.getGuild().getSelfMember().hasPermission(c, Permission.MESSAGE_WRITE,
-                Permission.MESSAGE_READ, Permission.MESSAGE_EMBED_LINKS),
-                () -> new ReplyError("Error, looks like I don't have all the necessary permissions to post embeds in %s",
-                    c.getAsMention()));
+            Check.check(this.checkChannelPerms(event, c),
+                () -> new CommandPermissionException(
+                    "Error, you are missing the necessary permissions in this channel for this command!"));
+            Check.check(this.checkNecessaryPerms(event, c),
+                () -> new CommandPermissionException(
+                    "Error, I seem to be missing the necessary permissions to run this command!"));
 
 
             List<String> jsons = args.subList(1, args.size())

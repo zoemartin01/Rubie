@@ -20,6 +20,7 @@ import java.util.*;
     usage = "<message...>",
     perm = CommandPerm.BOT_MANAGER
 )
+@Checks.Permissions.Guild(Permission.MESSAGE_MANAGE)
 public class Echo extends GuildCommand {
     @Override
     public void run(GuildCommandEvent event) {
@@ -50,15 +51,14 @@ public class Echo extends GuildCommand {
             TextChannel c = Parser.Channel.getTextChannel(event.getGuild(), event.getArgs().get(0));
             Check.entityReferenceNotNull(c, TextChannel.class, event.getArgs().get(0));
 
-            Check.check(event.getMember().hasPermission(c, Permission.MESSAGE_WRITE,
-                Permission.MESSAGE_READ),
-                () -> new ReplyError("Error, looks like you don't have all the necessary permissions to post embeds in %s",
-                    c.getAsMention()));
-
-            Check.check(event.getGuild().getSelfMember().hasPermission(c, Permission.MESSAGE_WRITE,
-                Permission.MESSAGE_READ),
-                () -> new ReplyError("Error, looks like I don't have all the necessary permissions to post embeds in %s",
-                    c.getAsMention()));
+            if (c != event.getTextChannel()) {
+                Check.check(this.checkChannelPerms(event, c),
+                    () -> new CommandPermissionException(
+                        "Error, you are missing the necessary permissions in this channel for this command!"));
+                Check.check(this.checkNecessaryPerms(event, c),
+                    () -> new CommandPermissionException(
+                        "Error, I seem to be missing the necessary permissions to run this command!"));
+            }
 
             String echo = lastArg(1, event);
 
@@ -93,9 +93,14 @@ public class Echo extends GuildCommand {
             }
             c = tc == null ? event.getTextChannel() : tc;
 
-            Check.check(event.getMember().hasPermission(c, Permission.MESSAGE_MANAGE),
-                () -> new ConsoleError("Member '%s' doesn't have edit permissions in channel '%s'",
-                    event.getMember().getId(), c.getId()));
+            if (c != event.getTextChannel()) {
+                Check.check(this.checkChannelPerms(event, c),
+                    () -> new CommandPermissionException(
+                        "Error, you are missing the necessary permissions in this channel for this command!"));
+                Check.check(this.checkNecessaryPerms(event, c),
+                    () -> new CommandPermissionException(
+                        "Error, I seem to be missing the necessary permissions to run this command!"));
+            }
 
             Message message;
             try {

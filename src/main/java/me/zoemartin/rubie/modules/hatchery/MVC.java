@@ -32,7 +32,7 @@ public class MVC extends GuildCommand {
         int count = g.getMembersWithRoles(mvc).size();
         int majority = (count - abstains) / 2 + 1;
 
-        embedReply(event, "MVC Majority", "The majority of %d with %d abstains is %d",
+        event.reply("MVC Majority", "The majority of %d with %d abstains is %d",
             count, abstains, majority).queue();
     }
 }

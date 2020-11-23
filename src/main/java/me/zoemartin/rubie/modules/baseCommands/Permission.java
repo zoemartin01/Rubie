@@ -49,7 +49,14 @@ public class Permission extends GuildCommand {
         @CommandOptions(
             name = "set",
             description = "Sets a Members Bot Permission",
-            usage = "<user> <level>"
+            usage = "<level> <user>",
+            perm = CommandPerm.BOT_ADMIN,
+            help = "Valid inputs for level are either the numeral or the name of:\n" +
+                       "`[4] Admins`\n" +
+                       "`[3] Manager`\n" +
+                       "`[2] Moderator`\n" +
+                       "`[1] User`\n" +
+                       "`[0] Everyone`\n"
         )
         @Checks.Permissions.Guild(net.dv8tion.jda.api.Permission.MANAGE_ROLES)
         public static class set extends GuildCommand {
@@ -61,12 +68,14 @@ public class Permission extends GuildCommand {
             @Override
             public void run(GuildCommandEvent event) {
                 List<String> args = event.getArgs();
-                Check.check(args.size() == 2 && Parser.User.isParsable(args.get(0))
-                                && Parser.Int.isParsable(args.get(1)), CommandArgumentException::new);
+                Check.check(args.size() >= 2, CommandArgumentException::new);
 
-                Member m = CacheUtils.getMemberExplicit(event.getGuild(), Parser.User.parse(args.get(0)));
-                CommandPerm cp = CommandPerm.fromNum(Parser.Int.parse(args.get(1)));
+                String mRef = lastArg(1, event);
+                Member m = CacheUtils.getMember(event.getGuild(), mRef);
+                CommandPerm cp = args.get(0).matches("\\d") ? CommandPerm.fromNum(Parser.Int.parse(args.get(0))) :
+                                     CommandPerm.fromString(args.get(0));
                 Check.notNull(cp, CommandArgumentException::new);
+                Check.entityReferenceNotNull(m, Member.class, mRef);
                 Check.check(!cp.equals(CommandPerm.OWNER) || event.getUser().getId().equals(Bot.getOWNER()),
                     CommandArgumentException::new);
 
@@ -74,7 +83,7 @@ public class Permission extends GuildCommand {
                     PermissionHandler.removeMemberPerm(event.getGuild().getId(), m.getId());
                 else
                     PermissionHandler.addMemberPerm(event.getGuild().getId(), m.getId(), cp);
-                embedReply(event, null, "Set `[%d] %s` to %s", cp.raw(), cp.toString(),
+                event.reply(null, "Set `[%d] %s` to %s", cp.raw(), cp.toString(),
                     m.getAsMention()).queue();
             }
         }
@@ -84,7 +93,8 @@ public class Permission extends GuildCommand {
             name = "remove",
             description = "Removes a Members Bot Permission",
             usage = "<user>",
-            alias = {"rm", "delete", "del"}
+            alias = {"rm", "delete", "del"},
+            perm = CommandPerm.BOT_ADMIN
         )
         @Checks.Permissions.Guild(net.dv8tion.jda.api.Permission.MANAGE_ROLES)
         public static class Remove extends GuildCommand {
@@ -98,14 +108,15 @@ public class Permission extends GuildCommand {
                 Check.check(PermissionHandler.removeMemberPerm(event.getGuild().getId(), m.getId()),
                     () -> new ReplyError("Error, Member does not have an assigned Member Permission"));
 
-                embedReply(event, (String) null, "Removed Member Permission from %s", m.getAsMention()).queue();
+                event.reply(null, "Removed Member Permission from %s", m.getAsMention()).queue();
             }
         }
 
         @SubCommand(MemberPerm.class)
         @CommandOptions(
             name = "list",
-            description = "Lists all members with special bot member permissions"
+            description = "Lists all members with special bot member permissions",
+            perm = CommandPerm.BOT_ADMIN
         )
         public static class list extends GuildCommand {
             @Override
@@ -152,20 +163,29 @@ public class Permission extends GuildCommand {
         @CommandOptions(
             name = "set",
             description = "Sets a Roles Bot Permission",
-            usage = "<role> <level>"
+            usage = "<level> <role>",
+            perm = CommandPerm.BOT_ADMIN,
+            help = "Valid inputs for level are either the numeral or the name of:\n" +
+                       "`[4] Admins`\n" +
+                       "`[3] Manager`\n" +
+                       "`[2] Moderator`\n" +
+                       "`[1] User`\n" +
+                       "`[0] Everyone`\n"
         )
         @Checks.Permissions.Guild(net.dv8tion.jda.api.Permission.MANAGE_ROLES)
         public static class set extends GuildCommand {
 
             @Override
             public void run(GuildCommandEvent event) {
-                Check.check(event.getArgs().size() == 2 && Parser.Int.isParsable(event.getArgs().get(1)),
-                    CommandArgumentException::new);
+                Check.check(event.getArgs().size() >= 2, CommandArgumentException::new);
+                List<String> args = event.getArgs();
 
-                Role r = Parser.Role.getRole(event.getGuild(), event.getArgs().get(0));
-                CommandPerm cp = CommandPerm.fromNum(Parser.Int.parse(event.getArgs().get(1)));
+                String rRef = lastArg(1, event);
+                Role r = Parser.Role.getRole(event.getGuild(), rRef);
+                CommandPerm cp = args.get(0).matches("\\d") ? CommandPerm.fromNum(Parser.Int.parse(args.get(0))) :
+                                     CommandPerm.fromString(args.get(0));
                 Check.notNull(cp, CommandArgumentException::new);
-                Check.entityReferenceNotNull(r, Role.class, event.getArgs().get(0));
+                Check.entityReferenceNotNull(r, Role.class, rRef);
                 Check.check(!cp.equals(CommandPerm.OWNER) || event.getUser().getId().equals(Bot.getOWNER()),
                     CommandArgumentException::new);
 
@@ -173,7 +193,7 @@ public class Permission extends GuildCommand {
                     PermissionHandler.removeRolePerm(event.getGuild().getId(), r.getId());
                 else
                     PermissionHandler.setRolePerm(event.getGuild().getId(), r.getId(), cp);
-                embedReply(event, null, "Set `[%d] %s` to %s", cp.raw(), cp.toString(),
+                event.reply(null, "Set `[%d] %s` to %s", cp.raw(), cp.toString(),
                     r.getAsMention()).queue();
             }
         }
@@ -183,7 +203,8 @@ public class Permission extends GuildCommand {
             name = "remove",
             description = "Removes a Roles Bot Permission",
             usage = "<role>",
-            alias = {"rm", "delete", "del"}
+            alias = {"rm", "delete", "del"},
+            perm = CommandPerm.BOT_ADMIN
         )
         public static class Remove extends GuildCommand {
             @Override
@@ -197,14 +218,15 @@ public class Permission extends GuildCommand {
                 Check.check(PermissionHandler.removeRolePerm(event.getGuild().getId(), r.getId()),
                     () -> new ReplyError("Error, Role does not have an assigned Role Permission"));
 
-                embedReply(event, (String) null, "Removed Role Permission from %s", r.getAsMention()).queue();
+                event.reply(null, "Removed Role Permission from %s", r.getAsMention()).queue();
             }
         }
 
         @SubCommand(RolePerm.class)
         @CommandOptions(
             name = "list",
-            description = "Lists all roles with special bot role permissions"
+            description = "Lists all roles with special bot role permissions",
+            perm = CommandPerm.BOT_ADMIN
         )
         public static class list extends GuildCommand {
             @Override

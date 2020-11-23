@@ -6,8 +6,7 @@ import me.zoemartin.rubie.core.annotations.Command;
 import me.zoemartin.rubie.core.annotations.CommandOptions;
 import me.zoemartin.rubie.core.interfaces.AbstractCommand;
 import net.dv8tion.jda.api.EmbedBuilder;
-import org.joda.time.DateTime;
-import org.joda.time.Duration;
+import org.joda.time.*;
 import org.joda.time.format.PeriodFormatter;
 import org.joda.time.format.PeriodFormatterBuilder;
 
@@ -25,6 +24,7 @@ import java.util.jar.Manifest;
 public class About extends AbstractCommand {
     private String JDA_VERSION = null;
     private static DateTime STARTUP;
+    private static String OWNER_TAG = null;
 
     public About() {
         STARTUP = DateTime.now();
@@ -52,7 +52,7 @@ public class About extends AbstractCommand {
                                         .appendSeconds()
                                         .appendSuffix(" seconds")
                                         .toFormatter();
-        eb.addField("Uptime", formatter.print(new Duration(STARTUP, DateTime.now()).toPeriod()), true);
+        eb.addField("Uptime", formatter.print(new Duration(STARTUP, DateTime.now()).toPeriodFrom(STARTUP)), true);
         Runtime rt = Runtime.getRuntime();
         long usedMB = (rt.totalMemory() - rt.freeMemory()) / 1024 / 1024;
         eb.addField("Memory Usage", usedMB + " MB", true);

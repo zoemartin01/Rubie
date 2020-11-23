@@ -39,7 +39,7 @@ public class Prefix extends GuildCommand {
 
             String prefix = lastArg(0, event);
             Prefixes.addPrefix(event.getGuild().getId(), prefix);
-            embedReply(event, (String) null, "Added `%s` as a prefix", prefix).queue();
+            event.reply(null, "Added `%s` as a prefix", prefix).queue();
         }
     }
 
@@ -59,7 +59,7 @@ public class Prefix extends GuildCommand {
             String prefix = event.getArgs().get(0);
             Check.check(Prefixes.removePrefix(event.getGuild().getId(), prefix),
                 () -> new ReplyError("Error, `%s` was not a bot prefix", prefix));
-            embedReply(event, (String) null, "Removed `%s` as a prefix", prefix).queue();
+            event.reply(null, "Removed `%s` as a prefix", prefix).queue();
         }
     }
 

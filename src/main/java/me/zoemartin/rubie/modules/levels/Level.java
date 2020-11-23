@@ -20,6 +20,7 @@ import java.util.stream.Collectors;
     name = "level",
     alias = "lvl",
     description = "Shows Levels",
+    usage = "[user]",
     perm = CommandPerm.BOT_USER
 )
 public class Level extends GuildCommand {
@@ -75,6 +76,7 @@ public class Level extends GuildCommand {
     @CommandOptions(
         name = "show",
         description = "Shows a users level",
+        usage = "[user]",
         perm = CommandPerm.BOT_USER
     )
     private static class Show extends GuildCommand {

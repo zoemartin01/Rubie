@@ -168,7 +168,7 @@ public class ModLogs extends GuildCommand {
                 cb.equal(r.get("user_id"), userId))).getResultList();
 
             modlog.forEach(DatabaseUtil::deleteObject);
-            embedReply(event, "Notes", "Cleared all modlogs for %s",
+            event.reply("Notes", "Cleared all modlogs for %s",
                 u == null ? userId : u.getAsMention()).queue();
         }
     }

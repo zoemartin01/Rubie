@@ -1,12 +1,16 @@
 package me.zoemartin.rubie.modules.commandProcessing;
 
-import me.zoemartin.rubie.core.CommandPerm;
+import me.zoemartin.rubie.Bot;
+import me.zoemartin.rubie.core.*;
+import me.zoemartin.rubie.core.interfaces.AbstractCommand;
 import me.zoemartin.rubie.core.util.CollectorsUtil;
 import me.zoemartin.rubie.core.util.DatabaseUtil;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
 import org.hibernate.Session;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -16,6 +20,8 @@ public class PermissionHandler {
     private static final Map<String, Collection<MemberPermission>> memberPerms = new ConcurrentHashMap<>();
     private static final Map<String, Collection<RolePermission>> rolePerms = new ConcurrentHashMap<>();
 
+    private static final Logger log = LoggerFactory.getLogger(PermissionHandler.class);
+
     public static void initPerms() {
         memberPerms.putAll(DatabaseUtil.loadGroupedCollection(
             "from MemberPermission", MemberPermission.class,
@@ -24,9 +30,7 @@ public class PermissionHandler {
             CollectorsUtil.toConcurrentSet()
         ));
 
-        memberPerms.forEach((s, e) -> System.out.printf(
-            "\u001B[36m[Level] Loaded '%d' member perm overrides for '%s'\u001B[0m\n",
-            e.size(), s));
+        memberPerms.forEach((s, e) -> log.info("Loaded '{}' member perm overrides for '{}'", e.size(), s));
 
         rolePerms.putAll(DatabaseUtil.loadGroupedCollection(
             "from RolePermission", RolePermission.class,
@@ -35,9 +39,18 @@ public class PermissionHandler {
             CollectorsUtil.toConcurrentSet()
         ));
 
-        rolePerms.forEach((s, e) -> System.out.printf(
-            "\u001B[36m[Level] Loaded '%d' role perm overrides for '%s'\u001B[0m\n",
-            e.size(), s));
+        rolePerms.forEach((s, e) -> log.info("Loaded '{}' role perm overrides for '{}'", e.size(), s));
+    }
+
+    public static boolean checkUserPerms(AbstractCommand command, CommandEvent event) {
+        if (command.commandPerm() == CommandPerm.EVERYONE) return true;
+        if (event.getUser().getId().equals(Bot.getOWNER())) return true;
+
+        if (event instanceof GuildCommandEvent) {
+            return getHighestFromUser(((GuildCommandEvent) event).getGuild(), ((GuildCommandEvent) event).getMember()).raw() >= command.commandPerm().raw();
+        }
+
+        return false;
     }
 
     public static MemberPermission getMemberPerm(String guildId, String memberId) {

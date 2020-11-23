@@ -67,7 +67,7 @@ public class TeeCommand extends GuildCommand {
             DatabaseUtil.saveObject(tee);
             TeeController.addTriggerEmbed(tee);
             event.addCheckmark();
-            embedReply(event, "Trigger Embed Added",
+            event.reply("Trigger Embed Added",
                 "Added Embed with trigger `%s`", trigger).queue();
         }
     }
@@ -97,7 +97,7 @@ public class TeeCommand extends GuildCommand {
 
             tee.setPerm(perm);
             DatabaseUtil.updateObject(tee);
-            embedReply(event, "Trigger Embed Updates",
+            event.reply("Trigger Embed Updates",
                 "Set Trigger Embed `%s` permission to `[%s] %s`", trigger, perm.raw(), perm.toString()).queue();
         }
     }
@@ -129,7 +129,7 @@ public class TeeCommand extends GuildCommand {
             tee.setCached_json(json);
             DatabaseUtil.updateObject(tee);
 
-            embedReply(event, "Trigger Embed Updates",
+            event.reply("Trigger Embed Updates",
                 "Updated Trigger Embed `%s`", trigger).queue();
         }
 
@@ -306,7 +306,7 @@ public class TeeCommand extends GuildCommand {
 
                 DatabaseUtil.deleteObject(tee);
                 TeeController.removeTriggerEmbed(tee);
-                embedReply(event, "Trigger Embed Deletion",
+                event.reply("Trigger Embed Deletion",
                     "Deleted Trigger Embed with `%s`", trigger).queue();
             }
         }

@@ -29,11 +29,11 @@ public class Usage extends GuildCommand {
         LinkedList<AbstractCommand> commands = new LinkedList<>();
         event.getArgs().forEach(s -> {
             if (commands.isEmpty()) commands.add(CommandManager.getCommands().stream()
-                                                     .filter(c -> s.matches(c.regex().toLowerCase()))
+                                                     .filter(c -> c.alias().contains(s.toLowerCase()))
                                                      .findFirst().orElseThrow(
                     () -> new ConsoleError("Command '%s' not found", event.getInvoked().getLast())));
             else commands.getLast().subCommands().stream()
-                     .filter(sc -> s.matches(sc.regex().toLowerCase()))
+                     .filter(sc -> sc.alias().contains(s.toLowerCase()))
                      .findFirst().ifPresent(commands::add);
 
         });

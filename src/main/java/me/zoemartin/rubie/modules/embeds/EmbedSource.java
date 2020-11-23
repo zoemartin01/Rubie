@@ -66,7 +66,7 @@ public class EmbedSource extends GuildCommand {
                     throw new UnexpectedError();
                 }
             } else
-                embedReply(event, "Embed Source", embed.toJson().isEmpty() ? "%s" : "```%s```", embed.toJson()).queue();
+                event.reply("Embed Source", embed.toJson().isEmpty() ? "%s" : "```%s```", embed.toJson()).queue();
         });
     }
 

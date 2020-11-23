@@ -1,9 +1,7 @@
 package me.zoemartin.rubie.modules.baseCommands;
 
 import me.zoemartin.rubie.core.*;
-import me.zoemartin.rubie.core.annotations.Command;
-import me.zoemartin.rubie.core.annotations.CommandOptions;
-import me.zoemartin.rubie.core.exceptions.ConsoleError;
+import me.zoemartin.rubie.core.annotations.*;
 import me.zoemartin.rubie.core.exceptions.ReplyError;
 import me.zoemartin.rubie.core.interfaces.AbstractCommand;
 import me.zoemartin.rubie.core.interfaces.GuildCommand;
@@ -18,7 +16,6 @@ import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
 
 import java.util.*;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
 @Command
@@ -27,6 +24,8 @@ import java.util.stream.Collectors;
     description = "Shows commands help or a list of all available commands",
     usage = "[command]"
 )
+@Arguments()
+@Arguments(Command.class)
 public class Help extends GuildCommand {
     @Override
     public void run(GuildCommandEvent event) {
@@ -48,18 +47,18 @@ public class Help extends GuildCommand {
         }
     }
 
-    public static void commandHelp(CommandEvent event) {
+    private static void commandHelp(CommandEvent event) {
         LinkedList<AbstractCommand> hierarchy = new LinkedList<>();
 
         event.getArgs().forEach(s -> {
             if (hierarchy.isEmpty()) {
                 AbstractCommand cmd = CommandManager.getCommands().stream()
-                                          .filter(c -> s.matches(c.regex().toLowerCase()))
+                                          .filter(c -> c.alias().contains(s.toLowerCase()))
                                           .findFirst().orElse(null);
                 hierarchy.add(cmd);
             } else if (hierarchy.getLast() != null) {
                 hierarchy.getLast().subCommands().stream()
-                    .filter(sc -> s.matches(sc.regex().toLowerCase()))
+                    .filter(sc -> sc.alias().contains(s.toLowerCase()))
                     .findFirst().ifPresent(hierarchy::add);
             }
         });
@@ -73,25 +72,23 @@ public class Help extends GuildCommand {
         eb.setTitle("`" + name.toUpperCase() + "`")
             .setColor(0xdf136c);
         eb.addField("Description:", cmd.description(), false);
-        if (!cmd.detailedHelp().isEmpty()) eb.addField("Detailed Help:", cmd.detailedHelp(), false);
+        //if (!cmd.help().isEmpty()) eb.addField("Detailed Help:", cmd.help(), false);
         eb.addField("Usage: ", cmd.usage().isEmpty() ?
                                    String.format("`%s`", name) : String.format("`%s %s`", name, cmd.usage()),
             false);
 
 
+        if (!cmd.help().isBlank()) eb.setDescription(cmd.help());
+
         CommandPerm perm = cmd.commandPerm();
         if (perm != CommandPerm.EVERYONE)
             eb.addField("Permission Level:", String.format("`[%d] %s`", perm.raw(), perm.toString()), false);
 
-        StringBuilder aliases = new StringBuilder();
-        for (String s : cmd.regex().split("\\|")) {
-            if (s.equals(cmd.name())) continue;
-            aliases.append(s).append(", ");
-        }
-
-        if (aliases.length() > 0) aliases.deleteCharAt(aliases.lastIndexOf(","))
-                                      .deleteCharAt(aliases.lastIndexOf(" "));
-        eb.addField("Aliases:", String.format("`%s`", aliases.length() > 0 ? aliases : "n/a"), false);
+        eb.addField("Aliases:", String.format("`%s`",
+            cmd.alias().size() > 1 ?
+                cmd.alias().stream().filter(s -> !s.equalsIgnoreCase(cmd.name()))
+                    .collect(Collectors.joining(", "))
+                : "n/a"), false);
 
         StringBuilder sub = new StringBuilder();
         Iterator<AbstractCommand> iterator = cmd.subCommands().iterator();
@@ -99,8 +96,13 @@ public class Help extends GuildCommand {
         while (iterator.hasNext()) {
             AbstractCommand c = iterator.next();
 
-            if (iterator.hasNext()) sub.append("`├─ ").append(c.name()).append("`\n");
-            else sub.append("`└─ ").append(c.name()).append("`");
+            if (iterator.hasNext())
+                sub.append("`├─ ")
+                    .append(c.commandPerm() != CommandPerm.EVERYONE ? "[" + c.commandPerm().raw() + "] " : "")
+                    .append(c.name()).append("`\n");
+            else sub.append("`└─ ")
+                     .append(c.commandPerm() != CommandPerm.EVERYONE ? "[" + c.commandPerm().raw() + "] " : "")
+                     .append(c.name()).append("`");
         }
 
         if (sub.length() > 0)
