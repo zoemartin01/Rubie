@@ -95,38 +95,45 @@ public class Levels extends ListenerAdapter implements Module {
         Guild g = event.getGuild();
         Collection<String> roles = getConfig(g).getRewardRoles(level);
 
+        long rewards = roles.stream().filter(s -> {
+            Role r = g.getRoleById(s);
+            if (r == null) return false;
+            return !event.getMember().getRoles().contains(r);
+        }).count();
+
         roles.forEach(s -> {
             Role r = g.getRoleById(s);
             if (r != null) g.addRoleToMember(event.getMember(), r).queue();
         });
 
         LevelConfig config = getConfig(g);
+        String name = event.getMember().getEffectiveName();
 
         switch (config.getAnnouncements()) {
             case ALL:
-                if (roles.isEmpty())
+                if (rewards > 0)
                     event.getAuthor().openPrivateChannel().complete().sendMessageFormat(
                         "Hey, %s! Congratulations on hitting level %s in %s! " +
-                            "Thanks for being here! " +
+                            "Hope you enjoy your new server privileges, and hey, thanks for being here " +
                             "\uD83D\uDC9A",
-                        event.getAuthor().getName(), level, g.getName()
+                        name, level, g.getName()
                     ).queue();
                 else
                     event.getAuthor().openPrivateChannel().complete().sendMessageFormat(
                         "Hey, %s! Congratulations on hitting level %s in %s! " +
-                            "Hope you enjoy your new server privileges, and hey, thanks for being here " +
+                            "Thanks for being here! " +
                             "\uD83D\uDC9A",
-                        event.getAuthor().getName(), level, g.getName()
+                        name, level, g.getName()
                     ).queue();
                 break;
 
             case REWARDS:
-                if (!roles.isEmpty())
+                if (rewards > 0)
                     event.getAuthor().openPrivateChannel().complete().sendMessageFormat(
                         "Hey, %s! Congratulations on hitting level %s in %s! " +
                             "Hope you enjoy your new server privileges, and hey, thanks for being here " +
                             "\uD83D\uDC9A",
-                        event.getAuthor().getName(), level, g.getName()
+                        name, level, g.getName()
                     ).queue();
                 break;
         }
