@@ -26,7 +26,6 @@ import java.util.EnumSet;
 import java.util.Properties;
 
 public class Bot extends ListenerAdapter {
-    private static final Logger log = LoggerFactory.getLogger(Bot.class);
     private static Properties properties;
 
     private static JDABuilder builder;
@@ -37,6 +36,7 @@ public class Bot extends ListenerAdapter {
 
     public static void main(String[] args) throws LoginException {
         System.setProperty("logFilename", "rubie_" + DateTime.now().toString("yyyy-MM-dd_hh-mm-ss") + ".log");
+        var log = LoggerFactory.getLogger(Bot.class);
 
         File configFile;
         properties = new Properties();
