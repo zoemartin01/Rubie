@@ -1,6 +1,6 @@
 package me.zoemartin.rubie.modules.levels;
 
-import me.zoemartin.rubie.core.annotations.Mapped;
+import me.zoemartin.rubie.core.annotations.*;
 import me.zoemartin.rubie.core.util.DatabaseConverter;
 
 import javax.persistence.*;
@@ -23,11 +23,11 @@ public class LevelConfig {
     @Column
     private boolean enabled;
 
-    @Column(columnDefinition="TEXT")
+    @Column(columnDefinition = "TEXT")
     @Convert(converter = DatabaseConverter.StringListConverter.class)
     private Collection<String> blacklisted_channels;
 
-    @Column(columnDefinition="TEXT")
+    @Column(columnDefinition = "TEXT")
     @Convert(converter = DatabaseConverter.StringListConverter.class)
     private Collection<String> blacklisted_roles;
 
@@ -71,6 +71,7 @@ public class LevelConfig {
         return guild_id;
     }
 
+    @Getter("enabled")
     public boolean isEnabled() {
         return enabled;
     }
@@ -99,7 +100,8 @@ public class LevelConfig {
         return blacklisted_roles.remove(roleId);
     }
 
-    public void setEnabled(boolean enabled) {
+    @Setter(name = "enabled")
+    public void setEnabled(Boolean enabled) {
         this.enabled = enabled;
     }
 
@@ -120,10 +122,12 @@ public class LevelConfig {
         return rewardRoles.getOrDefault(level, new HashSet<>()).remove(roleId);
     }
 
+    @Getter("announcements")
     public Announcements getAnnouncements() {
         return announcements;
     }
 
+    @Setter(name = "announcements", type = "[0] none /[1] rewards /[2] all")
     public void setAnnouncements(Announcements announcements) {
         this.announcements = announcements;
     }

@@ -1,9 +1,9 @@
 package me.zoemartin.rubie.modules.gatekeeper;
 
-import me.zoemartin.rubie.core.CommandPerm;
-import me.zoemartin.rubie.core.annotations.Mapped;
+import me.zoemartin.rubie.core.annotations.*;
 import me.zoemartin.rubie.core.util.DatabaseConverter;
 import net.dv8tion.jda.api.entities.Guild;
+import net.dv8tion.jda.api.entities.TextChannel;
 
 import javax.persistence.*;
 import java.util.*;
@@ -28,7 +28,7 @@ public class GatekeeperConfig {
     @Column(name = "timeout")
     long kickAfter;
 
-    @Column(name = "timeout_ignore_roles", columnDefinition="TEXT")
+    @Column(name = "timeout_ignore_roles", columnDefinition = "TEXT")
     @Convert(converter = DatabaseConverter.StringListConverter.class)
     private Collection<String> kickIgnoredRoles;
 
@@ -38,11 +38,11 @@ public class GatekeeperConfig {
     @Column(name = "enable_roles_remove")
     boolean removeRoles;
 
-    @Column(name = "roles_add", columnDefinition="TEXT")
+    @Column(name = "roles_add", columnDefinition = "TEXT")
     @Convert(converter = DatabaseConverter.StringListConverter.class)
     private Collection<String> rolesToAdd;
 
-    @Column(name = "roles_remove", columnDefinition="TEXT")
+    @Column(name = "roles_remove", columnDefinition = "TEXT")
     @Convert(converter = DatabaseConverter.StringListConverter.class)
     private Collection<String> rolesToRemove;
 
@@ -85,14 +85,17 @@ public class GatekeeperConfig {
         return guildId;
     }
 
+    @Getter("enabled")
     public boolean isGatekeeperEnabled() {
         return gatekeeperEnabled;
     }
 
+    @Getter("timeout_enabled")
     public boolean isKickEnabled() {
         return kickEnabled;
     }
 
+    @Getter("timeout_ms")
     public long getKickAfter() {
         return kickAfter;
     }
@@ -109,47 +112,53 @@ public class GatekeeperConfig {
         return rolesToRemove;
     }
 
+    @Getter("verification_trigger")
     public String getVerificationTrigger() {
         return verificationTrigger;
     }
 
+    @Getter("logs_enabled")
     public boolean isLoggingEnabled() {
         return logsEnabled;
     }
 
+    @Getter("logs_channel")
     public String getLogChannelId() {
         return logChannelId;
     }
 
+    @Getter("mode")
     public Mode getGatekeeperMode() {
         return gatekeeperMode;
     }
 
+    @Getter("send_private_verification_message")
     public boolean doSendMessage() {
         return sendMessage;
     }
 
+    @Getter("adds_roles")
     public boolean doAddRoles() {
         return addRoles;
     }
 
+    @Getter("removed_roles")
     public boolean doRemoveRoles() {
         return removeRoles;
     }
 
-    public void setGuildId(String guildId) {
-        this.guildId = guildId;
-    }
-
-    public void setGatekeeperEnabled(boolean gatekeeperEnabled) {
+    @Setter(name = "enabled")
+    public void setGatekeeperEnabled(Boolean gatekeeperEnabled) {
         this.gatekeeperEnabled = gatekeeperEnabled;
     }
 
-    public void setKickEnabled(boolean kickEnabled) {
+    @Setter(name = "timeout_enabled")
+    public void setKickEnabled(Boolean kickEnabled) {
         this.kickEnabled = kickEnabled;
     }
 
-    public void setKickAfter(long kickAfter) {
+    @Setter(name = "timeout_ms", type = "Time in ms")
+    public void setKickAfter(Long kickAfter) {
         this.kickAfter = kickAfter;
     }
 
@@ -177,31 +186,38 @@ public class GatekeeperConfig {
         return rolesToRemove.remove(roleId);
     }
 
+    @Setter(name = "verification_trigger")
     public void setVerificationTrigger(String verificationTrigger) {
         this.verificationTrigger = verificationTrigger;
     }
 
-    public void setLogsEnabled(boolean logsEnabled) {
+    @Setter(name = "logs_enabled")
+    public void setLogsEnabled(Boolean logsEnabled) {
         this.logsEnabled = logsEnabled;
     }
 
-    public void setLogChannelId(String logChannelId) {
-        this.logChannelId = logChannelId;
+    @Setter(name = "logs_channel")
+    public void setLogChannelId(TextChannel channel) {
+        this.logChannelId = channel.getId();
     }
 
+    @Setter(name = "mode", type = "on join/on trigger")
     public void setGatekeeperMode(Mode gatekeeperMode) {
         this.gatekeeperMode = gatekeeperMode;
     }
 
-    public void setSendMessage(boolean sendMessage) {
+    @Setter(name = "send_private_verification_message")
+    public void setSendMessage(Boolean sendMessage) {
         this.sendMessage = sendMessage;
     }
 
-    public void setAddRoles(boolean addRoles) {
+    @Setter(name = "adds_roles")
+    public void setAddRoles(Boolean addRoles) {
         this.addRoles = addRoles;
     }
 
-    public void setRemoveRoles(boolean removeRoles) {
+    @Setter(name = "removed_roles")
+    public void setRemoveRoles(Boolean removeRoles) {
         this.removeRoles = removeRoles;
     }
 

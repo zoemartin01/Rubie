@@ -1,18 +1,21 @@
 package me.zoemartin.rubie.modules.gatekeeper;
 
-import me.zoemartin.rubie.core.CommandPerm;
-import me.zoemartin.rubie.core.GuildCommandEvent;
+import me.zoemartin.rubie.core.*;
+import me.zoemartin.rubie.core.AutoConfig;
 import me.zoemartin.rubie.core.annotations.*;
 import me.zoemartin.rubie.core.exceptions.CommandArgumentException;
 import me.zoemartin.rubie.core.exceptions.ReplyError;
 import me.zoemartin.rubie.core.interfaces.GuildCommand;
 import me.zoemartin.rubie.core.util.*;
+import me.zoemartin.rubie.modules.levels.*;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.*;
+import net.dv8tion.jda.internal.utils.tuple.Pair;
 import org.hibernate.Session;
 
 import javax.persistence.criteria.*;
 import java.util.*;
+import java.util.function.*;
 import java.util.stream.Collectors;
 
 @Command
@@ -32,88 +35,27 @@ public class GatekeeperCommand extends GuildCommand {
         name = "config",
         description = "Configure the Gatekeeper",
         perm = CommandPerm.BOT_ADMIN,
-        usage = "[key] [value]"
+        alias = "conf"
     )
     private static class Config extends GuildCommand {
-        private static final Map<String, Class<?>> keys = Map.of(
-            "enabled", Boolean.class,
-            "timeout_enabled", Boolean.class,
-            "logging_enabled", Boolean.class,
-            "message_on_verification", Boolean.class,
-            "add_roles", Boolean.class,
-            "remove_roles", Boolean.class,
-            "log_channel", TextChannel.class,
-            "timeout", Long.class,
-            "trigger", String.class,
-            "mode", GatekeeperConfig.Mode.class
-        );
-
-
         @Override
         public void run(GuildCommandEvent event) {
-            if (event.getArgs().size() == 0) {
-                event.reply("Valid Config Keys", keys.entrySet().stream().map(e -> String.format("`%s` - `%s`",
-                    e.getKey(), e.getValue().getSimpleName())).collect(Collectors.joining("\n"))).queue();
-                return;
+            throw new CommandArgumentException();
+        }
+
+        @SubCommand(Config.class)
+        @CommandOptions(
+            name = "param",
+            description = "Gatekeeper Parameter Configuration",
+            perm = CommandPerm.BOT_ADMIN,
+            alias = "parameter",
+            usage = "[key] [value]"
+        )
+        static class Param extends AutoConfig<GatekeeperConfig> {
+            @Override
+            protected GatekeeperConfig supply(GuildCommandEvent event) {
+                return Gatekeeper.getConfig(event.getGuild());
             }
-
-            String key = event.getArgs().get(0);
-            Check.check(keys.containsKey(key), () -> new ReplyError("Not a valid config key!"));
-            GatekeeperConfig config = Gatekeeper.getConfig(event.getGuild());
-
-
-            if (event.getArgs().size() == 1) {
-                Object value;
-
-                switch (key) {
-                    case "enabled" -> value = config.isGatekeeperEnabled();
-                    case "timeout_enabled" -> value = config.isKickEnabled();
-                    case "logging_enabled" -> value = config.isLoggingEnabled();
-                    case "message_on_verification" -> value = config.doSendMessage();
-                    case "add_roles" -> value = config.doAddRoles();
-                    case "remove_roles" -> value = config.doRemoveRoles();
-                    case "log_channel" -> value = config.getLogChannelId() == null ? null : event.getGuild().getTextChannelById(config.getLogChannelId());
-                    case "timeout" -> value = config.getKickAfter();
-                    case "trigger" -> value = config.getVerificationTrigger();
-                    case "mode" -> value = config.getGatekeeperMode();
-                    default -> value = null;
-                }
-
-                event.reply(null, "Key `%s` is set to `%s`", key, value).queue();
-                return;
-            }
-
-            Object value;
-
-            String s = event.getArgs().get(1);
-            switch (key) {
-                case "enabled", "timeout_enabled", "logging_enabled", "message_on_verification", "add_roles", "remove_roles" -> value = Boolean.parseBoolean(s);
-                case "log_channel" -> value = Parser.Channel.getTextChannel(event.getGuild(), s);
-                case "timeout" -> value = Long.parseLong(s);
-                case "trigger" -> value = s;
-                case "mode" -> value = GatekeeperConfig.Mode.fromName(s);
-                default -> value = null;
-            }
-
-            Check.check(value != null /*&& value.getClass() == keys.get(key)*/,
-                () -> new ReplyError("Argument invalid!"));
-
-            switch (key) {
-                case "enabled" -> config.setGatekeeperEnabled((Boolean) value);
-                case "timeout_enabled" -> config.setKickEnabled((Boolean) value);
-                case "logging_enabled" -> config.setLogsEnabled((Boolean) value);
-                case "message_on_verification" -> config.setSendMessage((Boolean) value);
-                case "add_roles" -> config.setAddRoles((Boolean) value);
-                case "remove_roles" -> config.setRemoveRoles((Boolean) value);
-                case "log_channel" -> config.setLogChannelId(((TextChannel) value).getId());
-                case "timeout" -> config.setKickAfter((Long) value);
-                case "trigger" -> config.setVerificationTrigger((String) value);
-                case "mode" -> config.setGatekeeperMode((GatekeeperConfig.Mode) value);
-            }
-
-            DatabaseUtil.updateObject(config);
-            event.addCheckmark();
-            event.reply(null, "Updated config key `%s` to `%s`", key, value).queue();
         }
 
         @SubCommand(Config.class)

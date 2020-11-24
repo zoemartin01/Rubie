@@ -1,6 +1,7 @@
 package me.zoemartin.rubie.modules.gatekeeper;
 
 import me.zoemartin.rubie.Bot;
+import me.zoemartin.rubie.core.AutoConfig;
 import me.zoemartin.rubie.core.annotations.LoadModule;
 import me.zoemartin.rubie.core.interfaces.Module;
 import me.zoemartin.rubie.core.util.DatabaseUtil;
@@ -13,8 +14,7 @@ import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 
@@ -29,6 +29,11 @@ public class Gatekeeper extends ListenerAdapter implements Module {
         WebSocket.startAPI();
         Bot.addListener(this);
         URI = Bot.getProperties().getProperty("gatekeeper.uri");
+
+        AutoConfig.registerConverter(GatekeeperConfig.Mode.class,
+            (event, s) -> EnumSet.allOf(GatekeeperConfig.Mode.class).stream()
+                              .filter(mode -> s.toLowerCase().contains(mode.name().toLowerCase()))
+                              .findAny().orElseThrow(IllegalArgumentException::new));
     }
 
     @Override

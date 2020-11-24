@@ -1,6 +1,7 @@
 package me.zoemartin.rubie.modules.levels;
 
 import me.zoemartin.rubie.Bot;
+import me.zoemartin.rubie.core.AutoConfig;
 import me.zoemartin.rubie.core.annotations.LoadModule;
 import me.zoemartin.rubie.core.interfaces.Module;
 import me.zoemartin.rubie.core.util.DatabaseUtil;
@@ -29,6 +30,11 @@ public class Levels extends ListenerAdapter implements Module {
     @Override
     public void init() {
         Bot.addListener(this);
+
+        AutoConfig.registerConverter(LevelConfig.Announcements.class,
+            (event, s) -> EnumSet.allOf(LevelConfig.Announcements.class).stream()
+                .filter(a -> s.matches("\\d") ? a.raw() == Integer.parseInt(s) : a.name().equalsIgnoreCase(s))
+                .findAny().orElseThrow(IllegalArgumentException::new));
     }
 
     @Override

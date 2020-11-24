@@ -4,8 +4,7 @@ import com.google.gson.Gson;
 import com.google.gson.annotations.SerializedName;
 import com.google.gson.reflect.TypeToken;
 import me.zoemartin.rubie.Bot;
-import me.zoemartin.rubie.core.CommandPerm;
-import me.zoemartin.rubie.core.GuildCommandEvent;
+import me.zoemartin.rubie.core.*;
 import me.zoemartin.rubie.core.annotations.CommandOptions;
 import me.zoemartin.rubie.core.annotations.SubCommand;
 import me.zoemartin.rubie.core.exceptions.*;
@@ -44,78 +43,16 @@ class Config extends GuildCommand {
 
     @SubCommand(Config.class)
     @CommandOptions(
-        name = "enable",
-        description = "Enable the Leveling System",
-        perm = CommandPerm.BOT_ADMIN
+        name = "param",
+        description = "Level Parameter Configuration",
+        perm = CommandPerm.BOT_ADMIN,
+        alias = "parameter",
+        usage = "[key] [value]"
     )
-    private static class Enable extends GuildCommand {
+    static class Param extends AutoConfig<LevelConfig> {
         @Override
-        public @NotNull String name() {
-            return "enable";
-        }
-
-        @Override
-        public void run(GuildCommandEvent event) {
-            LevelConfig c = Levels.getConfig(event.getGuild());
-            c.setEnabled(true);
-            DatabaseUtil.updateObject(c);
-            event.addCheckmark();
-            event.reply("Levels", "Enabled Leveling System").queue();
-        }
-
-        @Override
-        public @NotNull CommandPerm commandPerm() {
-            return CommandPerm.BOT_ADMIN;
-        }
-
-        @Override
-        public @NotNull String description() {
-            return "Enabled the Leveling System";
-        }
-    }
-
-    @SubCommand(Config.class)
-    @CommandOptions(
-        name = "disable",
-        description = "Disable the Leveling System",
-        perm = CommandPerm.BOT_ADMIN
-    )
-    private static class Disable extends GuildCommand {
-        @Override
-        public void run(GuildCommandEvent event) {
-            LevelConfig c = Levels.getConfig(event.getGuild());
-            c.setEnabled(false);
-            DatabaseUtil.updateObject(c);
-            event.addCheckmark();
-            event.reply("Levels", "Disabled Leveling System").queue();
-        }
-    }
-
-    @SubCommand(Config.class)
-    @CommandOptions(
-        name = "announce",
-        description = "Announce level up ALWAYS/REWARD/NEVER",
-        usage = "<always/reward/never>",
-        perm = CommandPerm.BOT_ADMIN
-    )
-    private static class Announce extends GuildCommand {
-        @Override
-        public void run(GuildCommandEvent event) {
-            Check.check(event.getArgs().size() == 1 && event.getArgs().get(0).toLowerCase().matches("always|reward|never"),
-                CommandArgumentException::new);
-
-            LevelConfig config = Levels.getConfig(event.getGuild());
-
-            switch (event.getArgs().get(0).toLowerCase()) {
-                case "always" -> config.setAnnouncements(LevelConfig.Announcements.ALL);
-                case "reward" -> config.setAnnouncements(LevelConfig.Announcements.REWARDS);
-                case "never" -> config.setAnnouncements(LevelConfig.Announcements.NONE);
-            }
-
-            DatabaseUtil.updateObject(config);
-            event.addCheckmark();
-            event.reply("Levels", "Level up announcements set to `%s`",
-                config.getAnnouncements().toString()).queue();
+        protected LevelConfig supply(GuildCommandEvent event) {
+            return Levels.getConfig(event.getGuild());
         }
     }
 
