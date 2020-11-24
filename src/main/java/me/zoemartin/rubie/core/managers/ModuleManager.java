@@ -8,6 +8,7 @@ import me.zoemartin.rubie.core.util.DatabaseUtil;
 import org.reflections8.Reflections;
 import org.reflections8.scanners.SubTypesScanner;
 import org.reflections8.scanners.TypeAnnotationsScanner;
+import org.reflections8.util.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -45,7 +46,11 @@ public class ModuleManager {
 
     @SuppressWarnings("unchecked")
     private static void loadModuleCommands(Module m) {
-        Reflections reflections = new Reflections(m.getClass().getPackageName(), new TypeAnnotationsScanner(), new SubTypesScanner());
+        Reflections reflections = new Reflections(new ConfigurationBuilder()
+                                                      .setUrls(ClasspathHelper.forPackage(m.getClass().getPackageName()))
+                                                      .setScanners(new SubTypesScanner(), new TypeAnnotationsScanner())
+                                                      .filterInputsBy(new FilterBuilder().includePackage(m.getClass().getPackageName()))
+                                                      .setExecutorService(Executors.newFixedThreadPool(4)));
 
         Set<Class<?>> commandReflect = reflections.getTypesAnnotatedWith(Command.class);
 

@@ -7,8 +7,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.reflections8.Reflections;
 import org.reflections8.scanners.SubTypesScanner;
 import org.reflections8.scanners.TypeAnnotationsScanner;
-import org.reflections8.util.ClasspathHelper;
-import org.reflections8.util.ConfigurationBuilder;
+import org.reflections8.util.*;
 
 import javax.annotation.Nonnull;
 import java.lang.reflect.Constructor;
@@ -24,8 +23,9 @@ public abstract class AbstractCommand {
     @SuppressWarnings("unchecked")
     protected AbstractCommand() {
         Reflections reflections = new Reflections(new ConfigurationBuilder()
-                                                      .setUrls(ClasspathHelper.forPackage("me.zoemartin.rubie.modules"))
+                                                      .setUrls(ClasspathHelper.forPackage(this.getClass().getPackageName()))
                                                       .setScanners(new SubTypesScanner(), new TypeAnnotationsScanner())
+                                                      .filterInputsBy(new FilterBuilder().includePackage(this.getClass().getPackageName()))
                                                       .setExecutorService(Executors.newFixedThreadPool(4)));
 
         Set<Class<?>> commandReflect = reflections.getTypesAnnotatedWith(SubCommand.class);
