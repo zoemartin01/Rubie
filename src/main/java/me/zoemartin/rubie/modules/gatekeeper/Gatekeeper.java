@@ -26,6 +26,7 @@ public class Gatekeeper extends ListenerAdapter implements Module {
 
     @Override
     public void init() {
+        if (!Boolean.parseBoolean(Bot.getProperties().getProperty("gatekeeper.websocket.enabled"))) return;
         WebSocket.startAPI();
         Bot.addListener(this);
         URI = Bot.getProperties().getProperty("gatekeeper.uri");
