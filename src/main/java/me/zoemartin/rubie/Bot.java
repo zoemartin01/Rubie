@@ -35,7 +35,7 @@ public class Bot extends ListenerAdapter {
     private static int exitCode = 0;
 
     public static void main(String[] args) throws LoginException {
-        System.setProperty("logFilename", "rubie_" + DateTime.now().toString("yyyy-MM-dd_hh-mm-ss") + ".log");
+        System.setProperty("logFilename", "rubie_" + DateTime.now().toString("yyyy-MM-dd_HH-mm-ss") + ".log");
         var log = LoggerFactory.getLogger(Bot.class);
 
         File configFile;
