@@ -1,15 +1,14 @@
 package me.zoemartin.rubie.modules.levels;
 
+import com.google.auto.service.AutoService;
 import me.zoemartin.rubie.Bot;
 import me.zoemartin.rubie.core.AutoConfig;
-import me.zoemartin.rubie.core.annotations.LoadModule;
 import me.zoemartin.rubie.core.interfaces.Module;
 import me.zoemartin.rubie.core.util.DatabaseUtil;
 import net.dv8tion.jda.api.entities.*;
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.jodah.expiringmap.ExpiringMap;
-import org.apache.logging.log4j.util.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -17,9 +16,8 @@ import javax.annotation.Nonnull;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 
-@LoadModule
+@AutoService(Module.class)
 public class Levels extends ListenerAdapter implements Module {
     private static final Map<String, Map<String, UserLevel>> levels = new ConcurrentHashMap<>();
     private static final Map<String, LevelConfig> configs = new ConcurrentHashMap<>();

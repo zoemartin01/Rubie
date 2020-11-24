@@ -1,7 +1,7 @@
 package me.zoemartin.rubie.modules.moderation;
 
-import me.zoemartin.rubie.core.annotations.Mapped;
-import me.zoemartin.rubie.modules.levels.LevelConfig;
+import com.google.auto.service.AutoService;
+import me.zoemartin.rubie.core.interfaces.DatabaseEntry;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 
@@ -9,10 +9,10 @@ import javax.persistence.*;
 import java.util.Set;
 import java.util.UUID;
 
-@Mapped
+@AutoService(DatabaseEntry.class)
 @Entity
 @Table(name = "modactions")
-public class ModLogEntity {
+public class ModLogEntity implements DatabaseEntry {
 
     @Id
     @GeneratedValue
@@ -38,7 +38,7 @@ public class ModLogEntity {
     @Convert(converter = ModLogType.Converter.class)
     private ModLogType type;
 
-    protected ModLogEntity() {
+    public ModLogEntity() {
     }
 
     public ModLogEntity(String guild_id, String user_id, String moderator_id, String reason, long timestamp, ModLogType type) {

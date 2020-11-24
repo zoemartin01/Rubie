@@ -1,7 +1,8 @@
 package me.zoemartin.rubie.modules.commandProcessing;
 
+import com.google.auto.service.AutoService;
 import me.zoemartin.rubie.Bot;
-import me.zoemartin.rubie.core.annotations.Mapped;
+import me.zoemartin.rubie.core.interfaces.DatabaseEntry;
 import me.zoemartin.rubie.core.util.DatabaseConverter;
 import me.zoemartin.rubie.core.util.DatabaseUtil;
 import org.hibernate.Session;
@@ -12,10 +13,10 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-@Mapped
+@AutoService(DatabaseEntry.class)
 @Entity
 @Table(name = "prefixes")
-public class Prefixes {
+public class Prefixes implements DatabaseEntry {
     private static final Map<String, Prefixes> prefixesMap = new ConcurrentHashMap<>();
     private static String MENTION_PREFIX = null;
 
@@ -30,7 +31,7 @@ public class Prefixes {
     @Convert(converter = DatabaseConverter.StringListConverter.class)
     private Collection<String> prefixes;
 
-    protected Prefixes() {
+    public Prefixes() {
     }
 
     public Prefixes(String guild_id, Collection<String> prefixes) {

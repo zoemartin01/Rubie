@@ -7,6 +7,7 @@ import me.zoemartin.rubie.core.interfaces.GuildCommand;
 import me.zoemartin.rubie.core.util.Check;
 import me.zoemartin.rubie.core.util.DatabaseUtil;
 
+import javax.persistence.Entity;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Arrays;
@@ -66,7 +67,7 @@ public abstract class AutoConfig<T> extends GuildCommand {
                 var converted = converter.apply(event, value);
                 set.invoke(t, converted);
 
-                if (t.getClass().getAnnotationsByType(Mapped.class).length != 0) DatabaseUtil.saveObject(t);
+                if (t.getClass().getAnnotationsByType(Entity.class).length != 0) DatabaseUtil.saveObject(t);
 
                 event.reply(null, "`%s` set to `%s`", key, converted).queue();
                 event.addCheckmark();

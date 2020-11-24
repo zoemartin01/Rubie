@@ -1,17 +1,16 @@
 package me.zoemartin.rubie.modules.commandProcessing;
 
-import me.zoemartin.rubie.core.annotations.Mapped;
-import net.dv8tion.jda.api.entities.Message;
-import org.hibernate.annotations.Type;
+import com.google.auto.service.AutoService;
+import me.zoemartin.rubie.core.interfaces.DatabaseEntry;
 
 import javax.persistence.*;
 import java.util.Arrays;
 import java.util.UUID;
 
-@Mapped
+@AutoService(DatabaseEntry.class)
 @Entity
 @Table(name = "errors")
-public class LoggedError {
+public class LoggedError implements DatabaseEntry {
     @Id
     @Column
     @GeneratedValue
@@ -77,7 +76,7 @@ public class LoggedError {
         this.timestamp = timestamp;
     }
 
-    protected LoggedError() {
+    public LoggedError() {
     }
 
     public String getGuild_id() {

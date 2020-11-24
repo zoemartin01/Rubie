@@ -1,14 +1,15 @@
 package me.zoemartin.rubie.modules.levels;
 
-import me.zoemartin.rubie.core.annotations.Mapped;
+import com.google.auto.service.AutoService;
+import me.zoemartin.rubie.core.interfaces.DatabaseEntry;
 
 import javax.persistence.*;
 import java.util.UUID;
 
-@Mapped
+@AutoService(DatabaseEntry.class)
 @Entity
 @Table(name = "levels")
-public class UserLevel {
+public class UserLevel implements DatabaseEntry {
 
     @Id
     @GeneratedValue
@@ -38,7 +39,7 @@ public class UserLevel {
         this.exp = 0;
     }
 
-    protected UserLevel() {
+    public UserLevel() {
     }
 
     public String getGuild_id() {

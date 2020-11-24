@@ -1,5 +1,6 @@
 package me.zoemartin.rubie.modules.owner;
 
+import com.google.auto.service.AutoService;
 import me.zoemartin.rubie.core.*;
 import me.zoemartin.rubie.core.annotations.*;
 import me.zoemartin.rubie.core.exceptions.CommandArgumentException;
@@ -11,7 +12,7 @@ import net.dv8tion.jda.api.entities.*;
 
 import java.time.Instant;
 
-@LoadModule
+@AutoService(Module.class)
 @Command
 @CommandOptions(
     name = "todo",

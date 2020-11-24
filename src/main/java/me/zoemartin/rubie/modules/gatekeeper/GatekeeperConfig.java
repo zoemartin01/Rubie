@@ -1,6 +1,8 @@
 package me.zoemartin.rubie.modules.gatekeeper;
 
+import com.google.auto.service.AutoService;
 import me.zoemartin.rubie.core.annotations.*;
+import me.zoemartin.rubie.core.interfaces.DatabaseEntry;
 import me.zoemartin.rubie.core.util.DatabaseConverter;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.TextChannel;
@@ -9,10 +11,10 @@ import javax.persistence.*;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
-@Mapped
+@AutoService(DatabaseEntry.class)
 @Table(name = "gatekeeper_configs")
 @Entity
-public class GatekeeperConfig {
+public class GatekeeperConfig implements DatabaseEntry {
     private static final String DEFAULT_TRIGGER = ";agree";
 
     @Id
@@ -62,7 +64,7 @@ public class GatekeeperConfig {
     @Column(name = "message_on_verification")
     private boolean sendMessage;
 
-    protected GatekeeperConfig() {
+    public GatekeeperConfig() {
     }
 
     public GatekeeperConfig(Guild g) {

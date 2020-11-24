@@ -1,57 +1,33 @@
 package me.zoemartin.rubie.core.managers;
 
-import javassist.*;
 import me.zoemartin.rubie.core.*;
 import me.zoemartin.rubie.core.annotations.*;
 import me.zoemartin.rubie.core.interfaces.*;
 import me.zoemartin.rubie.core.interfaces.Module;
 import me.zoemartin.rubie.core.util.DatabaseUtil;
-import org.jetbrains.annotations.NotNull;
 import org.reflections8.Reflections;
 import org.reflections8.scanners.SubTypesScanner;
 import org.reflections8.scanners.TypeAnnotationsScanner;
-import org.reflections8.util.ClasspathHelper;
-import org.reflections8.util.ConfigurationBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.OutputStream;
-import java.io.PrintStream;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.*;
 import java.util.concurrent.*;
-import java.util.function.Supplier;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
+import java.util.stream.*;
 
 public class ModuleManager {
     private static final Logger log = LoggerFactory.getLogger(ModuleManager.class);
     private static final Collection<Module> modules = Collections.newSetFromMap(new ConcurrentHashMap<>());
 
     public static void init() {
-        // This is a really dumb way to suppress all the warns coming from java reflections
-        // but it works so ¯\_(ツ)_/¯
+        loadDatabaseMappings();
 
-        PrintStream err = System.err;
-        System.setErr(new PrintStream(OutputStream.nullOutputStream()));
-        Reflections reflections = new Reflections(ClasspathHelper.forJavaClassPath(), new TypeAnnotationsScanner(), new SubTypesScanner());
-        System.setErr(err);
-
-
-        Set<Class<?>> modules = reflections.getTypesAnnotatedWith(LoadModule.class);
-        modules.removeIf(aClass -> !Set.of(aClass.getInterfaces()).contains(Module.class));
-        modules.removeIf(aClass -> {
-            try {
-                aClass.getMethod("init");
-                return false;
-            } catch (NoSuchMethodException e) {
-                return true;
-            }
-        });
+        ServiceLoader<Module> loader = ServiceLoader.load(Module.class);
 
         ExecutorService es = Executors.newCachedThreadPool();
-        modules.forEach(module -> es.execute(() -> loadModule(module)));
+        StreamSupport.stream(loader.spliterator(), true).forEach(module -> es.execute(() -> loadModule(module)));
         es.shutdown();
         try {
             es.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
@@ -60,20 +36,11 @@ public class ModuleManager {
         }
     }
 
-    private static void loadModule(Class<?> module) {
-        Module m = null;
-        try {
-            m = (Module) Stream.of(module.getConstructors()).findAny()
-                             .orElseThrow(RuntimeException::new).newInstance();
-        } catch (IllegalAccessException | InvocationTargetException | InstantiationException e) {
-            e.printStackTrace();
-        }
-        if (m == null) return;
-        loadModuleMappings(m);
+    private static void loadModule(Module m) {
         m.init();
         loadModuleCommands(m);
         ModuleManager.modules.add(m);
-        log.info("Loaded '{}'", module.getName());
+        log.info("Loaded '{}'", m.getClass().getName());
     }
 
     @SuppressWarnings("unchecked")
@@ -104,16 +71,15 @@ public class ModuleManager {
             });
     }
 
-    private static void loadModuleMappings(Module m) {
-        Reflections reflections = new Reflections(m.getClass().getPackageName(), new TypeAnnotationsScanner(), new SubTypesScanner());
+    private static void loadDatabaseMappings() {
+        ServiceLoader<DatabaseEntry> loader = ServiceLoader.load(DatabaseEntry.class);
 
-        Set<Class<?>> commandReflect = reflections.getTypesAnnotatedWith(Mapped.class);
-
-        commandReflect.stream()
+        StreamSupport.stream(loader.spliterator(), true)
+            .map(Object::getClass)
             .filter(c -> c.getAnnotationsByType(Disabled.class).length == 0)
             .forEach(c -> {
                 DatabaseUtil.setMapped(c);
-                log.info("Mapped '{}':'{}'", m.getClass().getName(), c.getSimpleName());
+                log.info("Mapped '{}':'{}'", c.getPackageName(), c.getSimpleName());
             });
     }
 

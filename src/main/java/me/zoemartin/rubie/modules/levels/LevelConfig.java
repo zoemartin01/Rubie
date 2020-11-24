@@ -1,16 +1,18 @@
 package me.zoemartin.rubie.modules.levels;
 
+import com.google.auto.service.AutoService;
 import me.zoemartin.rubie.core.annotations.*;
+import me.zoemartin.rubie.core.interfaces.DatabaseEntry;
 import me.zoemartin.rubie.core.util.DatabaseConverter;
 
 import javax.persistence.*;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
-@Mapped
+@AutoService(DatabaseEntry.class)
 @Entity
 @Table(name = "level_config")
-public class LevelConfig {
+public class LevelConfig implements DatabaseEntry {
 
     @Id
     @GeneratedValue
@@ -60,7 +62,7 @@ public class LevelConfig {
         this.rewardRoles = new ConcurrentHashMap<>();
     }
 
-    protected LevelConfig() {
+    public LevelConfig() {
     }
 
     public UUID getUUID() {

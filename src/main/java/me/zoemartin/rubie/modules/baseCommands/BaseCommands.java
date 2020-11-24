@@ -1,10 +1,9 @@
 package me.zoemartin.rubie.modules.baseCommands;
 
+import com.google.auto.service.AutoService;
 import me.zoemartin.rubie.core.interfaces.Module;
-import me.zoemartin.rubie.core.managers.CommandManager;
-import me.zoemartin.rubie.core.annotations.LoadModule;
 
-@LoadModule
+@AutoService(Module.class)
 public class BaseCommands implements Module {
     @Override
     public void init() {

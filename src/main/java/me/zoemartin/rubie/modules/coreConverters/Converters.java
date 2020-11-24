@@ -1,12 +1,12 @@
 package me.zoemartin.rubie.modules.coreConverters;
 
+import com.google.auto.service.AutoService;
 import me.zoemartin.rubie.core.AutoConfig;
-import me.zoemartin.rubie.core.annotations.LoadModule;
 import me.zoemartin.rubie.core.interfaces.Module;
 import me.zoemartin.rubie.core.util.Parser;
 import net.dv8tion.jda.api.entities.TextChannel;
 
-@LoadModule
+@AutoService(Module.class)
 public class Converters implements Module {
     @Override
     public void init() {

@@ -1,17 +1,18 @@
 package me.zoemartin.rubie.modules.logging;
 
+import com.google.auto.service.AutoService;
 import me.zoemartin.rubie.core.annotations.Disabled;
-import me.zoemartin.rubie.core.annotations.Mapped;
+import me.zoemartin.rubie.core.interfaces.DatabaseEntry;
 import net.dv8tion.jda.api.entities.Message;
 
 import javax.persistence.*;
 import java.util.UUID;
 
 @Disabled
-@Mapped
+@AutoService(DatabaseEntry.class)
 @Entity
 @Table(name = "messages")
-public class LMessage {
+public class LMessage implements DatabaseEntry {
     @Id
     @Column(name = "id", updatable = false, nullable = false)
     private UUID uuid;
@@ -66,7 +67,7 @@ public class LMessage {
         this.timestamp = message.getTimeCreated().toEpochSecond();
     }
 
-    protected LMessage() {
+    public LMessage() {
     }
 
     public String getGuild_id() {

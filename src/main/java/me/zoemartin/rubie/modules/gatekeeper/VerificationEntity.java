@@ -1,6 +1,7 @@
 package me.zoemartin.rubie.modules.gatekeeper;
 
-import me.zoemartin.rubie.core.annotations.Mapped;
+import com.google.auto.service.AutoService;
+import me.zoemartin.rubie.core.interfaces.DatabaseEntry;
 import net.dv8tion.jda.api.entities.Member;
 import org.hibernate.annotations.GenericGenerator;
 
@@ -8,10 +9,10 @@ import javax.persistence.*;
 import java.time.Instant;
 import java.util.UUID;
 
-@Mapped
+@AutoService(DatabaseEntry.class)
 @Entity
 @Table(name = "verification_keys")
-public class VerificationEntity {
+public class VerificationEntity implements DatabaseEntry {
 
     @Id
     @GeneratedValue(generator = "UUID")
@@ -33,7 +34,7 @@ public class VerificationEntity {
     @Column
     private boolean verified;
 
-    protected VerificationEntity() {
+    public VerificationEntity() {
 
     }
 

@@ -1,15 +1,16 @@
 package me.zoemartin.rubie.modules.commandProcessing;
 
+import com.google.auto.service.AutoService;
 import me.zoemartin.rubie.core.CommandPerm;
-import me.zoemartin.rubie.core.annotations.Mapped;
+import me.zoemartin.rubie.core.interfaces.DatabaseEntry;
 
 import javax.persistence.*;
 import java.util.UUID;
 
-@Mapped
+@AutoService(DatabaseEntry.class)
 @Entity
 @Table(name = "member_permission")
-public class MemberPermission {
+public class MemberPermission implements DatabaseEntry {
     @Id
     @Column(name = "id", updatable = false, nullable = false)
     private UUID uuid;
@@ -38,7 +39,7 @@ public class MemberPermission {
         this.perm = perm;
     }
 
-    protected MemberPermission() {
+    public MemberPermission() {
     }
 
     public UUID getUuid() {

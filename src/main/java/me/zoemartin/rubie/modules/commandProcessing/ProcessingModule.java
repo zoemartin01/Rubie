@@ -1,12 +1,11 @@
 package me.zoemartin.rubie.modules.commandProcessing;
 
+import com.google.auto.service.AutoService;
 import me.zoemartin.rubie.Bot;
-import me.zoemartin.rubie.core.annotations.LoadModule;
 import me.zoemartin.rubie.core.interfaces.Module;
 import me.zoemartin.rubie.core.managers.CommandManager;
-import me.zoemartin.rubie.core.util.DatabaseUtil;
 
-@LoadModule
+@AutoService(Module.class)
 public class ProcessingModule implements Module {
     @Override
     public void init() {

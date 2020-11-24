@@ -1,16 +1,17 @@
 package me.zoemartin.rubie.modules.moderation;
 
-import me.zoemartin.rubie.core.annotations.Mapped;
+import com.google.auto.service.AutoService;
+import me.zoemartin.rubie.core.interfaces.DatabaseEntry;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 
 import javax.persistence.*;
 import java.util.UUID;
 
-@Mapped
+@AutoService(DatabaseEntry.class)
 @Entity
 @Table(name = "notes")
-public class NoteEntity {
+public class NoteEntity implements DatabaseEntry {
 
     @Id
     @GeneratedValue
@@ -32,7 +33,7 @@ public class NoteEntity {
     @Column
     private long timestamp;
 
-    protected NoteEntity() {
+    public NoteEntity() {
     }
 
     public NoteEntity(String guild_id, String user_id, String moderator_id, String note, long timestamp) {

@@ -1,15 +1,16 @@
 package me.zoemartin.rubie.modules.embeds.pinnedEmbeds;
 
 
-import me.zoemartin.rubie.core.annotations.Mapped;
+import com.google.auto.service.AutoService;
+import me.zoemartin.rubie.core.interfaces.DatabaseEntry;
 
 import javax.persistence.*;
 import java.util.UUID;
 
-@Mapped
+@AutoService(DatabaseEntry.class)
 @Entity
 @Table(name = "pinned_embeds")
-public class PineEntity {
+public class PineEntity implements DatabaseEntry {
 
     @Id
     @Column(updatable = false, nullable = false)
@@ -44,7 +45,7 @@ public class PineEntity {
         this.source_url = source_url;
     }
 
-    protected PineEntity() {
+    public PineEntity() {
 
     }
 

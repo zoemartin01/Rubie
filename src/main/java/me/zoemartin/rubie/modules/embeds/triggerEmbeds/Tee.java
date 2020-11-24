@@ -1,15 +1,16 @@
 package me.zoemartin.rubie.modules.embeds.triggerEmbeds;
 
+import com.google.auto.service.AutoService;
 import me.zoemartin.rubie.core.CommandPerm;
-import me.zoemartin.rubie.core.annotations.Mapped;
+import me.zoemartin.rubie.core.interfaces.DatabaseEntry;
 
 import javax.persistence.*;
 import java.util.UUID;
 
-@Mapped
+@AutoService(DatabaseEntry.class)
 @Entity
 @Table(name = "trigger_embeds")
-public class Tee {
+public class Tee implements DatabaseEntry {
     @Id
     @Column(updatable = false, nullable = false)
     @GeneratedValue
@@ -62,7 +63,7 @@ public class Tee {
         this.perm = CommandPerm.EVERYONE;
     }
 
-    protected Tee() {
+    public Tee() {
     }
 
     public String getGuild_id() {

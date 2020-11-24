@@ -1,18 +1,19 @@
 package me.zoemartin.rubie.modules.funCommands;
 
+import com.google.auto.service.AutoService;
 import me.zoemartin.rubie.Bot;
-import me.zoemartin.rubie.core.*;
-import me.zoemartin.rubie.core.annotations.*;
+import me.zoemartin.rubie.core.CommandEvent;
+import me.zoemartin.rubie.core.CommandPerm;
+import me.zoemartin.rubie.core.annotations.Command;
+import me.zoemartin.rubie.core.annotations.CommandOptions;
 import me.zoemartin.rubie.core.exceptions.CommandArgumentException;
-import me.zoemartin.rubie.core.interfaces.*;
+import me.zoemartin.rubie.core.interfaces.AbstractCommand;
 import me.zoemartin.rubie.core.interfaces.Module;
 import me.zoemartin.rubie.core.util.Check;
 import me.zoemartin.rubie.core.util.Parser;
-import net.dv8tion.jda.api.entities.*;
+import net.dv8tion.jda.api.entities.Activity;
 
-import static me.zoemartin.rubie.core.managers.CommandManager.register;
-
-@LoadModule
+@AutoService(Module.class)
 @Command
 @CommandOptions(
     name = "status",
