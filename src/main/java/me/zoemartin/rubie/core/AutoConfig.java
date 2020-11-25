@@ -67,7 +67,7 @@ public abstract class AutoConfig<T> extends GuildCommand {
                 var converted = converter.apply(event, value);
                 set.invoke(t, converted);
 
-                if (t.getClass().getAnnotationsByType(Entity.class).length != 0) DatabaseUtil.saveObject(t);
+                if (t.getClass().getAnnotationsByType(Entity.class).length != 0) DatabaseUtil.updateObject(t);
 
                 event.reply(null, "`%s` set to `%s`", key, converted).queue();
                 event.addCheckmark();

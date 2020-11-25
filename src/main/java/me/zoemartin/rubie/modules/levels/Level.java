@@ -1,8 +1,7 @@
 package me.zoemartin.rubie.modules.levels;
 
 import me.zoemartin.rubie.Bot;
-import me.zoemartin.rubie.core.CommandPerm;
-import me.zoemartin.rubie.core.GuildCommandEvent;
+import me.zoemartin.rubie.core.*;
 import me.zoemartin.rubie.core.annotations.*;
 import me.zoemartin.rubie.core.interfaces.GuildCommand;
 import me.zoemartin.rubie.modules.pagedEmbeds.PageListener;
@@ -91,6 +90,7 @@ public class Level extends GuildCommand {
 
             Member member = CacheUtils.getMember(event.getGuild(), u.getId());
             UserLevel level = Levels.getUserLevel(event.getGuild(), u);
+            var userConf = Levels.getUserConfig(event.getMember());
             int exp = level.getExp();
             int lvl = Levels.calcLevel(exp);
             double expToNext = Levels.calcExp(lvl + 1);
@@ -105,8 +105,13 @@ public class Level extends GuildCommand {
                                   .setFooter(u.getAsTag())
                                   .setTimestamp(Instant.now());
 
-            if (member != null) eb.setColor(member.getColor())
-                                    .setTitle("Level " + lvl + " - Rank #" + (levels.indexOf(level) + 1));
+            if (userConf.getColor() != null) {
+                eb.setColor(userConf.getColor());
+            } else {
+                if (member != null) eb.setColor(member.getColor());
+            }
+
+            if (member != null) eb.setTitle("Level " + lvl + " - Rank #" + (levels.indexOf(level) + 1));
             else eb.setTitle("Level " + lvl);
 
             eb.addField((int) ((exp - Levels.calcExp(lvl)) / (expToNext - Levels.calcExp(lvl)) * 100) + "%",
@@ -114,6 +119,21 @@ public class Level extends GuildCommand {
 
             event.getChannel().sendMessage(eb.build()).queue();
 
+        }
+    }
+
+    @SubCommand(Level.class)
+    @CommandOptions(
+        name = "customise",
+        description = "Customise your level card!",
+        usage = "[key] [value]",
+        alias = {"c", "custom"},
+        perm = CommandPerm.BOT_USER
+    )
+    static class Custom extends AutoConfig<UserConfig> {
+        @Override
+        protected UserConfig supply(GuildCommandEvent event) {
+            return Levels.getUserConfig(event.getMember());
         }
     }
 }

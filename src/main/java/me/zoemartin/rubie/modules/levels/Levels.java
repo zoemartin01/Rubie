@@ -22,6 +22,7 @@ public class Levels extends ListenerAdapter implements Module {
     private static final Map<String, Map<String, UserLevel>> levels = new ConcurrentHashMap<>();
     private static final Map<String, LevelConfig> configs = new ConcurrentHashMap<>();
     private static final Map<String, Set<String>> timeout = new ConcurrentHashMap<>();
+    private static final Map<String, Map<String, UserConfig>> userConfigs = new ConcurrentHashMap<>();
 
     private final Logger log = LoggerFactory.getLogger(Levels.class);
 
@@ -33,12 +34,20 @@ public class Levels extends ListenerAdapter implements Module {
             (event, s) -> EnumSet.allOf(LevelConfig.Announcements.class).stream()
                 .filter(a -> s.matches("\\d") ? a.raw() == Integer.parseInt(s) : a.name().equalsIgnoreCase(s))
                 .findAny().orElseThrow(IllegalArgumentException::new));
+
+        AutoConfig.registerConverter(UserConfig.Color.class,
+            (event, s) -> {
+                if (s.matches("reset|role")) return null;
+                if (s.matches("^(#|0x)([a-fA-F0-9]{6}|[a-fA-F0-9]{3})$")) return new UserConfig.Color(Integer.decode(s));
+                else throw new IllegalArgumentException();
+            });
     }
 
     @Override
     public void initLate() {
         initLevels();
         initConfigs();
+        initUserConfigs();
     }
 
     private void initLevels() {
@@ -46,6 +55,14 @@ public class Levels extends ListenerAdapter implements Module {
             UserLevel::getGuild_id, UserLevel::getUser_id, Function.identity()));
         levels.forEach((s, stringUserLevelMap) -> log.info(
             "Loaded '{}' levels for '{}'",
+            stringUserLevelMap.keySet().size(), s));
+    }
+
+    private void initUserConfigs() {
+        userConfigs.putAll(DatabaseUtil.loadGroupedMap("from UserConfig", UserConfig.class,
+            UserConfig::getGuildId, UserConfig::getUserId, Function.identity()));
+        userConfigs.forEach((s, stringUserLevelMap) -> log.info(
+            "Loaded '{}' user configs for '{}'",
             stringUserLevelMap.keySet().size(), s));
     }
 
@@ -152,6 +169,16 @@ public class Levels extends ListenerAdapter implements Module {
             UserLevel l = new UserLevel(g.getId(), user.getId());
             DatabaseUtil.saveObject(l);
             return l;
+        });
+    }
+
+    @Nonnull
+    public static UserConfig getUserConfig(Member m) {
+        return userConfigs.computeIfAbsent(m.getGuild().getId(), k -> new ConcurrentHashMap<>())
+                   .computeIfAbsent(m.getId(), v -> {
+            var c = new UserConfig(m);
+            DatabaseUtil.saveObject(c);
+            return c;
         });
     }
 
