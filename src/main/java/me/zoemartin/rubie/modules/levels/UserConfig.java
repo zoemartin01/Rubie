@@ -36,7 +36,7 @@ public class UserConfig implements DatabaseEntry {
     public UserConfig(Member member) {
         this.guildId = member.getGuild().getId();
         this.userId = member.getId();
-        this.color = -1;
+        this.color = null;
     }
 
     public UserConfig() {
