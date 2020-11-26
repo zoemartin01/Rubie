@@ -90,7 +90,7 @@ public class Level extends GuildCommand {
 
             Member member = CacheUtils.getMember(event.getGuild(), u.getId());
             UserLevel level = Levels.getUserLevel(event.getGuild(), u);
-            var userConf = Levels.getUserConfig(event.getMember());
+            var userConf = member == null ? null : Levels.getUserConfig(member);
             int exp = level.getExp();
             int lvl = Levels.calcLevel(exp);
             double expToNext = Levels.calcExp(lvl + 1);
@@ -105,7 +105,7 @@ public class Level extends GuildCommand {
                                   .setFooter(u.getAsTag())
                                   .setTimestamp(Instant.now());
 
-            if (userConf.getColor() != null) {
+            if (userConf != null && userConf.getColor() != null) {
                 eb.setColor(userConf.getColor());
             } else {
                 if (member != null) eb.setColor(member.getColor());
