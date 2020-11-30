@@ -10,6 +10,7 @@ public class ProcessingModule implements Module {
     @Override
     public void init() {
         Bot.addListener(new CommandListener());
+        Bot.addListener(new GuildJoin());
         CommandManager.setCommandProcessor(new CommandHandler());
     }
 
