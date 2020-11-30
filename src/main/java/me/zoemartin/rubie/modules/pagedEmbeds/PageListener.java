@@ -27,19 +27,18 @@ public class PageListener extends ListenerAdapter implements Module {
         if (!event.getReactionEmote().isEmoji()) return;
 
         switch (event.getReactionEmote().getAsCodepoints().toUpperCase()) {
-            case PagedEmbed.BACK:
+            case PagedEmbed.BACK -> {
                 p.last();
                 event.getReaction().removeReaction(event.getUser()).queue();
-                break;
-
-            case PagedEmbed.FORWARD:
+            }
+            case PagedEmbed.FORWARD -> {
                 p.next();
                 event.getReaction().removeReaction(event.getUser()).queue();
-                break;
-
-            case PagedEmbed.STOP:
+            }
+            case PagedEmbed.STOP -> {
                 p.stop();
                 pages.get(event.getGuild().getId()).remove(p);
+            }
         }
     }
 
