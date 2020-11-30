@@ -60,6 +60,9 @@ public class EmbedUtil {
                                  .setTitle(eb.getTitle())
                                  .setColor(eb.getColor());
 
+            if (eb.getAuthor() != null)
+                b.setAuthor(eb.getAuthor().getName(), eb.getAuthor().getUrl(), eb.getAuthor().getIconUrl());
+
             b.setFooter(String.format("Page %s out of %s", fList.indexOf(f) + 1, fList.size()));
             f.forEach(b::appendDescription);
 

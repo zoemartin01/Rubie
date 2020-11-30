@@ -9,6 +9,8 @@ public class PagedEmbed {
     static final String BACK = "U+2B05";
     static final String FORWARD = "U+27A1";
     static final String STOP = "U+23F9";
+    static final String END = "U+23ED";
+    static final String START = "U+23EE";
 
     private final List<MessageEmbed> pages;
     private final String guildId;
