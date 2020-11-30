@@ -59,7 +59,7 @@ public abstract class AbstractCommand {
         CommandOptions options = this.getClass().getAnnotationsByType(CommandOptions.class)[0];
 
         configuration = new CommandConfiguration(subCommands, options.name(), options.perm(), options.usage(),
-            options.description(), options.botPerms(), options.alias(), options.help());
+            options.description(), options.botPerms(), options.alias(), options.help(), options.hidden());
     }
 
     protected AbstractCommand(CommandConfiguration configuration) {

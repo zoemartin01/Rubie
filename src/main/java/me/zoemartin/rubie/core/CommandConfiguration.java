@@ -15,8 +15,9 @@ public class CommandConfiguration {
     private final Permission[] botPerms;
     private final String[] alias;
     private final String help;
+    private final boolean hidden;
 
-    public CommandConfiguration(Set<AbstractCommand> subCommands, String name, CommandPerm perm, String usage, String description, Permission[] botPerms, String[] alias, String help) {
+    public CommandConfiguration(Set<AbstractCommand> subCommands, String name, CommandPerm perm, String usage, String description, Permission[] botPerms, String[] alias, String help, boolean hidden) {
         this.subCommands = subCommands;
         this.name = name;
         this.perm = perm;
@@ -25,6 +26,7 @@ public class CommandConfiguration {
         this.botPerms = botPerms;
         this.alias = alias;
         this.help = help;
+        this.hidden = hidden;
     }
 
     public Set<AbstractCommand> getSubCommands() {
@@ -57,5 +59,9 @@ public class CommandConfiguration {
 
     public String getHelp() {
         return help;
+    }
+
+    public boolean isHidden() {
+        return hidden;
     }
 }

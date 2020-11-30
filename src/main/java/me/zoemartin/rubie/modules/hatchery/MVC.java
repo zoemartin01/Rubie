@@ -14,7 +14,8 @@ import net.dv8tion.jda.api.entities.*;
     name = "mvc",
     description = "Returns the MVC Count",
     usage = "[abstains]",
-    perm = CommandPerm.BOT_MANAGER
+    perm = CommandPerm.BOT_MANAGER,
+    hidden = true
 )
 public class MVC extends GuildCommand {
     @Override

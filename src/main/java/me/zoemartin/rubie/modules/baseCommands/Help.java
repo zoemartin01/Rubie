@@ -37,6 +37,7 @@ public class Help extends GuildCommand {
             PagedEmbed p = new PagedEmbed(EmbedUtil.pagedDescription(new EmbedBuilder()
                                                                          .setTitle("Help").setColor(0xdf136c).build(),
                 CommandManager.getCommands().stream()
+                    .filter(command -> !command.getConfiguration().isHidden())
                     .filter(
                         command -> PermissionHandler.getHighestFromUser(guild, member).raw() >= command.commandPerm().raw())
                     .sorted(Comparator.comparing(AbstractCommand::name))

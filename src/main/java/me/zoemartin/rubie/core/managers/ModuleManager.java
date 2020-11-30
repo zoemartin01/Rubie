@@ -103,7 +103,8 @@ public class ModuleManager {
     private static <T extends AbstractCommand> T subcommand(T c) {
         SubCommand.AsBase asBase = c.getClass().getAnnotationsByType(SubCommand.AsBase.class)[0];
 
-        CommandConfiguration conf = new CommandConfiguration(c.subCommands(), asBase.name(), c.commandPerm(), c.usage(), c.description(), c.getConfiguration().getBotPerms(), asBase.alias(), c.getConfiguration().getHelp());
+        CommandConfiguration conf = new CommandConfiguration(c.subCommands(), asBase.name(), c.commandPerm(), c.usage(), c.description(), c.getConfiguration().getBotPerms(), asBase.alias(), c.getConfiguration().getHelp(),
+            c.getConfiguration().isHidden());
 
         if (c instanceof GuildCommand) {
             return (T) new GuildCommand(conf) {

@@ -16,7 +16,8 @@ import java.util.List;
     name = "mvcrefresh",
     description = "Refreshes MVC",
     perm = CommandPerm.BOT_MANAGER,
-    botPerms = Permission.MANAGE_ROLES
+    botPerms = Permission.MANAGE_ROLES,
+    hidden = true
 )
 public class MVCRefresh extends GuildCommand {
     @Override

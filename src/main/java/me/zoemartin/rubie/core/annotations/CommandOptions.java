@@ -24,5 +24,7 @@ public @interface CommandOptions {
 
     String[] alias() default {};
 
+    boolean hidden() default false;
+
     int maxArguments() default -1;
 }
