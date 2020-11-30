@@ -16,6 +16,7 @@ import java.awt.*;
 import java.io.IOException;
 import java.net.URL;
 import java.util.EnumSet;
+import java.util.stream.Collectors;
 
 @Command
 @CommandOptions(
@@ -56,6 +57,10 @@ public class ServerInfo extends GuildCommand {
             return overrides.contains(Permission.MESSAGE_READ) || overrides.contains(Permission.MESSAGE_WRITE);
         }).count();
 
+        var features = guild.getFeatures().stream()
+                           .map(s -> s.replaceAll("_", " ")
+                                         .toLowerCase()).collect(Collectors.toList());
+
         eb.addField("Channels",
             String.format("<:voice_channel:758143690845454346> %d %s\n<:text_channel:758143729902288926> %d %s",
                 guild.getVoiceChannelCache().size(), vcLocked > 0 ? "(" + vcLocked + " locked)" : "",
@@ -70,7 +75,8 @@ public class ServerInfo extends GuildCommand {
             .addField("Region", guild.getRegionRaw(), true)
             .addField("Categories", guild.getCategories().size() + "", true)
 
-            .addField("Features", String.join("\n", guild.getFeatures()), true)
+            .addField("Features", features.isEmpty() ? "`n/a`" :
+                                      ("```" + String.join(", ", features) + "```"), true)
 
             .setFooter("ID: " + guild.getId() + " | Created")
             .setTimestamp(guild.getTimeCreated());
