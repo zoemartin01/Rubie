@@ -37,7 +37,7 @@ public class RoleManagement extends GuildCommand {
         perm = CommandPerm.BOT_MODERATOR
     )
     @SubCommand.AsBase(name = "roleinfo")
-    private static class RoleInfo extends GuildCommand {
+    private static class Info extends GuildCommand {
         @Override
         public void run(GuildCommandEvent event) {
             Check.check(!event.getArgs().isEmpty(), CommandArgumentException::new);
@@ -54,13 +54,13 @@ public class RoleManagement extends GuildCommand {
                         role.getColor().getRGB()).substring(2) : "n/a", true)
                     .addField("Mention", role.getAsMention(), true)
                     .addField("Member Count", String.valueOf(role.getGuild().getMembersWithRoles(role).size()), true)
-                    .addField("Position", String.valueOf(role.getPositionRaw()), true)
-                    .addField("Hoisted", String.valueOf(role.isHoisted()), true)
-                    .addField("Mentionable", String.valueOf(role.isMentionable()), true)
+                    .addField("Misc Info",
+                        String.format("Hoisted: %s\nMentionable: %s\nPosition: %d",
+                            role.isHoisted(), role.isMentionable(), role.getPosition()), true)
                     .addField("Created ago", TimeUtils.dateAgo(role.getTimeCreated(), OffsetDateTime.now()), false)
 
-                    .setFooter("ID: " + role.getId())
-                    .setTimestamp(Instant.now())
+                    .setFooter("ID: " + role.getId() + " | Created")
+                    .setTimestamp(role.getTimeCreated())
                     .setColor(role.getColor());
 
             event.getChannel().sendMessage(eb.build()).queue();
