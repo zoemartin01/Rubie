@@ -1,6 +1,7 @@
 package me.zoemartin.rubie.modules.owner;
 
 import com.google.auto.service.AutoService;
+import me.zoemartin.rubie.Bot;
 import me.zoemartin.rubie.core.*;
 import me.zoemartin.rubie.core.annotations.*;
 import me.zoemartin.rubie.core.exceptions.CommandArgumentException;
@@ -21,8 +22,13 @@ import java.time.Instant;
     usage = "<message>"
 )
 public class Todo extends AbstractCommand implements Module {
-    private static final String DEV_SERVER_ID = "771750212200562749";
-    private static final String CHANNEL_ID = "779770625329070171";
+    static final String DEV_SERVER_ID = "771750212200562749";
+    static final String CHANNEL_ID = "779770625329070171";
+
+    @Override
+    public void init() {
+        Bot.addListener(new Logging());
+    }
 
     @Override
     public void run(CommandEvent event) {
