@@ -28,8 +28,6 @@ class BlackList extends GuildCommand {
         throw new CommandArgumentException();
     }
 
-    // TODO: Blacklist USER
-
     @SubCommand(BlackList.class)
     @CommandOptions(
         name = "list",
@@ -162,6 +160,57 @@ class BlackList extends GuildCommand {
                 event.addCheckmark();
                 event.reply("Level Blacklist", "Unblacklisted %s",
                     r.getAsMention()).queue();
+            }
+        }
+    }
+
+    @SubCommand(BlackList.class)
+    @CommandOptions(
+        name = "user",
+        description = "Block a user from gaining levels",
+        usage = "<user>",
+        perm = CommandPerm.BOT_MANAGER,
+        alias = "u"
+    )
+    @SubCommand.AsBase(name = "nolevels")
+    private static class user extends GuildCommand {
+        @Override
+        public void run(GuildCommandEvent event) {
+            Check.check(!event.getArgs().isEmpty(), CommandArgumentException::new);
+            var uRef = lastArg(0, event);
+            var u = CacheUtils.getUser(Parser.User.parse(uRef));
+
+            Check.entityReferenceNotNull(u, User.class, uRef);
+            LevelConfig config = Levels.getConfig(event.getGuild());
+            config.blockUser(u.getId());
+            DatabaseUtil.updateObject(config);
+            event.addCheckmark();
+            event.reply("Level Blacklist", "Blacklisted %s",
+                u.getAsMention()).queue();
+        }
+
+        @SubCommand(role.class)
+        @CommandOptions(
+            name = "remove",
+            description = "Unblocks a user from not gaining levels",
+            usage = "<user>",
+            perm = CommandPerm.BOT_MANAGER,
+            alias = "rm"
+        )
+        private static class Remove extends GuildCommand {
+            @Override
+            public void run(GuildCommandEvent event) {
+                Check.check(!event.getArgs().isEmpty(), CommandArgumentException::new);
+                var uRef = lastArg(0, event);
+                var u = CacheUtils.getUser(Parser.User.parse(uRef));
+
+                Check.entityReferenceNotNull(u, User.class, uRef);
+                LevelConfig config = Levels.getConfig(event.getGuild());
+                if (!config.unblocksUser(u.getId())) return;
+                DatabaseUtil.updateObject(config);
+                event.addCheckmark();
+                event.reply("Level Blacklist", "Unblacklisted %s",
+                    u.getAsMention()).queue();
             }
         }
     }

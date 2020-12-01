@@ -33,6 +33,10 @@ public class LevelConfig implements DatabaseEntry {
     @Convert(converter = DatabaseConverter.StringListConverter.class)
     private Collection<String> blacklisted_roles;
 
+    @Column(name = "blacklisted_users",columnDefinition = "TEXT")
+    @Convert(converter = DatabaseConverter.StringListConverter.class)
+    private Collection<String> userBlacklist;
+
     @Column
     @ElementCollection(fetch = FetchType.EAGER)
     @MapKeyColumn(name = "role_reward")
@@ -43,15 +47,6 @@ public class LevelConfig implements DatabaseEntry {
     @Convert(converter = Announcements.Converter.class)
     private Announcements announcements;
 
-    public LevelConfig(UUID uuid, String guild_id, boolean enabled, Collection<String> blacklisted_channels,
-                       Map<Integer, Collection<String>> rewardRoles) {
-        this.uuid = uuid;
-        this.guild_id = guild_id;
-        this.enabled = enabled;
-        this.blacklisted_channels = blacklisted_channels;
-        this.rewardRoles = rewardRoles;
-    }
-
     public LevelConfig(String guild_id, boolean enabled) {
         this.uuid = UUID.randomUUID();
         this.guild_id = guild_id;
@@ -59,6 +54,7 @@ public class LevelConfig implements DatabaseEntry {
         this.announcements = Announcements.NONE;
         this.blacklisted_channels = Collections.newSetFromMap(new ConcurrentHashMap<>());
         this.blacklisted_roles = Collections.newSetFromMap(new ConcurrentHashMap<>());
+        this.userBlacklist = Collections.newSetFromMap(new ConcurrentHashMap<>());
         this.rewardRoles = new ConcurrentHashMap<>();
     }
 
@@ -94,6 +90,18 @@ public class LevelConfig implements DatabaseEntry {
         return Collections.unmodifiableCollection(blacklisted_roles);
     }
 
+    public boolean blockUser(String userId) {
+        return userBlacklist.add(userId);
+    }
+
+    public boolean unblocksUser(String userId) {
+        return userBlacklist.remove(userId);
+    }
+
+    public Collection<String> getBlockedUsers() {
+        return Collections.unmodifiableCollection(userBlacklist);
+    }
+
     public boolean addBlacklistedRole(String roleId) {
         return blacklisted_roles.add(roleId);
     }
@@ -106,7 +114,6 @@ public class LevelConfig implements DatabaseEntry {
     public void setEnabled(Boolean enabled) {
         this.enabled = enabled;
     }
-
 
     public Map<Integer, Collection<String>> getRewardRoles() {
         return rewardRoles;
