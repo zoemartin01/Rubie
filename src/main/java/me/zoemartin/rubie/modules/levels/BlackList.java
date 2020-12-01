@@ -5,15 +5,25 @@ import me.zoemartin.rubie.core.GuildCommandEvent;
 import me.zoemartin.rubie.core.annotations.*;
 import me.zoemartin.rubie.core.exceptions.CommandArgumentException;
 import me.zoemartin.rubie.core.interfaces.GuildCommand;
+import me.zoemartin.rubie.core.interfaces.JobProcessor;
+import me.zoemartin.rubie.core.managers.JobManager;
 import me.zoemartin.rubie.modules.pagedEmbeds.PageListener;
 import me.zoemartin.rubie.modules.pagedEmbeds.PagedEmbed;
 import me.zoemartin.rubie.core.util.*;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.*;
+import org.joda.time.DateTime;
+import org.joda.time.Period;
+import org.joda.time.format.PeriodFormatter;
+import org.joda.time.format.PeriodFormatterBuilder;
 
+import java.time.Instant;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
+import static me.zoemartin.rubie.core.Job.CommonKeys.*;
 
 @SubCommand(Config.class)
 @CommandOptions(
@@ -44,15 +54,19 @@ class BlackList extends GuildCommand {
 
             Collection<String> roles = config.getBlacklistedRoles();
             Collection<String> channels = config.getBlacklistedChannels();
+            var users = config.getBlockedUsers();
 
             if (roles.isEmpty() && channels.isEmpty()) return;
 
             PagedEmbed p = new PagedEmbed(EmbedUtil.pagedDescription(
                 new EmbedBuilder().setTitle("Blacklistings").build(),
-                Stream.concat(roles.stream().filter(s -> !s.isEmpty()).map(s -> g.getRoleById(s) == null ? s :
-                                                                                    g.getRoleById(s).getAsMention()),
+                Stream.of(roles.stream().filter(s -> !s.isEmpty()).map(s -> g.getRoleById(s) == null ? s :
+                                                                                g.getRoleById(s).getAsMention()),
                     channels.stream().filter(s -> !s.isEmpty()).map(s -> g.getTextChannelById(s) == null ? s :
-                                                                             g.getTextChannelById(s).getAsMention()))
+                                                                             g.getTextChannelById(s).getAsMention()),
+                    users.stream().filter(s -> !s.isEmpty()).map(s -> CacheUtils.getUser(s) == null ? s :
+                                                                          CacheUtils.getUser(s).getAsMention()))
+                    .reduce(Stream::concat).orElseGet(Stream::empty)
                     .map(s -> String.format("%s\n", s)).collect(Collectors.toList())), event);
 
             PageListener.add(p);
@@ -168,28 +182,64 @@ class BlackList extends GuildCommand {
     @CommandOptions(
         name = "user",
         description = "Block a user from gaining levels",
-        usage = "<user>",
+        usage = "<user> [time]",
         perm = CommandPerm.BOT_MANAGER,
         alias = "u"
     )
     @SubCommand.AsBase(name = "nolevels")
     private static class user extends GuildCommand {
+        private static final JobProcessor processor = new TempBlockLevels();
+
+        private static final PeriodFormatter formatter = new PeriodFormatterBuilder()
+                                                             .appendYears()
+                                                             .appendSuffix("y")
+                                                             .appendSeparator(" ", " ", new String[]{",", ", "})
+                                                             .appendMonths()
+                                                             .appendSuffix("mon")
+                                                             .appendSeparator(" ", " ", new String[]{",", ", "})
+                                                             .appendWeeks()
+                                                             .appendSuffix("w")
+                                                             .appendSeparator(" ", " ", new String[]{",", ", "})
+                                                             .appendDays()
+                                                             .appendSuffix("d")
+                                                             .appendSeparator(" ", " ", new String[]{",", ", "})
+                                                             .appendHours()
+                                                             .appendSuffix("h")
+                                                             .appendSeparator(" ", " ", new String[]{",", ", "})
+                                                             .appendMinutes()
+                                                             .appendSuffix("m")
+                                                             .appendSeparator(" ", " ", new String[]{",", ", "})
+                                                             .appendSecondsWithOptionalMillis()
+                                                             .appendSuffix("s")
+                                                             .toFormatter();
+
         @Override
         public void run(GuildCommandEvent event) {
-            Check.check(!event.getArgs().isEmpty(), CommandArgumentException::new);
-            var uRef = lastArg(0, event);
+            var args = event.getArgs();
+            Check.check(!args.isEmpty(), CommandArgumentException::new);
+            var uRef = args.get(0);
             var u = CacheUtils.getUser(Parser.User.parse(uRef));
+
+            var time = -1L;
+            if (args.size() > 1)
+                time = DateTime.now().plus(Period.parse(lastArg(1, event), formatter)).getMillis();
 
             Check.entityReferenceNotNull(u, User.class, uRef);
             LevelConfig config = Levels.getConfig(event.getGuild());
             config.blockUser(u.getId());
+            if (time > Instant.now().toEpochMilli()) {
+                var settings = new ConcurrentHashMap<String, String>();
+                settings.put(GUILD, event.getGuild().getId());
+                settings.put(USER, event.getUser().getId());
+                JobManager.newJob(processor, time, settings);
+            }
             DatabaseUtil.updateObject(config);
             event.addCheckmark();
             event.reply("Level Blacklist", "Blacklisted %s",
                 u.getAsMention()).queue();
         }
 
-        @SubCommand(role.class)
+        @SubCommand(user.class)
         @CommandOptions(
             name = "remove",
             description = "Unblocks a user from not gaining levels",
@@ -211,6 +261,36 @@ class BlackList extends GuildCommand {
                 event.addCheckmark();
                 event.reply("Level Blacklist", "Unblacklisted %s",
                     u.getAsMention()).queue();
+            }
+        }
+
+        @SubCommand(user.class)
+        @CommandOptions(
+            name = "list",
+            description = "List users blocked from gaining levels",
+            perm = CommandPerm.BOT_MANAGER,
+            alias = "l"
+        )
+        private static class list extends GuildCommand {
+            @SuppressWarnings("ConstantConditions")
+            @Override
+            public void run(GuildCommandEvent event) {
+                Guild g = event.getGuild();
+                LevelConfig config = Levels.getConfig(g);
+
+                Collection<String> roles = config.getBlacklistedRoles();
+                Collection<String> channels = config.getBlacklistedChannels();
+                var users = config.getBlockedUsers();
+
+                if (roles.isEmpty() && channels.isEmpty()) return;
+
+                PagedEmbed p = new PagedEmbed(EmbedUtil.pagedDescription(
+                    new EmbedBuilder().setTitle("Blacklistings").build(),
+                    users.stream().filter(s -> !s.isEmpty()).map(s -> CacheUtils.getUser(s) == null ? s :
+                                                                          CacheUtils.getUser(s).getAsMention())
+                        .map(s -> String.format("%s\n", s)).collect(Collectors.toList())), event);
+
+                PageListener.add(p);
             }
         }
     }
