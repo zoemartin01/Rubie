@@ -71,7 +71,7 @@ public class Bot extends ListenerAdapter {
         settings.put(Environment.PASS, properties.getProperty("database.password"));
         settings.put(Environment.DIALECT, "org.hibernate.dialect.PostgreSQL82Dialect");
         settings.put(Environment.POOL_SIZE, 10);
-        settings.put(Environment.SHOW_SQL, true);
+        settings.put(Environment.SHOW_SQL, false);
         settings.put(Environment.HBM2DDL_AUTO, "update");
         config.setProperties(settings);
 
