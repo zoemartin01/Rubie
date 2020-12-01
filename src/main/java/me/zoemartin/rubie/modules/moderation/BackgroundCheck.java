@@ -9,7 +9,6 @@ import me.zoemartin.rubie.core.interfaces.GuildCommand;
 import me.zoemartin.rubie.core.managers.CommandManager;
 import me.zoemartin.rubie.core.util.Check;
 
-@Disabled
 @Command
 @CommandOptions(
     name = "backgroundcheck",

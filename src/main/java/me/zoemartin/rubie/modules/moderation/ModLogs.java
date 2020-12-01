@@ -25,7 +25,6 @@ import java.util.*;
 import java.util.concurrent.*;
 import java.util.stream.Collectors;
 
-@Disabled
 @Command
 @CommandOptions(
     name = "modlogs",
@@ -232,10 +231,11 @@ public class ModLogs extends GuildCommand {
             Set<String> users = modlogs.stream().map(ModLogEntity::getUser_id)
                                     .collect(Collectors.toCollection(HashSet::new));
 
-            EmbedBuilder eb = new EmbedBuilder().setTitle("Bulk Note Import");
-            eb.setDescription("Imported Notes:\n" + String.join("\n", users));
+            EmbedBuilder eb = new EmbedBuilder().setTitle("Bulk Modlogs Import for Users");
+            var paged = new PagedEmbed(EmbedUtil.pagedDescription(eb.build(), users.stream().map(s1 -> s1 + "\n")
+                                                                                  .collect(Collectors.toList())), event);
+            PageListener.add(paged);
             m.delete().complete();
-            event.getChannel().sendMessage(eb.build()).queue();
         }
     }
 

@@ -28,7 +28,6 @@ import java.util.*;
 import java.util.concurrent.*;
 import java.util.stream.Collectors;
 
-@Disabled
 @Command
 @CommandOptions(
     name = "notes",
@@ -268,9 +267,10 @@ public class Note extends GuildCommand {
             Set<String> users = notes.stream().map(NoteEntity::getUser_id).collect(Collectors.toCollection(HashSet::new));
 
             EmbedBuilder eb = new EmbedBuilder().setTitle("Bulk Note Import");
-            eb.setDescription("Imported Notes:\n" + String.join("\n", users));
+            var paged = new PagedEmbed(EmbedUtil.pagedDescription(eb.build(), users.stream().map(s1 -> s1 + "\n")
+                                                                                  .collect(Collectors.toList())), event);
+            PageListener.add(paged);
             m.delete().complete();
-            event.getChannel().sendMessage(eb.build()).queue();
         }
     }
 }
