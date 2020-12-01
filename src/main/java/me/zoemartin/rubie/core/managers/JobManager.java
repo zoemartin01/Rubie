@@ -57,6 +57,7 @@ public class JobManager {
 
         futures.put(job, scheduler.scheduleWithFixedDelay(() -> {
             consumer.accept(job);
+            log.info("Executed a job for '{}'", job.getJobId());
             DatabaseUtil.deleteObject(job);
             futures.remove(job).cancel(true);
         }, delay, delay, TimeUnit.MILLISECONDS));
