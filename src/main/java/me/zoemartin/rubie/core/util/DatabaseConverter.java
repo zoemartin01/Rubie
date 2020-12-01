@@ -18,7 +18,7 @@ public class DatabaseConverter {
         @Override
         public Collection<String> convertToEntityAttribute(String string) {
             Collection<String> collection = Collections.newSetFromMap(new ConcurrentHashMap<>());
-            collection.addAll(Arrays.asList(string.split(SPLIT_CHAR)));
+            if (string != null) collection.addAll(Arrays.asList(string.split(SPLIT_CHAR)));
             return collection;
         }
     }
