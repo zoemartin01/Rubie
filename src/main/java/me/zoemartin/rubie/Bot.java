@@ -1,11 +1,13 @@
 package me.zoemartin.rubie;
 
+import me.zoemartin.rubie.core.managers.JobManager;
 import me.zoemartin.rubie.core.managers.ModuleManager;
 import me.zoemartin.rubie.core.util.DatabaseUtil;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.entities.Activity;
 import net.dv8tion.jda.api.entities.Message;
+import net.dv8tion.jda.api.events.ReadyEvent;
 import net.dv8tion.jda.api.events.ShutdownEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.requests.GatewayIntent;
@@ -14,6 +16,7 @@ import net.dv8tion.jda.api.utils.Compression;
 import net.dv8tion.jda.api.utils.MemberCachePolicy;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
+import org.jetbrains.annotations.NotNull;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -119,5 +122,10 @@ public class Bot extends ListenerAdapter {
     @Override
     public void onShutdown(@Nonnull ShutdownEvent event) {
         System.exit(exitCode);
+    }
+
+    @Override
+    public void onReady(@NotNull ReadyEvent event) {
+        JobManager.init();
     }
 }
