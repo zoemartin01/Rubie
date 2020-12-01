@@ -19,7 +19,6 @@ import java.util.stream.StreamSupport;
 
 public class JobManager {
     private static final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(10);
-    private static final Map<UUID, Collection<Job>> jobs = new ConcurrentHashMap<>();
     private static final Map<UUID, Consumer<Job>> consumers = new ConcurrentHashMap<>();
     private static final Map<Job, Future<?>> futures = new ConcurrentHashMap<>();
 
@@ -28,7 +27,8 @@ public class JobManager {
     public static void init() {
         var loader = ServiceLoader.load(JobProcessor.class);
 
-        jobs.putAll(DatabaseUtil.loadGroupedCollection("from Job", Job.class,
+        var jobs = new ConcurrentHashMap<UUID, Collection<Job>>(
+            DatabaseUtil.loadGroupedCollection("from Job", Job.class,
             Job::getJobId, Function.identity(), CollectorsUtil.toConcurrentSet()));
 
         StreamSupport.stream(loader.spliterator(), true)
@@ -37,7 +37,7 @@ public class JobManager {
                 consumers.put(c.job(), c.process());
                 log.info("Loaded Job Processor '{}':'{}' (ID '{}') with {} jobs",
                     c.getClass().getPackageName(), c.getClass().getSimpleName(), c.job(),
-                    jobs.computeIfAbsent(c.job(), k -> Collections.newSetFromMap(new ConcurrentHashMap<>())).size());
+                    jobs.getOrDefault(c.job(), Collections.emptySet()).size());
             });
 
         log.info("Loaded {} Job Processors", loader.stream().count());
@@ -65,9 +65,9 @@ public class JobManager {
 
     public static void newJob(JobProcessor processor, long end, Map<String, String> settings) {
         var job = new Job(processor.job(), end, settings);
-        schedule(job);
-        log.info("Scheduled a job ({}) for {}", job.getJobId(), new DateTime(job.getEnd()));
         DatabaseUtil.saveObject(job);
+        log.info("Scheduling a job ({}) for {}", job.getJobId(), new DateTime(job.getEnd()));
+        schedule(job);
     }
 
     static class Imp implements JobProcessor {
