@@ -91,6 +91,7 @@ public class Levels extends ListenerAdapter implements Module {
         if (!config.isEnabled()) return;
         if (timeout.getOrDefault(g.getId(), Collections.emptySet()).contains(u.getId())) return;
         if (config.getBlacklistedChannels().contains(event.getChannel().getId())) return;
+        if (config.getBlockedUsers().contains(u.getId())) return;
         if (event.getMember().getRoles().stream().anyMatch(role -> config.getBlacklistedRoles().contains(role.getId())))
             return;
 
