@@ -41,7 +41,8 @@ public class JobManager {
             });
 
         log.info("Loaded {} Job Processors", loader.stream().count());
-        consumers.forEach((uuid, jobConsumer) -> jobs.get(uuid).forEach(JobManager::schedule));
+        consumers.forEach((uuid, jobConsumer) ->
+                              jobs.getOrDefault(uuid, Collections.emptySet()).forEach(JobManager::schedule));
     }
 
     private static void schedule(Job job) {
