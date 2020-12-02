@@ -8,6 +8,8 @@ import net.dv8tion.jda.api.exceptions.ErrorResponseException;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Objects;
+
 public class CacheUtils {
     private CacheUtils() {
         throw new IllegalAccessError();
@@ -68,6 +70,23 @@ public class CacheUtils {
         try {
             Member m = guild.getMember(u);
             return m == null ? guild.retrieveMember(u).complete() : m;
+        } catch (ErrorResponseException e) {
+            return null;
+        }
+    }
+
+    @Nullable
+    public static Emote getEmote(String id) {
+        if (id == null || !Parser.Emote.isParsable(id)) return null;
+
+        try {
+            var e = Bot.getJDA().getEmoteById(Parser.Emote.parse(id));
+            if (e != null) return e;
+            return Bot.getJDA().getGuilds().stream()
+                       .map(guild -> guild.retrieveEmoteById(id).complete())
+                       .filter(Objects::nonNull)
+                       .findAny()
+                       .orElse(null);
         } catch (ErrorResponseException e) {
             return null;
         }

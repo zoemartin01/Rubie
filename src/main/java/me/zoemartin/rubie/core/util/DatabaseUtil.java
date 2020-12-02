@@ -110,7 +110,7 @@ public class DatabaseUtil {
         mapped.add(aClass);
     }
 
-    private static <T, R> Collection<R> loadCollection(String queryString, Class<T> tClass, Function<? super T, ? extends R> mapper) {
+    public static <T, R> Collection<R> loadCollection(String queryString, Class<T> tClass, Function<? super T, ? extends R> mapper) {
         Session session = getSessionFactory().openSession();
         Collection<T> load = session.createQuery(queryString, tClass).list();
         return load.stream().map(mapper).collect(Collectors.toList());
