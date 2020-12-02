@@ -214,14 +214,14 @@ public class ReactRoleCommand extends GuildCommand {
                 var emoteMatcher = EMOTE_PATTERN.matcher(s);
                 var emojiMatcher = EMOJI_PATTERN.matcher(s);
                 if (emoteMatcher.find()) {
-                    var emote = Parser.Emote.parse(emoteMatcher.group(1));
-                    var role = Parser.Role.getRole(guild, emoteMatcher.group(2));
+                    var emote = Parser.Emote.parse(emoteMatcher.group(1).trim());
+                    var role = Parser.Role.getRole(guild, emoteMatcher.group(2).trim());
                     Check.notNull(role, () -> new EntityNotFoundException("Malformed Input: Could not find role %s", emoteMatcher.group(2)));
                     return new ReactRole(message, role, emote);
                 } else if (emojiMatcher.find()) {
                     var emoji = emojiMatcher.group(1).trim();
-                    var role = Parser.Role.getRole(guild, emojiMatcher.group(2));
-                    Check.notNull(role, () -> new EntityNotFoundException("Malformed Input: Could not find role %s", emoteMatcher.group(2)));
+                    var role = Parser.Role.getRole(guild, emojiMatcher.group(2).trim());
+                    Check.notNull(role, () -> new EntityNotFoundException("Malformed Input: Could not find role %s", emojiMatcher.group(2)));
                     return new ReactRole(message, role, emoji);
                 } else throw new ReplyError("Malformed Input: `%s`", s);
             }).filter(Objects::nonNull).filter(reactRole -> !ReactManager.forMessage(message).contains(reactRole))
@@ -304,14 +304,14 @@ public class ReactRoleCommand extends GuildCommand {
                     var emoteMatcher = EMOTE_PATTERN.matcher(s);
                     var emojiMatcher = EMOJI_PATTERN.matcher(s);
                     if (emoteMatcher.find()) {
-                        var emote = Parser.Emote.parse(emoteMatcher.group(1));
-                        var role = Parser.Role.getRole(guild, emoteMatcher.group(2));
+                        var emote = Parser.Emote.parse(emoteMatcher.group(1).trim());
+                        var role = Parser.Role.getRole(guild, emoteMatcher.group(2).trim());
                         Check.notNull(role, () -> new EntityNotFoundException("Could not find role %s", emoteMatcher.group(2)));
                         return new ReactRole(message, role, emote);
                     } else if (emojiMatcher.find()) {
                         var emoji = emojiMatcher.group(1).trim();
-                        var role = Parser.Role.getRole(guild, emojiMatcher.group(2));
-                        Check.notNull(role, () -> new EntityNotFoundException("Could not find role %s", emoteMatcher.group(2)));
+                        var role = Parser.Role.getRole(guild, emojiMatcher.group(2).trim());
+                        Check.notNull(role, () -> new EntityNotFoundException("Could not find role %s", emojiMatcher.group(2)));
                         return new ReactRole(message, role, emoji);
                     } else return null;
                 }).filter(Objects::nonNull).filter(reactRole -> !ReactManager.forMessage(message).contains(reactRole))
