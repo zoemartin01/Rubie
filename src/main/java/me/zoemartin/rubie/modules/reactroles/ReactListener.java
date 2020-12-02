@@ -11,6 +11,7 @@ import java.util.stream.Collectors;
 public class ReactListener extends ListenerAdapter {
     @Override
     public void onGuildMessageReactionAdd(@NotNull GuildMessageReactionAddEvent event) {
+        if (event.getUser().isBot()) return;
         var guild = event.getGuild();
         var config = ReactManager.getConfig(guild);
         if (!config.isEnabled()) return;
@@ -31,6 +32,7 @@ public class ReactListener extends ListenerAdapter {
 
     @Override
     public void onGuildMessageReactionRemove(@NotNull GuildMessageReactionRemoveEvent event) {
+        if (event.getUser() == null || event.getUser().isBot()) return;
         var guild = event.getGuild();
         var config = ReactManager.getConfig(guild);
         if (!config.isEnabled()) return;
