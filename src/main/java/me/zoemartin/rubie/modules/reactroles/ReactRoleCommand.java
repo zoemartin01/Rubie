@@ -264,5 +264,97 @@ public class ReactRoleCommand extends GuildCommand {
                     return String.format("%s - %s", reactRole.getReact(), Objects.requireNonNull(role).getAsMention());
             }).collect(Collectors.joining("\n"))).queue();
         }
+
+        @SubCommand(ReactRoleCommand.class)
+        @CommandOptions(
+            name = "autoadd",
+            description = "Automatically adds React Roles to a Message if it recognises the format",
+            help = "Scans messages and Embed descriptions. Valid format is `<emote> <role>` in a line on its own." +
+                       "Everything not in this format will be ignored.",
+            usage = "<message id> [channel]",
+            perm = CommandPerm.BOT_MANAGER,
+            botPerms = Permission.MANAGE_ROLES
+        )
+        @Checks.Permissions.Guild(Permission.MANAGE_ROLES)
+        private static class AutoAdd extends GuildCommand {
+            private static final Pattern EMOTE_PATTERN = Pattern.compile("<?(?:a:)?.*?:?(\\d{17,19})>?[ \\t]+(.+)");
+            private static final Pattern EMOJI_PATTERN = Pattern.compile("([^\\w]*)\\s+(.*)");
+
+            @Override
+            public void run(GuildCommandEvent event) {
+                var args = event.getArgs();
+                Check.check(!args.isEmpty(), CommandArgumentException::new);
+
+                var guild = event.getGuild();
+                var jda = event.getJDA();
+
+                var channel = args.size() > 1 ? Parser.Channel.getTextChannel(guild, args.get(1)) : null;
+                var message = channel == null ?
+                                  event.getChannel().retrieveMessageById(args.get(0)).complete()
+                                  : channel.retrieveMessageById(args.get(0)).complete();
+
+
+                Check.notNull(message, () -> new EntityNotFoundException("Sorry, I couldn't find that message!"));
+                var sb = new StringBuilder(message.getContentRaw());
+                message.getEmbeds().forEach(embed -> sb.append("\n").append(embed.getDescription()));
+
+                var lines = sb.toString().lines();
+                var reacts = lines.map(s -> {
+                    if (s.isBlank()) return null;
+                    var emoteMatcher = EMOTE_PATTERN.matcher(s);
+                    var emojiMatcher = EMOJI_PATTERN.matcher(s);
+                    if (emoteMatcher.find()) {
+                        var emote = Parser.Emote.parse(emoteMatcher.group(1));
+                        var role = Parser.Role.getRole(guild, emoteMatcher.group(2));
+                        Check.notNull(role, () -> new EntityNotFoundException("Could not find role %s", emoteMatcher.group(2)));
+                        return new ReactRole(message, role, emote);
+                    } else if (emojiMatcher.find()) {
+                        var emoji = emojiMatcher.group(1).trim();
+                        var role = Parser.Role.getRole(guild, emojiMatcher.group(2));
+                        Check.notNull(role, () -> new EntityNotFoundException("Could not find role %s", emoteMatcher.group(2)));
+                        return new ReactRole(message, role, emoji);
+                    } else return null;
+                }).filter(Objects::nonNull).filter(reactRole -> !ReactManager.forMessage(message).contains(reactRole))
+                                 .collect(Collectors.toList());
+
+                var existing = message.getReactions();
+                var failed = new ArrayList<ReactRole>();
+                reacts.stream()
+                    .filter(reactRole -> existing.stream()
+                                             .map(MessageReaction::getReactionEmote)
+                                             .map(react -> react.isEmoji() ? react.getEmoji() : react.getEmote().getId())
+                                             .noneMatch(react -> reactRole.getReact().equals(react)))
+                    .forEach(reactRole -> {
+                        if (reactRole.getReact().matches("\\d+")) {
+                            var emote = jda.getEmoteById(reactRole.getReact());
+                            if (emote != null) message.addReaction(emote).queue();
+                        } else {
+                            try {
+                                message.addReaction(reactRole.getReact()).complete();
+                            } catch (ErrorResponseException e) {
+                                if (e.getErrorResponse() == ErrorResponse.UNKNOWN_EMOJI) {
+                                    failed.add(reactRole);
+                                } else {
+                                    throw e;
+                                }
+                            }
+                        }
+                    });
+
+                reacts.removeIf(failed::contains);
+                reacts.forEach(ReactManager::addReactRole);
+                event.reply("React Roles Auto Add", reacts.stream().map(reactRole -> {
+                    var role = Parser.Role.getRole(guild, reactRole.getRoleId());
+
+                    if (reactRole.getReact().matches("\\d+")) {
+                        var emote = jda.getEmoteById(reactRole.getReact());
+                        return String.format("%s - %s", emote == null ? reactRole.getReact() : emote.getAsMention(),
+                            Objects.requireNonNull(role).getAsMention());
+                    } else
+                        return String.format("%s - %s", reactRole.getReact(), Objects.requireNonNull(role).getAsMention());
+                }).collect(Collectors.joining("\n"))).queue();
+            }
+
+        }
     }
 }
