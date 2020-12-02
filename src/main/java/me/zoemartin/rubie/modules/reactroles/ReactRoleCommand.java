@@ -180,9 +180,9 @@ public class ReactRoleCommand extends GuildCommand {
     @CommandOptions(
         name = "add",
         description = "Add React Roles to a Message",
-        help = "Only use one `react - role` pair per line. " +
+        help = "Only use one `react - role` pair per line. Roles in the first line will be ignored." +
                    "When the react is already on the target message I will not add another one!",
-        usage = "<message id> [channel]",
+        usage = "<message id> [channel]\n<emote> <role>\n[<emote> <role>]\n[...]",
         perm = CommandPerm.BOT_MANAGER,
         botPerms = Permission.MANAGE_ROLES
     )
@@ -204,12 +204,13 @@ public class ReactRoleCommand extends GuildCommand {
                               event.getChannel().retrieveMessageById(args.get(0)).complete()
                               : channel.retrieveMessageById(args.get(0)).complete();
 
-            var input = event.getArgString().replaceFirst(args.get(0), "");
-            if (channel != null) input = input.replaceFirst(args.get(2), "");
+            var input = event.getArgString().replaceFirst(".*?\n", "");
+            //if (channel != null) input = input.replaceFirst(args.get(2), "");
             var lines = input.lines();
 
             Check.notNull(message, () -> new EntityNotFoundException("Sorry, I couldn't find that message!"));
             var reacts = lines.map(s -> {
+                if (s.isBlank()) return null;
                 var emoteMatcher = EMOTE_PATTERN.matcher(s);
                 var emojiMatcher = EMOJI_PATTERN.matcher(s);
                 if (emoteMatcher.find()) {
@@ -223,7 +224,7 @@ public class ReactRoleCommand extends GuildCommand {
                     Check.notNull(role, () -> new EntityNotFoundException("Malformed Input: Could not find role %s", emoteMatcher.group(2)));
                     return new ReactRole(message, role, emoji);
                 } else throw new ReplyError("Malformed Input: `%s`", s);
-            }).filter(reactRole -> !ReactManager.forMessage(message).contains(reactRole))
+            }).filter(Objects::nonNull).filter(reactRole -> !ReactManager.forMessage(message).contains(reactRole))
                              .collect(Collectors.toList());
 
             var existing = message.getReactions();
