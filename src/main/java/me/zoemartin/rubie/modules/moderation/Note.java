@@ -119,11 +119,14 @@ public class Note extends GuildCommand {
                 cb.equal(r.get("guild_id"), event.getGuild().getId()),
                 cb.equal(r.get("user_id"), userId))).getResultList();
 
+            var sorted = notes.stream().sorted(
+                Comparator.comparingLong(NoteEntity::getTimestamp).reversed());
+
             List<MessageEmbed> pages = EmbedUtil.pagedFieldEmbed(
                 new EmbedBuilder()
                     .setAuthor(u == null ? userId : String.format("%s / %s", u.getAsTag(), u.getId()),
                         null, u == null ? null : u.getEffectiveAvatarUrl())
-                    .setTitle("Notes (" + notes.size() + ")").build(), notes.stream().map(e -> {
+                    .setTitle("Notes (" + notes.size() + ")").build(), sorted.map(e -> {
                     User moderator = e.getModerator_id() == null ? null :
                                          Bot.getJDA().getUserById(e.getModerator_id());
                     return new MessageEmbed.Field("Note ID: `" + e.getUuid() + "`",

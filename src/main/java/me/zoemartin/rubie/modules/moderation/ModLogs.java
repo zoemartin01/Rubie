@@ -71,11 +71,14 @@ public class ModLogs extends GuildCommand {
                 cb.equal(r.get("guild_id"), event.getGuild().getId()),
                 cb.equal(r.get("user_id"), userId))).getResultList();
 
+            var sorted = modlogs.stream().sorted(
+                Comparator.comparingLong(ModLogEntity::getTimestamp).reversed());
+
             List<MessageEmbed> pages = EmbedUtil.pagedFieldEmbed(
                 new EmbedBuilder()
                     .setAuthor(u == null ? userId : String.format("%s / %s", u.getAsTag(), u.getId()),
                         null, u == null ? null : u.getEffectiveAvatarUrl())
-                    .setTitle("Modlogs (" + modlogs.size() + ")").build(), modlogs.stream().map(e -> {
+                    .setTitle("Modlogs (" + modlogs.size() + ")").build(), sorted.map(e -> {
                     User moderator = e.getModerator_id() == null ? null :
                                          Bot.getJDA().getUserById(e.getModerator_id());
                     return new MessageEmbed.Field(e.getType().name() + " | Modlog ID: `" + e.getUuid() + "`",
