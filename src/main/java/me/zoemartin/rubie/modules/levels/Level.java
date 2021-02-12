@@ -49,7 +49,7 @@ public class Level extends GuildCommand {
                 start = args.size() > 1 && Parser.Int.isParsable(args.get(1)) ? Parser.Int.parse(args.get(1)) : 1;
             } else {
                 levels = Levels.getLevels(event.getGuild()).stream()
-                             .filter(userLevel -> Bot.getJDA().getUserById(userLevel.getUser_id()) != null)
+                             .filter(userLevel -> event.getGuild().getMemberById(userLevel.getUser_id()) != null)
                              .sorted(Comparator.comparingInt(UserLevel::getExp).reversed())
                              .collect(Collectors.toList());
                 start = !args.isEmpty() && Parser.Int.isParsable(args.get(0)) ? Parser.Int.parse(args.get(0)) : 1;
@@ -96,7 +96,7 @@ public class Level extends GuildCommand {
             double expToNext = Levels.calcExp(lvl + 1);
 
             List<UserLevel> levels = Levels.getLevels(event.getGuild()).stream()
-                                         .filter(userLevel -> Bot.getJDA().getUserById(userLevel.getUser_id()) != null)
+                                         .filter(userLevel -> event.getGuild().getMemberById(userLevel.getUser_id()) != null)
                                          .sorted(Comparator.comparingInt(UserLevel::getExp).reversed())
                                          .collect(Collectors.toList());
 
