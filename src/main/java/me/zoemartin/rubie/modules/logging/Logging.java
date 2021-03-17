@@ -9,5 +9,6 @@ public class Logging implements Module {
     @Override
     public void init() {
         Bot.addListener(new Nickname.NicknameListener());
+        Bot.addListener(new Username.UsernameListener());
     }
 }
