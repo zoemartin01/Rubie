@@ -386,6 +386,22 @@ public abstract class Parser<T, K> {
         }
 
         /**
+         * @return Never-null emote name
+         *
+         * @throws IllegalArgumentException
+         *     If the provided input is not in a valid format
+         */
+        @NotNull
+        public String parseName(String s) {
+            if (s.matches("<a:\\w+:\\d{17,19}>") || s.matches("<:\\w+:\\d{17,19}>")) {
+                Matcher matcher = Pattern.compile("^<a?:(\\w+):\\d{17,19}>$").matcher(s);
+                matcher.find();
+                return matcher.group(1);
+            } else if (s.matches("\\d{17,19}")) return s;
+            else throw new IllegalArgumentException("Emote not parsable!");
+        }
+
+        /**
          * Parses a input string in the valid format (see {@link #isParsable(String)}) and returns a pair with the emote
          * id and the {@link EmoteType}
          *
