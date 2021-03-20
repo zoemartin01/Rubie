@@ -10,6 +10,7 @@ import me.zoemartin.rubie.core.util.Parser;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.*;
 import net.dv8tion.jda.api.exceptions.ErrorResponseException;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
@@ -25,6 +26,8 @@ import java.util.List;
     perm = CommandPerm.BOT_USER
 )
 public class EmbedSource extends GuildCommand {
+    private static final String HASTE_HOST = "https://starb.in";
+
     @Override
     public void run(GuildCommandEvent event) {
         List<String> args = event.getArgs();
@@ -72,13 +75,18 @@ public class EmbedSource extends GuildCommand {
 
     public static String haste(String content) throws IOException, InterruptedException {
         final HttpClient client = HttpClient.newHttpClient();
-        final HttpRequest request = HttpRequest.newBuilder(URI.create("https://hastebin.com/documents"))
+        final HttpRequest request = HttpRequest.newBuilder(URI.create(HASTE_HOST + "/documents"))
                                         .POST(HttpRequest.BodyPublishers.ofString(content)).build();
 
         final HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
         final String responseContent = response.body();
         final JSONObject responseJson = new JSONObject(responseContent);
-        final String key = responseJson.getString("key");
-        return "https://hastebin.com/" + key;
+        final String key;
+        try {
+            key = responseJson.getString("key");
+        } catch (JSONException e) {
+            throw new ReplyError("An unexpected error has occurred. If this error persists please notify the developer!");
+        }
+        return HASTE_HOST + key;
     }
 }
