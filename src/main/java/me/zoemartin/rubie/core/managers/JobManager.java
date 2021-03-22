@@ -3,7 +3,6 @@ package me.zoemartin.rubie.core.managers;
 import me.zoemartin.rubie.core.Job;
 import me.zoemartin.rubie.core.annotations.Disabled;
 import me.zoemartin.rubie.core.interfaces.JobProcessor;
-import me.zoemartin.rubie.core.interfaces.Module;
 import me.zoemartin.rubie.core.util.CollectorsUtil;
 import me.zoemartin.rubie.core.util.DatabaseUtil;
 import org.joda.time.DateTime;
@@ -18,11 +17,17 @@ import java.util.function.Function;
 import java.util.stream.StreamSupport;
 
 public class JobManager {
-    private static final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(10);
+    private static final int poolSize = 10;
+    private static final int schedulerDelay = 60;
+    private static final Comparator<Job> comparator = Comparator.comparingLong(Job::getEnd);
+    private static final Logger log = LoggerFactory.getLogger(JobManager.class);
+
+    private static final ScheduledExecutorService pool = Executors.newScheduledThreadPool(poolSize);
+    private static final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
+
+    private static final PriorityQueue<Job> queue = new PriorityQueue<>(comparator);
     private static final Map<UUID, Consumer<Job>> consumers = new ConcurrentHashMap<>();
     private static final Map<Job, Future<?>> futures = new ConcurrentHashMap<>();
-
-    private static final Logger log = LoggerFactory.getLogger(JobManager.class);
 
     public static void init() {
         var loader = ServiceLoader.load(JobProcessor.class);
@@ -43,6 +48,25 @@ public class JobManager {
         log.info("Loaded {} Job Processors", loader.stream().count());
         consumers.forEach((uuid, jobConsumer) ->
                               jobs.getOrDefault(uuid, Collections.emptySet()).forEach(JobManager::schedule));
+
+        // fill thread pool until queue is empty or pool is full
+        scheduler.scheduleWithFixedDelay(() -> {
+            while (((ThreadPoolExecutor) pool).getActiveCount() < poolSize) {
+                Job j;
+                synchronized (queue) {
+                    j = queue.poll();
+                }
+                if (j == null) return;
+                var delay = j.getEnd() - Instant.now().toEpochMilli();
+                if (delay > TimeUnit.SECONDS.toMillis((long) (schedulerDelay * 1.1))) {
+                    synchronized (queue) {
+                        queue.add(j);
+                    }
+                    return;
+                }
+                schedule(j);
+            }
+        }, 0, schedulerDelay, TimeUnit.SECONDS);
     }
 
     private static void schedule(Job job) {
@@ -54,14 +78,33 @@ public class JobManager {
             consumer.accept(job);
             DatabaseUtil.deleteObject(job);
             return;
+        } else if (delay > TimeUnit.SECONDS.toMillis((long) (schedulerDelay * 1.2))) {
+            synchronized (queue) {
+                queue.add(job);
+            }
+            return;
         }
 
-        futures.put(job, scheduler.scheduleWithFixedDelay(() -> {
-            consumer.accept(job);
-            log.info("Executed a job for '{}'", job.getJobId());
-            DatabaseUtil.deleteObject(job);
-            futures.remove(job).cancel(true);
-        }, delay, delay, TimeUnit.MILLISECONDS));
+        if (((ThreadPoolExecutor) pool).getActiveCount() < poolSize) {
+            futures.put(job, pool.scheduleWithFixedDelay(() -> {
+                consumer.accept(job);
+                log.info("Executed a job for '{}'", job.getJobId());
+                DatabaseUtil.deleteObject(job);
+                new Thread(() -> {
+                    futures.remove(job).cancel(true);
+
+                    Job j;
+                    synchronized (queue) {
+                        j = queue.poll();
+                    }
+                    if (j != null) schedule(j);
+                }).start();
+            }, delay, delay, TimeUnit.MILLISECONDS));
+        } else {
+            synchronized (queue) {
+                queue.add(job);
+            }
+        }
     }
 
     public static void newJob(JobProcessor processor, long end, Map<String, String> settings) {
@@ -69,17 +112,5 @@ public class JobManager {
         DatabaseUtil.saveObject(job);
         log.info("Scheduling a job ({}) for {}", job.getJobId(), new DateTime(job.getEnd()));
         schedule(job);
-    }
-
-    static class Imp implements JobProcessor {
-        @Override
-        public String uuid() {
-            return "08df9546-557e-4985-9b76-a4b397e28159";
-        }
-
-        @Override
-        public Consumer<Job> process() {
-            return job -> log.info("Job executed!!");
-        }
     }
 }
