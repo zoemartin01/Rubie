@@ -230,7 +230,7 @@ class BlackList extends GuildCommand {
             if (time > Instant.now().toEpochMilli()) {
                 var settings = new ConcurrentHashMap<String, String>();
                 settings.put(GUILD, event.getGuild().getId());
-                settings.put(USER, event.getUser().getId());
+                settings.put(USER, u.getId());
                 JobManager.newJob(processor, time, settings);
             }
             DatabaseUtil.updateObject(config);
