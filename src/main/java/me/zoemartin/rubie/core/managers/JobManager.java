@@ -18,23 +18,17 @@ import java.util.stream.StreamSupport;
 
 public class JobManager {
     private static final int poolSize = 10;
-    private static final int schedulerDelay = 60;
-    private static final Comparator<Job> comparator = Comparator.comparingLong(Job::getEnd);
     private static final Logger log = LoggerFactory.getLogger(JobManager.class);
 
     private static final ScheduledExecutorService pool = Executors.newScheduledThreadPool(poolSize);
-    private static final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
-
-    private static final PriorityQueue<Job> queue = new PriorityQueue<>(comparator);
     private static final Map<UUID, Consumer<Job>> consumers = new ConcurrentHashMap<>();
-    private static final Map<Job, Future<?>> futures = new ConcurrentHashMap<>();
 
     public static void init() {
         var loader = ServiceLoader.load(JobProcessor.class);
 
         var jobs = new ConcurrentHashMap<UUID, Collection<Job>>(
             DatabaseUtil.loadGroupedCollection("from Job", Job.class,
-            Job::getJobId, Function.identity(), CollectorsUtil.toConcurrentSet()));
+                Job::getJobId, Function.identity(), CollectorsUtil.toConcurrentSet()));
 
         StreamSupport.stream(loader.spliterator(), true)
             .filter(c -> c.getClass().getAnnotationsByType(Disabled.class).length == 0)
@@ -48,25 +42,6 @@ public class JobManager {
         log.info("Loaded {} Job Processors", loader.stream().count());
         consumers.forEach((uuid, jobConsumer) ->
                               jobs.getOrDefault(uuid, Collections.emptySet()).forEach(JobManager::schedule));
-
-        // fill thread pool until queue is empty or pool is full
-        scheduler.scheduleWithFixedDelay(() -> {
-            while (((ThreadPoolExecutor) pool).getActiveCount() < poolSize) {
-                Job j;
-                synchronized (queue) {
-                    j = queue.poll();
-                }
-                if (j == null) return;
-                var delay = j.getEnd() - Instant.now().toEpochMilli();
-                if (delay > TimeUnit.SECONDS.toMillis((long) (schedulerDelay * 1.1))) {
-                    synchronized (queue) {
-                        queue.add(j);
-                    }
-                    return;
-                }
-                schedule(j);
-            }
-        }, 0, schedulerDelay, TimeUnit.SECONDS);
     }
 
     private static void schedule(Job job) {
@@ -78,33 +53,13 @@ public class JobManager {
             consumer.accept(job);
             DatabaseUtil.deleteObject(job);
             return;
-        } else if (delay > TimeUnit.SECONDS.toMillis((long) (schedulerDelay * 1.2))) {
-            synchronized (queue) {
-                queue.add(job);
-            }
-            return;
         }
 
-        if (((ThreadPoolExecutor) pool).getActiveCount() < poolSize) {
-            futures.put(job, pool.scheduleWithFixedDelay(() -> {
-                consumer.accept(job);
-                log.info("Executed a job for '{}'", job.getJobId());
-                DatabaseUtil.deleteObject(job);
-                new Thread(() -> {
-                    futures.remove(job).cancel(true);
-
-                    Job j;
-                    synchronized (queue) {
-                        j = queue.poll();
-                    }
-                    if (j != null) schedule(j);
-                }).start();
-            }, delay, delay, TimeUnit.MILLISECONDS));
-        } else {
-            synchronized (queue) {
-                queue.add(job);
-            }
-        }
+        pool.schedule(() -> {
+            consumer.accept(job);
+            log.info("Executed a job for '{}'", job.getJobId());
+            DatabaseUtil.deleteObject(job);
+        }, delay, TimeUnit.MILLISECONDS);
     }
 
     public static void newJob(JobProcessor processor, long end, Map<String, String> settings) {
