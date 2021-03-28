@@ -30,6 +30,7 @@ import java.util.Properties;
 
 public class Bot extends ListenerAdapter {
     private static Properties properties;
+    private static File configFile;
 
     private static JDABuilder builder;
     private static JDA jda = null;
@@ -37,11 +38,11 @@ public class Bot extends ListenerAdapter {
 
     private static int exitCode = 0;
 
+    private static final Logger log = LoggerFactory.getLogger(Bot.class);
+
     public static void main(String[] args) throws LoginException {
         System.setProperty("logFilename", "rubie_" + DateTime.now().toString("yyyy-MM-dd_HH-mm-ss") + ".log");
-        var log = LoggerFactory.getLogger(Bot.class);
 
-        File configFile;
         properties = new Properties();
 
         if (args.length == 0) {
@@ -54,12 +55,7 @@ public class Bot extends ListenerAdapter {
             log.error("Env Configuration file does not exist!");
         }
 
-        try {
-            properties.load(new FileReader(configFile));
-        } catch (IOException e) {
-            log.error("Error loading configuration file!");
-        }
-
+        reloadConfig();
 
         builder = JDABuilder.createDefault(properties.getProperty("bot.token"));
 
@@ -86,7 +82,6 @@ public class Bot extends ListenerAdapter {
         builder.setMemberCachePolicy(MemberCachePolicy.ALL);
         builder.setBulkDeleteSplittingEnabled(false);
         builder.setCompression(Compression.NONE);
-        builder.setActivity(Activity.listening(properties.getProperty("bot.status")));
         builder.addEventListeners(new Bot());
 
         EnumSet<Message.MentionType> deny = EnumSet.of(Message.MentionType.EVERYONE, Message.MentionType.HERE,
@@ -117,6 +112,14 @@ public class Bot extends ListenerAdapter {
         System.out.println(exitCode);
         if (force) jda.shutdownNow();
         else jda.shutdown();
+    }
+
+    public static void reloadConfig() {
+        try {
+            properties.load(new FileReader(configFile));
+        } catch (IOException e) {
+            log.error("Error loading configuration file!");
+        }
     }
 
     @Override

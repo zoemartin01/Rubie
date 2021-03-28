@@ -25,7 +25,7 @@ import java.util.jar.Manifest;
     alias = "botinfo"
 )
 public class About extends AbstractCommand {
-    private String JDA_VERSION = null;
+    private static String JDA_VERSION = null;
     private static DateTime STARTUP;
     private static String OWNER_TAG = null;
 
@@ -97,10 +97,15 @@ public class About extends AbstractCommand {
         else return f2.print(p);
     }
 
-    private void findVersion() {
+    public static String getVersion() {
+        if (JDA_VERSION == null) findVersion();
+        return JDA_VERSION;
+    }
+
+    private static void findVersion() {
         Enumeration<URL> resources;
         try {
-            resources = getClass().getClassLoader()
+            resources = About.class.getClassLoader()
                             .getResources("META-INF/MANIFEST.MF");
             while (resources.hasMoreElements()) {
                 Manifest manifest = new Manifest(resources.nextElement().openStream());
