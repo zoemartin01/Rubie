@@ -31,14 +31,20 @@ public class Status extends AbstractCommand {
     private static List<String> status = new LinkedList<>();
     private static List<Activity.ActivityType> activity = new LinkedList<>();
 
-    // Status rotates every 1 minute and refreshes the templates every 5 seconds
+    // Status rotates every 5 minutes and refreshes the templates every 60 seconds
     Status() {
         loadRotation();
 
         Supplier<JDA> jda = Bot::getJDA;
-        replacements.put("users", () -> String.valueOf(jda.get().getUsers().size()));
+        replacements.put("users", () -> {
+            jda.get().getGuilds().forEach(guild -> guild.loadMembers().get());
+            return String.valueOf(jda.get().getUsers().size());
+        });
         replacements.put("servers", () -> String.valueOf(jda.get().getGuilds().size()));
-        replacements.put("version", About::getVersion);
+        replacements.put("version", () -> {
+            var ver = getClass().getPackage().getImplementationVersion();
+            return ver == null ? "DEV BUILD" : ver;
+        });
 
         refresh.scheduleAtFixedRate(() -> {
             try {
@@ -46,7 +52,7 @@ public class Status extends AbstractCommand {
                 jda.get().getPresence().setActivity(act);
             } catch (Exception ignored) {
             }
-        }, 5, 5, TimeUnit.SECONDS);
+        }, 5, 60, TimeUnit.SECONDS);
 
         rotate.scheduleAtFixedRate(() -> {
             synchronized (counter) {
@@ -55,7 +61,7 @@ public class Status extends AbstractCommand {
                 if (counter.getCurrent() + 1 == counter.getMax()) counter.setCurrent(0);
                 else counter.incrementCurrent();
             }
-        }, 1, 1, TimeUnit.MINUTES);
+        }, 5, 5, TimeUnit.MINUTES);
     }
 
     @SubCommand(Status.class)

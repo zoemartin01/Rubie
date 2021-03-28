@@ -97,11 +97,6 @@ public class About extends AbstractCommand {
         else return f2.print(p);
     }
 
-    public static String getVersion() {
-        if (JDA_VERSION == null) findVersion();
-        return JDA_VERSION;
-    }
-
     private static void findVersion() {
         Enumeration<URL> resources;
         try {
