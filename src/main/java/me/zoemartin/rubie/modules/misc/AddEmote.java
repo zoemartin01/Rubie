@@ -1,12 +1,13 @@
 package me.zoemartin.rubie.modules.misc;
 
+import me.zoemartin.rubie.core.CommandPerm;
 import me.zoemartin.rubie.core.GuildCommandEvent;
-import me.zoemartin.rubie.core.annotations.Command;
-import me.zoemartin.rubie.core.annotations.CommandOptions;
+import me.zoemartin.rubie.core.annotations.*;
 import me.zoemartin.rubie.core.exceptions.*;
 import me.zoemartin.rubie.core.interfaces.GuildCommand;
 import me.zoemartin.rubie.core.util.Check;
 import me.zoemartin.rubie.core.util.Parser;
+import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Icon;
 import net.dv8tion.jda.api.exceptions.ErrorResponseException;
 
@@ -19,8 +20,11 @@ import java.util.regex.Pattern;
     name = "addemote",
     alias = "steal",
     description = "Add an emote from an image or another server's emote",
-    usage = "<image url|emote> [name]"
+    usage = "<image url|emote> [name]",
+    botPerms = Permission.MANAGE_EMOTES,
+    perm = CommandPerm.BOT_MANAGER
 )
+@Checks.Permissions.Guild(Permission.MANAGE_EMOTES)
 public class AddEmote extends GuildCommand {
     private static final String GIF_URI = "https://cdn.discordapp.com/emojis/%s.gif";
     private static final String PNG_URI = "https://cdn.discordapp.com/emojis/%s.png";
