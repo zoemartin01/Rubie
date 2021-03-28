@@ -90,9 +90,6 @@ public class About extends AbstractCommand {
                      .appendSuffix(p.getSeconds() > 1 ? " seconds" : " second")
                      .toFormatter();
 
-        System.out.println(d.getMillis());
-        System.out.println(TimeUnit.DAYS.toMillis(7));
-
         if (d.getMillis() >= TimeUnit.DAYS.toMillis(7)) return f1.print(p);
         else return f2.print(p);
     }
