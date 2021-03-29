@@ -9,5 +9,11 @@ public class Moderation implements Module {
     @Override
     public void init() {
         Bot.addListener(new CarlNoteWatcher());
+        Bot.addListener(new Subscribe.Listeners());
+    }
+
+    @Override
+    public void initLate() {
+        SubscriptionManager.init();
     }
 }
