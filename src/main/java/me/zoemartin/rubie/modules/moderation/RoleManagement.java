@@ -12,9 +12,12 @@ import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.*;
 import org.jetbrains.annotations.NotNull;
 
+import java.awt.*;
 import java.time.Instant;
 import java.time.OffsetDateTime;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 @Command
 @CommandOptions(
@@ -129,6 +132,53 @@ public class RoleManagement extends GuildCommand {
             event.addCheckmark();
             event.reply("Role Management", "Removed %s from %s", m.getAsMention(),
                 r.getAsMention()).queue(message -> message.delete().queueAfter(10, TimeUnit.SECONDS));
+        }
+    }
+
+    @Checks.Permissions.Guild(Permission.MANAGE_ROLES)
+    @SubCommand(RoleManagement.class)
+    @CommandOptions(
+        name = "create",
+        description = "Create a role",
+        usage = "<name> [color] [mentionable] [hoisted] [perms...]",
+        perm = CommandPerm.BOT_ADMIN,
+        botPerms = Permission.MANAGE_ROLES
+    )
+
+    private static class Create extends GuildCommand {
+        @Override
+        public void run(GuildCommandEvent event) {
+            var args = event.getArgs();
+            Check.check(!args.isEmpty(), CommandArgumentException::new);
+
+            var name = args.get(0);
+            var color = args.size() >= 2 ? getColor(args.get(1)) : new Color(0);
+            var mentionable = args.size() >= 3 && args.get(2).matches("true|1");
+            var hoisted = args.size() >= 4 && args.get(3).matches("true|1");
+            var perms = args.size() > 4 ?
+                            args.subList(4, args.size()).stream().map(s -> EnumSet.allOf(Permission.class).stream().filter(
+                                permission -> permission.getName().equals(s)
+                                                  || s.matches("\\d{1,5}")
+                                                         && permission.getOffset() == Integer.parseInt(s)
+                            ).findAny().orElse(null)).filter(Objects::nonNull).collect(Collectors.toSet())
+                            : EnumSet.noneOf(Permission.class);
+
+            var role = event.getGuild().createRole()
+                           .setName(name)
+                           .setColor(color)
+                           .setMentionable(mentionable)
+                           .setHoisted(hoisted).setPermissions(perms)
+                           .complete();
+
+            event.reply("Role Created", "Created role %s", role.getAsMention()).queue();
+        }
+
+        private static Color getColor(String s) {
+            try {
+                return new Color(Integer.decode(s));
+            } catch (NumberFormatException n) {
+                return new Color(0);
+            }
         }
     }
 }
