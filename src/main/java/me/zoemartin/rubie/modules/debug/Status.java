@@ -148,7 +148,12 @@ public class Status extends AbstractCommand {
         status = new LinkedList<>();
 
         var prop = Bot.getProperties();
-        var count = Integer.parseInt(prop.getProperty("bot.status.count"));
+        var count = 0;
+
+        try {
+            count = Integer.parseInt(prop.getProperty("bot.status.count"));
+        } catch (NumberFormatException ignored) {
+        }
 
         for (int i = 0; i < count; i++) {
             status.add(i, prop.getProperty("bot.status." + i));
