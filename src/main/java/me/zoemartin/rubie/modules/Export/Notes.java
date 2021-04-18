@@ -5,36 +5,42 @@ import com.google.gson.GsonBuilder;
 import me.zoemartin.rubie.Bot;
 import me.zoemartin.rubie.core.CommandPerm;
 import me.zoemartin.rubie.core.GuildCommandEvent;
-import me.zoemartin.rubie.core.annotations.Command;
-import me.zoemartin.rubie.core.annotations.CommandOptions;
+import me.zoemartin.rubie.core.annotations.*;
 import me.zoemartin.rubie.core.exceptions.CommandArgumentException;
 import me.zoemartin.rubie.core.interfaces.GuildCommand;
 import me.zoemartin.rubie.core.util.Check;
 import me.zoemartin.rubie.core.util.Parser;
 import net.dv8tion.jda.api.entities.*;
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.Serializable;
 import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 @Command
 @CommandOptions(
-    name = "export-notes",
+    name = "exportnotes",
     description = "Export notes from supported bots by parsing the `notes` command output. (Carl-Bot, Dyno, Auttaja)",
     usage = "<channel...>",
-    perm = CommandPerm.BOT_ADMIN
+    perm = CommandPerm.OWNER
 )
 public class Notes extends GuildCommand {
     private static final String CARL_ID = "235148962103951360";
     private static final String DYNO_ID = "155149108183695360";
     private static final String AUTTAJA_ID = "242730576195354624";
+
+    private static final Logger log = LoggerFactory.getLogger(Notes.class);
 
     @Override
     public void run(GuildCommandEvent event) {
@@ -48,11 +54,12 @@ public class Notes extends GuildCommand {
                                          .collect(Collectors.toList());
 
         Collection<NoteEntry> notes = new ArrayList<>();
-        channels.forEach(c -> c.getIterableHistory().stream()
+        channels.parallelStream().forEach(c -> c.getIterableHistory().stream()
                                   .filter(message -> message.getAuthor().getId().equals(CARL_ID)
                                                          || message.getAuthor().getId().equals(DYNO_ID)
                                                          || message.getAuthor().getId().equals(AUTTAJA_ID))
                                   .forEach(message -> {
+                                      log.info("Read Messages in {}, Parsed: {}", c.getName(), notes.size());
                                       switch (message.getAuthor().getId()) {
                                           case CARL_ID -> message.getEmbeds().forEach(embed -> notes.addAll(parseCarl(embed)));
                                           case DYNO_ID -> message.getEmbeds().forEach(embed -> notes.addAll(parseDyno(embed)));
@@ -60,8 +67,10 @@ public class Notes extends GuildCommand {
                                       }
                                   }));
 
+        var export = new HashSet<>(notes);
+
         Gson gson = new GsonBuilder().setPrettyPrinting().create();
-        event.getChannel().sendFile(gson.toJson(notes).getBytes(), "notes_" + Instant.now() + ".json").complete();
+        event.getChannel().sendFile(gson.toJson(export).getBytes(), "notes_" + Instant.now() + ".json").complete();
         se.shutdown();
     }
 
@@ -75,7 +84,7 @@ public class Notes extends GuildCommand {
 
         if (embed.getAuthor() == null || embed.getAuthor().getName() == null) return Collections.emptyList();
         User u = Bot.getJDA().getUserByTag(embed.getAuthor().getName());
-        Check.entityReferenceNotNull(u, User.class, embed.getAuthor().getName());
+        if (u == null) return Collections.emptySet();
         String user_id = u.getId();
 
         return fields.stream().map(field -> {
@@ -174,6 +183,30 @@ public class Notes extends GuildCommand {
             this.moderator_tag = moderator_tag;
             this.note = note;
             this.timestamp = timestamp;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+
+            if (o == null || getClass() != o.getClass()) return false;
+
+            NoteEntry noteEntry = (NoteEntry) o;
+
+            return new EqualsBuilder()
+                       .append(user_id, noteEntry.user_id)
+                       .append(note, noteEntry.note)
+                       .append(timestamp, noteEntry.timestamp)
+                       .isEquals();
+        }
+
+        @Override
+        public int hashCode() {
+            return new HashCodeBuilder(17, 37)
+                       .append(user_id)
+                       .append(note)
+                       .append(timestamp)
+                       .toHashCode();
         }
 
         public String getUser_id() {
