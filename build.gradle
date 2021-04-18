@@ -10,7 +10,7 @@ compileJava.options.encoding = 'UTF-8'
 sourceCompatibility = 14
 targetCompatibility = 14
 
-String JDA_VERSION = "4.2.0_203"
+String JDA_VERSION = "4.2.1_253"
 
 group('me.zoemartin')
 version gitVersion()
@@ -21,20 +21,19 @@ tasks.withType(JavaCompile) {
 
 repositories {
     mavenCentral()
+    maven {
+        name 'm2-dv8tion'
+        url 'https://m2.dv8tion.net/releases'
+    }
     jcenter()
 }
 
 shadowJar {
     manifest {
-        attributes 'Main-Class':             mainClassName
+        attributes 'Main-Class': mainClassName
         attributes 'Implementation-Version': version
         attributes 'jda-version': JDA_VERSION
     }
-}
-
-repositories {
-    mavenCentral()
-    jcenter()
 }
 
 dependencies {
