@@ -30,7 +30,7 @@ public class ModuleManager {
 
         var prop = Bot.getProperties();
         if (prop.containsKey("modules.custom.package"))
-            modulePaths.add("modules.custom.package");
+            modulePaths.add(prop.getProperty("modules.custom.package"));
 
         loadDatabaseMappings();
 
