@@ -31,7 +31,7 @@ public class Status extends AbstractCommand {
     private static List<Activity.ActivityType> activity = new LinkedList<>();
 
     // Status rotates every 5 minutes and refreshes the templates every 60 seconds
-    Status() {
+    public Status() {
         loadRotation();
 
         Supplier<JDA> jda = Bot::getJDA;
