@@ -92,7 +92,6 @@ public class ModuleManager {
         log.info("Loaded '{}'", m.getClass().getName());
     }
 
-    @SuppressWarnings("unchecked")
     private static void loadModuleCommands(ModuleInterface m) {
         Reflections reflections = new Reflections(new ConfigurationBuilder()
                                                       .setUrls(ClasspathHelper.forPackage(m.getClass().getPackageName()))
@@ -107,14 +106,11 @@ public class ModuleManager {
             .forEach(c -> {
                 AbstractCommand command = null;
                 try {
-                    Constructor<? extends AbstractCommand> constructor =
-                        (Constructor<? extends AbstractCommand>)
-                            Arrays.stream(c.getDeclaredConstructors()).findAny().orElseThrow(
-                                () -> new IllegalStateException("Command Class missing a public no-args Constructor"));
+                    var constructor = c.getDeclaredConstructor();
                     constructor.setAccessible(true);
-                    command = constructor.newInstance();
-                } catch (InstantiationException | IllegalAccessException | InvocationTargetException e) {
-                    System.err.println(e.getMessage());
+                    command = (AbstractCommand) constructor.newInstance();
+                } catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
+                    log.error("Error loading command", e);
                 }
                 if (command == null) return;
 
