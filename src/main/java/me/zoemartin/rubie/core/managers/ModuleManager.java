@@ -1,5 +1,6 @@
 package me.zoemartin.rubie.core.managers;
 
+import me.zoemartin.rubie.Bot;
 import me.zoemartin.rubie.core.*;
 import me.zoemartin.rubie.core.annotations.Module;
 import me.zoemartin.rubie.core.annotations.*;
@@ -21,8 +22,16 @@ import java.util.stream.Collectors;
 public class ModuleManager {
     private static final Logger log = LoggerFactory.getLogger(ModuleManager.class);
     private static final Collection<ModuleInterface> modules = Collections.newSetFromMap(new ConcurrentHashMap<>());
+    private static final Collection<String> modulePaths = Collections.newSetFromMap(new ConcurrentHashMap<>());
 
     public static void init() {
+        modulePaths.add("me.zoemartin.rubie");
+
+
+        var prop = Bot.getProperties();
+        if (prop.containsKey("modules.custom.package"))
+            modulePaths.add("modules.custom.package");
+
         loadDatabaseMappings();
 
         ExecutorService es = Executors.newCachedThreadPool();
@@ -36,16 +45,24 @@ public class ModuleManager {
         }
     }
 
+    public static Collection<String> getModulePaths() {
+        return Collections.unmodifiableCollection(modulePaths);
+    }
+
     public static Collection<ModuleInterface> getModules() {
         return Collections.unmodifiableCollection(modules);
     }
 
     private static Collection<ModuleInterface> loadModules() {
         var reflections = new Reflections(new ConfigurationBuilder()
-                                              .setUrls(ClasspathHelper.forPackage("me.zoemartin.rubie.modules"))
+                                              .setUrls(
+                                                  modulePaths.stream().map(ClasspathHelper::forPackage)
+                                                      .flatMap(Collection::stream).collect(Collectors.toList())
+                                              )
                                               .setScanners(new SubTypesScanner(), new TypeAnnotationsScanner())
-                                              .filterInputsBy(new FilterBuilder().includePackage("me.zoemartin.rubie.modules"))
+                                              .filterInputsBy(new FilterBuilder().includePackage(modulePaths.toArray(String[]::new)))
                                               .setExecutorService(Executors.newFixedThreadPool(4)));
+
 
         var classes = reflections.getTypesAnnotatedWith(Module.class);
 
@@ -109,9 +126,12 @@ public class ModuleManager {
 
     private static void loadDatabaseMappings() {
         var reflections = new Reflections(new ConfigurationBuilder()
-                                              .setUrls(ClasspathHelper.forPackage("me.zoemartin.rubie"))
+                                              .setUrls(
+                                                  modulePaths.stream().map(ClasspathHelper::forPackage)
+                                                      .flatMap(Collection::stream).collect(Collectors.toList())
+                                              )
                                               .setScanners(new SubTypesScanner(), new TypeAnnotationsScanner())
-                                              .filterInputsBy(new FilterBuilder().includePackage("me.zoemartin.rubie"))
+                                              .filterInputsBy(new FilterBuilder().includePackage(modulePaths.toArray(String[]::new)))
                                               .setExecutorService(Executors.newFixedThreadPool(4)));
 
         var dbm = reflections.getTypesAnnotatedWith(DatabaseEntity.class);

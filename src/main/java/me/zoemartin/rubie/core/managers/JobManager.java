@@ -49,10 +49,14 @@ public class JobManager {
     }
 
     private static Collection<JobProcessorInterface> loadProcessors() {
+        var modulePaths = ModuleManager.getModulePaths();
         var reflections = new Reflections(new ConfigurationBuilder()
-                                              .setUrls(ClasspathHelper.forPackage("me.zoemartin.rubie"))
+                                              .setUrls(
+                                                  modulePaths.stream().map(ClasspathHelper::forPackage)
+                                                      .flatMap(Collection::stream).collect(Collectors.toList())
+                                              )
                                               .setScanners(new SubTypesScanner(), new TypeAnnotationsScanner())
-                                              .filterInputsBy(new FilterBuilder().includePackage("me.zoemartin.rubie"))
+                                              .filterInputsBy(new FilterBuilder().includePackage(modulePaths.toArray(String[]::new)))
                                               .setExecutorService(Executors.newFixedThreadPool(4)));
 
         var processors = reflections.getTypesAnnotatedWith(JobProcessor.class);
