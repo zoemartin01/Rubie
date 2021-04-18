@@ -1,4 +1,4 @@
-package me.zoemartin.rubie.modules.funCommands;
+package me.zoemartin.rubie.modules.misc;
 
 import com.google.auto.service.AutoService;
 import me.zoemartin.rubie.Bot;

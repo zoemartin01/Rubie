@@ -1,4 +1,4 @@
-package me.zoemartin.rubie.modules.funCommands;
+package me.zoemartin.rubie.modules.misc;
 
 import me.zoemartin.rubie.core.GuildCommandEvent;
 import me.zoemartin.rubie.core.annotations.Command;
@@ -21,7 +21,8 @@ import static me.zoemartin.rubie.core.Job.CommonKeys.*;
 @CommandOptions(
     name = "remindme",
     description = "Create Reminders ",
-    usage = "<in> <reminder>"
+    usage = "<in> <reminder>",
+    help = "Time format ex: 1y2mo5w3d2h1m10s"
 )
 public class RemindMe extends GuildCommand {
     static final String MSG_KEY = "reminder";
@@ -32,7 +33,7 @@ public class RemindMe extends GuildCommand {
                                                          .appendSuffix("y")
                                                          .appendSeparator(" ", " ", new String[]{",", ", "})
                                                          .appendMonths()
-                                                         .appendSuffix("mon")
+                                                         .appendSuffix("mo")
                                                          .appendSeparator(" ", " ", new String[]{",", ", "})
                                                          .appendWeeks()
                                                          .appendSuffix("w")

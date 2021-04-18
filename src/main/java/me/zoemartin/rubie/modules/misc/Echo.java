@@ -1,4 +1,4 @@
-package me.zoemartin.rubie.modules.funCommands;
+package me.zoemartin.rubie.modules.misc;
 
 import me.zoemartin.rubie.Bot;
 import me.zoemartin.rubie.core.CommandPerm;
