@@ -39,8 +39,7 @@ public class CommandManager {
                 if (event.getAuthor().getId().equals(Bot.getOWNER())) {
                     event.getChannel().sendMessageFormat("Error: `%s`", e.getMessage()).queue();
                     throw e;
-                }
-                else System.err.println(e.getMessage());
+                } else System.err.println(e.getMessage());
             } catch (ReplyError e) {
                 if (!event.isFromGuild()) event.getChannel().sendMessage(e.getMessage()).queue();
                 else throw e;

@@ -4,14 +4,9 @@ import me.zoemartin.rubie.core.*;
 import me.zoemartin.rubie.core.annotations.Checks;
 import me.zoemartin.rubie.core.annotations.CommandOptions;
 import me.zoemartin.rubie.core.util.Help;
-import net.dv8tion.jda.api.EmbedBuilder;
-import net.dv8tion.jda.api.entities.*;
-import net.dv8tion.jda.api.requests.restaction.MessageAction;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import net.dv8tion.jda.api.entities.TextChannel;
 
 import java.util.Arrays;
-import java.util.List;
 
 public abstract class GuildCommand extends AbstractCommand {
     public GuildCommand() {

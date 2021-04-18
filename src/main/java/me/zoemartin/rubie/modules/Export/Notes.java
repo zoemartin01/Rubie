@@ -5,7 +5,8 @@ import com.google.gson.GsonBuilder;
 import me.zoemartin.rubie.Bot;
 import me.zoemartin.rubie.core.CommandPerm;
 import me.zoemartin.rubie.core.GuildCommandEvent;
-import me.zoemartin.rubie.core.annotations.*;
+import me.zoemartin.rubie.core.annotations.Command;
+import me.zoemartin.rubie.core.annotations.CommandOptions;
 import me.zoemartin.rubie.core.exceptions.CommandArgumentException;
 import me.zoemartin.rubie.core.interfaces.GuildCommand;
 import me.zoemartin.rubie.core.util.Check;
@@ -23,7 +24,6 @@ import java.io.Serializable;
 import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.*;
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -55,17 +55,17 @@ public class Notes extends GuildCommand {
 
         Collection<NoteEntry> notes = new ArrayList<>();
         channels.parallelStream().forEach(c -> c.getIterableHistory().stream()
-                                  .filter(message -> message.getAuthor().getId().equals(CARL_ID)
-                                                         || message.getAuthor().getId().equals(DYNO_ID)
-                                                         || message.getAuthor().getId().equals(AUTTAJA_ID))
-                                  .forEach(message -> {
-                                      log.info("Read Messages in {}, Parsed: {}", c.getName(), notes.size());
-                                      switch (message.getAuthor().getId()) {
-                                          case CARL_ID -> message.getEmbeds().forEach(embed -> notes.addAll(parseCarl(embed)));
-                                          case DYNO_ID -> message.getEmbeds().forEach(embed -> notes.addAll(parseDyno(embed)));
-                                          case AUTTAJA_ID -> message.getEmbeds().forEach(embed -> notes.addAll(parseAuttaja(embed)));
-                                      }
-                                  }));
+                                                   .filter(message -> message.getAuthor().getId().equals(CARL_ID)
+                                                                          || message.getAuthor().getId().equals(DYNO_ID)
+                                                                          || message.getAuthor().getId().equals(AUTTAJA_ID))
+                                                   .forEach(message -> {
+                                                       log.info("Read Messages in {}, Parsed: {}", c.getName(), notes.size());
+                                                       switch (message.getAuthor().getId()) {
+                                                           case CARL_ID -> message.getEmbeds().forEach(embed -> notes.addAll(parseCarl(embed)));
+                                                           case DYNO_ID -> message.getEmbeds().forEach(embed -> notes.addAll(parseDyno(embed)));
+                                                           case AUTTAJA_ID -> message.getEmbeds().forEach(embed -> notes.addAll(parseAuttaja(embed)));
+                                                       }
+                                                   }));
 
         var export = new HashSet<>(notes);
 

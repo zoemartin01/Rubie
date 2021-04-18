@@ -3,7 +3,6 @@ package me.zoemartin.rubie.core;
 import me.zoemartin.rubie.core.interfaces.AbstractCommand;
 import net.dv8tion.jda.api.Permission;
 
-import java.util.List;
 import java.util.Set;
 
 public class CommandConfiguration {

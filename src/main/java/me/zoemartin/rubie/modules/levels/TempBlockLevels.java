@@ -1,18 +1,19 @@
 package me.zoemartin.rubie.modules.levels;
 
-import com.google.auto.service.AutoService;
 import me.zoemartin.rubie.Bot;
 import me.zoemartin.rubie.core.Job;
-import me.zoemartin.rubie.core.interfaces.JobProcessor;
+import me.zoemartin.rubie.core.annotations.JobProcessor;
+import me.zoemartin.rubie.core.interfaces.JobProcessorInterface;
 import me.zoemartin.rubie.core.util.DatabaseUtil;
 
 import java.util.Set;
 import java.util.function.Consumer;
 
-import static me.zoemartin.rubie.core.Job.CommonKeys.*;
+import static me.zoemartin.rubie.core.Job.CommonKeys.GUILD;
+import static me.zoemartin.rubie.core.Job.CommonKeys.USER;
 
-@AutoService(JobProcessor.class)
-public class TempBlockLevels implements JobProcessor {
+@JobProcessor
+public class TempBlockLevels implements JobProcessorInterface {
     @Override
     public String uuid() {
         return "6b54f418-4937-4cf2-af70-d1792fef1360";

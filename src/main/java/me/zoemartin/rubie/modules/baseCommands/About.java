@@ -5,15 +5,13 @@ import me.zoemartin.rubie.core.CommandEvent;
 import me.zoemartin.rubie.core.annotations.Command;
 import me.zoemartin.rubie.core.annotations.CommandOptions;
 import me.zoemartin.rubie.core.interfaces.AbstractCommand;
-import me.zoemartin.rubie.core.util.TimeUtils;
 import net.dv8tion.jda.api.EmbedBuilder;
-import org.joda.time.*;
-import org.joda.time.format.PeriodFormatter;
+import org.joda.time.DateTime;
+import org.joda.time.Duration;
 import org.joda.time.format.PeriodFormatterBuilder;
 
 import java.io.IOException;
 import java.net.URL;
-import java.time.temporal.ChronoUnit;
 import java.util.Enumeration;
 import java.util.concurrent.TimeUnit;
 import java.util.jar.Manifest;

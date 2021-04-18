@@ -1,6 +1,6 @@
 package me.zoemartin.rubie.core.interfaces;
 
-public interface Module {
+public interface ModuleInterface {
     default void init() {
     }
 

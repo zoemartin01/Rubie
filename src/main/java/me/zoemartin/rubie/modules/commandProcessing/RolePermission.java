@@ -1,13 +1,13 @@
 package me.zoemartin.rubie.modules.commandProcessing;
 
-import com.google.auto.service.AutoService;
 import me.zoemartin.rubie.core.CommandPerm;
+import me.zoemartin.rubie.core.annotations.DatabaseEntity;
 import me.zoemartin.rubie.core.interfaces.DatabaseEntry;
 
 import javax.persistence.*;
 import java.util.UUID;
 
-@AutoService(DatabaseEntry.class)
+@DatabaseEntity
 @Entity
 @Table(name = "role_permission")
 public class RolePermission implements DatabaseEntry {

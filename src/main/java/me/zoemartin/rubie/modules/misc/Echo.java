@@ -6,12 +6,15 @@ import me.zoemartin.rubie.core.GuildCommandEvent;
 import me.zoemartin.rubie.core.annotations.*;
 import me.zoemartin.rubie.core.exceptions.*;
 import me.zoemartin.rubie.core.interfaces.GuildCommand;
-import me.zoemartin.rubie.core.util.*;
+import me.zoemartin.rubie.core.util.Check;
+import me.zoemartin.rubie.core.util.Parser;
 import net.dv8tion.jda.api.Permission;
-import net.dv8tion.jda.api.entities.*;
+import net.dv8tion.jda.api.entities.Message;
+import net.dv8tion.jda.api.entities.TextChannel;
 import net.dv8tion.jda.api.exceptions.ErrorResponseException;
 
-import java.util.*;
+import java.util.EnumSet;
+import java.util.List;
 
 @Command
 @CommandOptions(

@@ -3,17 +3,14 @@ package me.zoemartin.rubie.modules.embeds.pinnedEmbeds;
 import com.sun.istack.Nullable;
 import me.zoemartin.rubie.core.util.CollectorsUtil;
 import me.zoemartin.rubie.core.util.DatabaseUtil;
-import me.zoemartin.rubie.modules.embeds.triggerEmbeds.Tee;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.TextChannel;
-import org.hibernate.Session;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 
 public class PineController {
     private static final Map<String, Collection<PineEntity>> pines = new ConcurrentHashMap<>();
@@ -35,9 +32,9 @@ public class PineController {
     @Nullable
     public static PineEntity getPine(Guild g, TextChannel c, String message_id) {
         return pines.computeIfAbsent(g.getId(), s -> Collections.newSetFromMap(new ConcurrentHashMap<>()))
-            .stream().filter(pineEntity -> pineEntity.getChannel_id().equals(c.getId())
-                                               && pineEntity.getMessage_id().equals(message_id))
-            .findAny().orElse(null);
+                   .stream().filter(pineEntity -> pineEntity.getChannel_id().equals(c.getId())
+                                                      && pineEntity.getMessage_id().equals(message_id))
+                   .findAny().orElse(null);
     }
 
     public static boolean removePine(PineEntity entity) {
@@ -48,6 +45,6 @@ public class PineController {
 
     public static boolean addPine(PineEntity pineEntity) {
         return pines.computeIfAbsent(pineEntity.getGuild_id(), s -> Collections.newSetFromMap(new ConcurrentHashMap<>()))
-            .add(pineEntity);
+                   .add(pineEntity);
     }
 }

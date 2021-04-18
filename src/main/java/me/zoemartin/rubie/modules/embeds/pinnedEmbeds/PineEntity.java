@@ -1,13 +1,13 @@
 package me.zoemartin.rubie.modules.embeds.pinnedEmbeds;
 
 
-import com.google.auto.service.AutoService;
+import me.zoemartin.rubie.core.annotations.DatabaseEntity;
 import me.zoemartin.rubie.core.interfaces.DatabaseEntry;
 
 import javax.persistence.*;
 import java.util.UUID;
 
-@AutoService(DatabaseEntry.class)
+@DatabaseEntity
 @Entity
 @Table(name = "pinned_embeds")
 public class PineEntity implements DatabaseEntry {
@@ -26,7 +26,7 @@ public class PineEntity implements DatabaseEntry {
     @Column(updatable = false, nullable = false)
     private String message_id;
 
-    @Column(updatable = false, nullable = false, columnDefinition="TEXT")
+    @Column(updatable = false, nullable = false, columnDefinition = "TEXT")
     private String source_url;
 
     public PineEntity(String guild_id, String channel_id, String message_id, String source_url) {

@@ -27,7 +27,7 @@ public class MessageUtils {
             Pattern pattern = Pattern.compile(ROLE_REGEX);
             Matcher matcher = pattern.matcher(output);
 
-            while(matcher.find()) {
+            while (matcher.find()) {
                 Role r = guild.getRoleById(matcher.group(2));
 
                 if (r != null && !r.isMentionable()) {

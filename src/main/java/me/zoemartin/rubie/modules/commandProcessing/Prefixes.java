@@ -1,7 +1,7 @@
 package me.zoemartin.rubie.modules.commandProcessing;
 
-import com.google.auto.service.AutoService;
 import me.zoemartin.rubie.Bot;
+import me.zoemartin.rubie.core.annotations.DatabaseEntity;
 import me.zoemartin.rubie.core.interfaces.DatabaseEntry;
 import me.zoemartin.rubie.core.util.DatabaseConverter;
 import me.zoemartin.rubie.core.util.DatabaseUtil;
@@ -13,7 +13,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-@AutoService(DatabaseEntry.class)
+@DatabaseEntity
 @Entity
 @Table(name = "prefixes")
 public class Prefixes implements DatabaseEntry {

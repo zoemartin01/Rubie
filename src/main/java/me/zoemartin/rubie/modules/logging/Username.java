@@ -1,10 +1,8 @@
 package me.zoemartin.rubie.modules.logging;
 
-import com.google.auto.service.AutoService;
 import me.zoemartin.rubie.core.CommandPerm;
 import me.zoemartin.rubie.core.GuildCommandEvent;
-import me.zoemartin.rubie.core.annotations.Command;
-import me.zoemartin.rubie.core.annotations.CommandOptions;
+import me.zoemartin.rubie.core.annotations.*;
 import me.zoemartin.rubie.core.exceptions.CommandArgumentException;
 import me.zoemartin.rubie.core.exceptions.ReplyError;
 import me.zoemartin.rubie.core.interfaces.DatabaseEntry;
@@ -13,8 +11,8 @@ import me.zoemartin.rubie.core.util.*;
 import me.zoemartin.rubie.modules.pagedEmbeds.PageListener;
 import me.zoemartin.rubie.modules.pagedEmbeds.PagedEmbed;
 import net.dv8tion.jda.api.EmbedBuilder;
-import net.dv8tion.jda.api.entities.*;
-import net.dv8tion.jda.api.events.guild.member.update.GuildMemberUpdateNicknameEvent;
+import net.dv8tion.jda.api.entities.MessageEmbed;
+import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.user.update.UserUpdateNameEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import org.hibernate.annotations.GenericGenerator;
@@ -25,7 +23,7 @@ import java.time.Instant;
 import java.util.*;
 import java.util.stream.Collectors;
 
-@AutoService(DatabaseEntry.class)
+@DatabaseEntity
 @Entity
 @Table(name = "usernames")
 public class Username implements DatabaseEntry {

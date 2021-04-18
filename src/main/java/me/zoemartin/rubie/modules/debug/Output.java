@@ -9,9 +9,10 @@ import me.zoemartin.rubie.core.interfaces.GuildCommand;
 import me.zoemartin.rubie.core.managers.CommandManager;
 import me.zoemartin.rubie.core.util.Check;
 import me.zoemartin.rubie.core.util.Parser;
-import net.dv8tion.jda.api.entities.*;
+import net.dv8tion.jda.api.entities.TextChannel;
 
-import java.util.*;
+import java.util.LinkedList;
+import java.util.List;
 
 @Disabled
 @Command

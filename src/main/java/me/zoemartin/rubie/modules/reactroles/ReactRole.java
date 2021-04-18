@@ -1,6 +1,6 @@
 package me.zoemartin.rubie.modules.reactroles;
 
-import com.google.auto.service.AutoService;
+import me.zoemartin.rubie.core.annotations.DatabaseEntity;
 import me.zoemartin.rubie.core.interfaces.DatabaseEntry;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.Role;
@@ -13,7 +13,7 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "reactroles")
-@AutoService(DatabaseEntry.class)
+@DatabaseEntity
 public class ReactRole implements DatabaseEntry {
     @Id
     @GeneratedValue(generator = "UUID")

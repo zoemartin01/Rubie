@@ -3,7 +3,6 @@ package me.zoemartin.rubie.modules.commandProcessing;
 import me.zoemartin.rubie.core.interfaces.CommandLogger;
 import me.zoemartin.rubie.core.managers.CommandManager;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
-import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 
 import javax.annotation.Nonnull;

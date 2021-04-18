@@ -2,7 +2,6 @@ package me.zoemartin.rubie.core.interfaces;
 
 import me.zoemartin.rubie.core.*;
 import me.zoemartin.rubie.core.annotations.*;
-import net.dv8tion.jda.api.Permission;
 import org.apache.commons.lang3.StringUtils;
 import org.reflections8.Reflections;
 import org.reflections8.scanners.SubTypesScanner;
@@ -31,27 +30,27 @@ public abstract class AbstractCommand {
         Set<Class<?>> commandReflect = reflections.getTypesAnnotatedWith(SubCommand.class);
 
         Set<AbstractCommand> subCommands = commandReflect.stream()
-                                                         .filter(c -> c.getAnnotationsByType(SubCommand.class)[0].value() == this.getClass())
-                                                         .filter(c -> c.getAnnotationsByType(Disabled.class).length == 0)
-                                                         .map(c -> {
-                                                             AbstractCommand sub = null;
-                                                             try {
-                                                                 Constructor<? extends AbstractCommand> constructor =
-                                                                     (Constructor<? extends AbstractCommand>)
-                                                                         Arrays.stream(c.getDeclaredConstructors()).findAny().orElseThrow(
-                                                                             () -> new IllegalStateException("Command Class missing a public no-args Constructor")
-                                                                         );
-                                                                 constructor.setAccessible(true);
-                                                                 sub = constructor.newInstance();
-                                                             } catch (InstantiationException | IllegalAccessException | InvocationTargetException e) {
-                                                                 System.err.println(e.getMessage());
-                                                             }
-                                                             if (sub == null) return null;
+                                               .filter(c -> c.getAnnotationsByType(SubCommand.class)[0].value() == this.getClass())
+                                               .filter(c -> c.getAnnotationsByType(Disabled.class).length == 0)
+                                               .map(c -> {
+                                                   AbstractCommand sub = null;
+                                                   try {
+                                                       Constructor<? extends AbstractCommand> constructor =
+                                                           (Constructor<? extends AbstractCommand>)
+                                                               Arrays.stream(c.getDeclaredConstructors()).findAny().orElseThrow(
+                                                                   () -> new IllegalStateException("Command Class missing a public no-args Constructor")
+                                                               );
+                                                       constructor.setAccessible(true);
+                                                       sub = constructor.newInstance();
+                                                   } catch (InstantiationException | IllegalAccessException | InvocationTargetException e) {
+                                                       System.err.println(e.getMessage());
+                                                   }
+                                                   if (sub == null) return null;
 
-                                                             sub.subCommands();
-                                                             return sub;
-                                                         }).filter(Objects::nonNull)
-                                                         .collect(Collectors.toSet());
+                                                   sub.subCommands();
+                                                   return sub;
+                                               }).filter(Objects::nonNull)
+                                               .collect(Collectors.toSet());
 
         if (this.getClass().getAnnotationsByType(CommandOptions.class).length == 0)
             throw new IllegalStateException("Command Class missing CommandOptions Annotation");

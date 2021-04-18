@@ -1,12 +1,12 @@
 package me.zoemartin.rubie.modules.commandProcessing;
 
-import com.google.auto.service.AutoService;
 import me.zoemartin.rubie.Bot;
-import me.zoemartin.rubie.core.interfaces.Module;
+import me.zoemartin.rubie.core.annotations.Module;
+import me.zoemartin.rubie.core.interfaces.ModuleInterface;
 import me.zoemartin.rubie.core.managers.CommandManager;
 
-@AutoService(Module.class)
-public class ProcessingModule implements Module {
+@Module
+public class ProcessingModule implements ModuleInterface {
     @Override
     public void init() {
         Bot.addListener(new CommandListener());

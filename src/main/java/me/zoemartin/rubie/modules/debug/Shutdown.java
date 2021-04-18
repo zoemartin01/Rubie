@@ -49,7 +49,7 @@ public class Shutdown extends AbstractCommand {
         name = "update",
         description = "Updates the bot to the newest version and restarts",
         perm = CommandPerm.OWNER,
-                       alias = "upgrade"
+        alias = "upgrade"
     )
     @SubCommand.AsBase(name = "update", alias = "upgrade")
     private static class Upgrade extends AbstractCommand {
@@ -65,7 +65,7 @@ public class Shutdown extends AbstractCommand {
         name = "restart",
         description = "Restarts the bot",
         perm = CommandPerm.OWNER,
-                       alias = "reboot"
+        alias = "reboot"
     )
     @SubCommand.AsBase(name = "restart", alias = "reboot")
     private static class Restart extends AbstractCommand {

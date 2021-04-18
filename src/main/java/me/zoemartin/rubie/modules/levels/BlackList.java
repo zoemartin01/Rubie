@@ -2,14 +2,15 @@ package me.zoemartin.rubie.modules.levels;
 
 import me.zoemartin.rubie.core.CommandPerm;
 import me.zoemartin.rubie.core.GuildCommandEvent;
-import me.zoemartin.rubie.core.annotations.*;
+import me.zoemartin.rubie.core.annotations.CommandOptions;
+import me.zoemartin.rubie.core.annotations.SubCommand;
 import me.zoemartin.rubie.core.exceptions.CommandArgumentException;
 import me.zoemartin.rubie.core.interfaces.GuildCommand;
-import me.zoemartin.rubie.core.interfaces.JobProcessor;
+import me.zoemartin.rubie.core.interfaces.JobProcessorInterface;
 import me.zoemartin.rubie.core.managers.JobManager;
+import me.zoemartin.rubie.core.util.*;
 import me.zoemartin.rubie.modules.pagedEmbeds.PageListener;
 import me.zoemartin.rubie.modules.pagedEmbeds.PagedEmbed;
-import me.zoemartin.rubie.core.util.*;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.*;
 import org.joda.time.DateTime;
@@ -18,12 +19,14 @@ import org.joda.time.format.PeriodFormatter;
 import org.joda.time.format.PeriodFormatterBuilder;
 
 import java.time.Instant;
-import java.util.*;
+import java.util.Collection;
+import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static me.zoemartin.rubie.core.Job.CommonKeys.*;
+import static me.zoemartin.rubie.core.Job.CommonKeys.GUILD;
+import static me.zoemartin.rubie.core.Job.CommonKeys.USER;
 
 @SubCommand(Config.class)
 @CommandOptions(
@@ -188,7 +191,7 @@ class BlackList extends GuildCommand {
     )
     @SubCommand.AsBase(name = "nolevels")
     private static class user extends GuildCommand {
-        private static final JobProcessor processor = new TempBlockLevels();
+        private static final JobProcessorInterface processor = new TempBlockLevels();
 
         private static final PeriodFormatter formatter = new PeriodFormatterBuilder()
                                                              .appendYears()

@@ -8,9 +8,9 @@ import me.zoemartin.rubie.core.interfaces.GuildCommand;
 import me.zoemartin.rubie.core.util.Check;
 import me.zoemartin.rubie.core.util.Parser;
 import net.dv8tion.jda.api.Permission;
-import net.dv8tion.jda.api.entities.*;
+import net.dv8tion.jda.api.entities.TextChannel;
 
-import java.util.*;
+import java.util.List;
 import java.util.stream.Collectors;
 
 @Command

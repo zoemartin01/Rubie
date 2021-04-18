@@ -1,7 +1,8 @@
 package me.zoemartin.rubie.modules.debug;
 
 import me.zoemartin.rubie.core.*;
-import me.zoemartin.rubie.core.annotations.*;
+import me.zoemartin.rubie.core.annotations.Command;
+import me.zoemartin.rubie.core.annotations.CommandOptions;
 import me.zoemartin.rubie.core.exceptions.ReplyError;
 import me.zoemartin.rubie.core.interfaces.AbstractCommand;
 import me.zoemartin.rubie.core.interfaces.GuildCommand;
@@ -47,14 +48,14 @@ public class DebugCommand extends AbstractCommand {
         Arrays.stream(command.getOptionValues("c")).forEach(s -> {
             if (commands.isEmpty()) {
                 AbstractCommand cmd = CommandManager.getCommands().stream()
-                                  .filter(c -> c.alias().contains(s.toLowerCase()))
-                                  .findFirst().orElseThrow(() -> new ReplyError("No valid command"));
+                                          .filter(c -> c.alias().contains(s.toLowerCase()))
+                                          .findFirst().orElseThrow(() -> new ReplyError("No valid command"));
                 commands.add(cmd);
                 invoked.add(s);
             } else {
                 AbstractCommand cmd = commands.getLast().subCommands().stream()
-                                  .filter(sc -> sc.alias().contains(s.toLowerCase()))
-                                  .findFirst().orElse(null);
+                                          .filter(sc -> sc.alias().contains(s.toLowerCase()))
+                                          .findFirst().orElse(null);
                 if (cmd != null) {
                     commands.add(cmd);
                     invoked.add(s);
@@ -92,7 +93,7 @@ public class DebugCommand extends AbstractCommand {
         Constructor<GuildCommandEvent> debugConstructor;
         try {
             debugConstructor = GuildCommandEvent.class.getDeclaredConstructor(
-                User.class,MessageChannel.class, String.class,
+                User.class, MessageChannel.class, String.class,
                 JDA.class, List.class, List.class, Message.class,
                 Member.class, Guild.class, TextChannel.class, String.class);
         } catch (NoSuchMethodException e) {

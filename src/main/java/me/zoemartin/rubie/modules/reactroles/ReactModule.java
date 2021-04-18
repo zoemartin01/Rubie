@@ -1,11 +1,11 @@
 package me.zoemartin.rubie.modules.reactroles;
 
-import com.google.auto.service.AutoService;
 import me.zoemartin.rubie.Bot;
-import me.zoemartin.rubie.core.interfaces.Module;
+import me.zoemartin.rubie.core.annotations.Module;
+import me.zoemartin.rubie.core.interfaces.ModuleInterface;
 
-@AutoService(Module.class)
-public class ReactModule implements Module {
+@Module
+public class ReactModule implements ModuleInterface {
     @Override
     public void init() {
         Bot.addListener(new ReactListener());

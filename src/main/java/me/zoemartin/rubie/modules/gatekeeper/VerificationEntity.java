@@ -1,6 +1,6 @@
 package me.zoemartin.rubie.modules.gatekeeper;
 
-import com.google.auto.service.AutoService;
+import me.zoemartin.rubie.core.annotations.DatabaseEntity;
 import me.zoemartin.rubie.core.interfaces.DatabaseEntry;
 import net.dv8tion.jda.api.entities.Member;
 import org.hibernate.annotations.GenericGenerator;
@@ -9,7 +9,7 @@ import javax.persistence.*;
 import java.time.Instant;
 import java.util.UUID;
 
-@AutoService(DatabaseEntry.class)
+@DatabaseEntity
 @Entity
 @Table(name = "verification_keys")
 public class VerificationEntity implements DatabaseEntry {

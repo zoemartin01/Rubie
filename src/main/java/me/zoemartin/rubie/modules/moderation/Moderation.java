@@ -1,11 +1,11 @@
 package me.zoemartin.rubie.modules.moderation;
 
-import com.google.auto.service.AutoService;
 import me.zoemartin.rubie.Bot;
-import me.zoemartin.rubie.core.interfaces.Module;
+import me.zoemartin.rubie.core.annotations.Module;
+import me.zoemartin.rubie.core.interfaces.ModuleInterface;
 
-@AutoService(Module.class)
-public class Moderation implements Module {
+@Module
+public class Moderation implements ModuleInterface {
     @Override
     public void init() {
         Bot.addListener(new CarlNoteWatcher());

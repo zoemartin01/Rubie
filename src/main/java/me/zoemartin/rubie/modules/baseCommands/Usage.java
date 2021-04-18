@@ -10,7 +10,7 @@ import me.zoemartin.rubie.core.managers.CommandManager;
 import me.zoemartin.rubie.core.util.Check;
 import net.dv8tion.jda.api.EmbedBuilder;
 
-import java.util.*;
+import java.util.LinkedList;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 

@@ -16,8 +16,8 @@ public class GuildCommandEvent extends CommandEvent {
 
     // Exists only for debug purposes
     private GuildCommandEvent(@NotNull User user, @NotNull MessageChannel channel, @NotNull String content,
-                             @NotNull JDA jda, @NotNull List<String> args, @NotNull List<String> invoked,
-                             @Nullable Message message, Member member, Guild guild, TextChannel textChannel, String argString) {
+                              @NotNull JDA jda, @NotNull List<String> args, @NotNull List<String> invoked,
+                              @Nullable Message message, Member member, Guild guild, TextChannel textChannel, String argString) {
         super(user, channel, content, jda, args, invoked, argString);
         this.member = member;
         this.guild = guild;

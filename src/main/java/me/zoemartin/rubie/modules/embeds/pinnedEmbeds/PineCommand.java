@@ -14,7 +14,8 @@ import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.*;
 import net.dv8tion.jda.api.exceptions.ErrorResponseException;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.List;
 import java.util.stream.Collectors;
 
 @Command
@@ -22,7 +23,7 @@ import java.util.stream.Collectors;
     name = "pinnedembed",
     description = "Pinned Embeds",
     perm = CommandPerm.BOT_MANAGER,
-                   alias = "pine"
+    alias = "pine"
 )
 public class PineCommand extends GuildCommand {
     @Override

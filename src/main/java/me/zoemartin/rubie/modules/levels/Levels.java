@@ -1,9 +1,9 @@
 package me.zoemartin.rubie.modules.levels;
 
-import com.google.auto.service.AutoService;
 import me.zoemartin.rubie.Bot;
 import me.zoemartin.rubie.core.AutoConfig;
-import me.zoemartin.rubie.core.interfaces.Module;
+import me.zoemartin.rubie.core.annotations.Module;
+import me.zoemartin.rubie.core.interfaces.ModuleInterface;
 import me.zoemartin.rubie.core.util.DatabaseUtil;
 import net.dv8tion.jda.api.entities.*;
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent;
@@ -17,8 +17,8 @@ import java.util.*;
 import java.util.concurrent.*;
 import java.util.function.Function;
 
-@AutoService(Module.class)
-public class Levels extends ListenerAdapter implements Module {
+@Module
+public class Levels extends ListenerAdapter implements ModuleInterface {
     private static final Map<String, Map<String, UserLevel>> levels = new ConcurrentHashMap<>();
     private static final Map<String, LevelConfig> configs = new ConcurrentHashMap<>();
     private static final Map<String, Set<String>> timeout = new ConcurrentHashMap<>();
@@ -32,13 +32,14 @@ public class Levels extends ListenerAdapter implements Module {
 
         AutoConfig.registerConverter(LevelConfig.Announcements.class,
             (event, s) -> EnumSet.allOf(LevelConfig.Announcements.class).stream()
-                .filter(a -> s.matches("\\d") ? a.raw() == Integer.parseInt(s) : a.name().equalsIgnoreCase(s))
-                .findAny().orElseThrow(IllegalArgumentException::new));
+                              .filter(a -> s.matches("\\d") ? a.raw() == Integer.parseInt(s) : a.name().equalsIgnoreCase(s))
+                              .findAny().orElseThrow(IllegalArgumentException::new));
 
         AutoConfig.registerConverter(UserConfig.Color.class,
             (event, s) -> {
                 if (s.matches("reset|role")) return null;
-                if (s.matches("^(#|0x)([a-fA-F0-9]{6}|[a-fA-F0-9]{3})$")) return new UserConfig.Color(Integer.decode(s));
+                if (s.matches("^(#|0x)([a-fA-F0-9]{6}|[a-fA-F0-9]{3})$"))
+                    return new UserConfig.Color(Integer.decode(s));
                 else throw new IllegalArgumentException();
             });
     }
@@ -177,10 +178,10 @@ public class Levels extends ListenerAdapter implements Module {
     public static UserConfig getUserConfig(Member m) {
         return userConfigs.computeIfAbsent(m.getGuild().getId(), k -> new ConcurrentHashMap<>())
                    .computeIfAbsent(m.getId(), v -> {
-            var c = new UserConfig(m);
-            DatabaseUtil.saveObject(c);
-            return c;
-        });
+                       var c = new UserConfig(m);
+                       DatabaseUtil.saveObject(c);
+                       return c;
+                   });
     }
 
     public static Collection<UserLevel> getLevels(Guild g) {

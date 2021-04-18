@@ -1,12 +1,14 @@
 package me.zoemartin.rubie.modules.trigger;
 
-import com.google.auto.service.AutoService;
+import me.zoemartin.rubie.core.annotations.DatabaseEntity;
+import me.zoemartin.rubie.core.annotations.Disabled;
 import me.zoemartin.rubie.core.interfaces.DatabaseEntry;
 
 import javax.persistence.*;
 import java.util.UUID;
 
-@AutoService(DatabaseEntry.class)
+@Disabled
+@DatabaseEntity
 @Entity
 @Table(name = "trigger")
 public class Trigger implements DatabaseEntry {

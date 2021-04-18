@@ -1,6 +1,6 @@
 package me.zoemartin.rubie.modules.moderation;
 
-import com.google.auto.service.AutoService;
+import me.zoemartin.rubie.core.annotations.DatabaseEntity;
 import me.zoemartin.rubie.core.interfaces.DatabaseEntry;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
@@ -9,7 +9,7 @@ import javax.persistence.*;
 import java.util.Set;
 import java.util.UUID;
 
-@AutoService(DatabaseEntry.class)
+@DatabaseEntity
 @Entity
 @Table(name = "modactions")
 public class ModLogEntity implements DatabaseEntry {

@@ -1,9 +1,9 @@
 package me.zoemartin.rubie.modules.misc;
 
-import com.google.auto.service.AutoService;
 import me.zoemartin.rubie.Bot;
 import me.zoemartin.rubie.core.Job;
-import me.zoemartin.rubie.core.interfaces.JobProcessor;
+import me.zoemartin.rubie.core.annotations.JobProcessor;
+import me.zoemartin.rubie.core.interfaces.JobProcessorInterface;
 import me.zoemartin.rubie.core.util.CacheUtils;
 import net.dv8tion.jda.api.EmbedBuilder;
 
@@ -13,8 +13,8 @@ import java.util.function.Consumer;
 
 import static me.zoemartin.rubie.core.Job.CommonKeys.*;
 
-@AutoService(JobProcessor.class)
-public class RemindMeJob implements JobProcessor {
+@JobProcessor
+public class RemindMeJob implements JobProcessorInterface {
     private static final String DEFAULT = "¯\\_(ツ)_/¯";
 
     @Override
@@ -37,7 +37,7 @@ public class RemindMeJob implements JobProcessor {
 
             var message = settings.getOrDefault(RemindMe.MSG_KEY, DEFAULT);
             var embed = new EmbedBuilder().setTitle("Reminder").setTimestamp(Instant.now())
-                .setDescription("You asked me to remind you about\n\n" + (message.isBlank() ? DEFAULT : message))
+                            .setDescription("You asked me to remind you about\n\n" + (message.isBlank() ? DEFAULT : message))
                             .build();
             c.sendMessage(u.getAsMention()).embed(embed).queue();
         };

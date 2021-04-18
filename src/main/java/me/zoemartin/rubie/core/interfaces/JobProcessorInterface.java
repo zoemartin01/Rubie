@@ -5,7 +5,7 @@ import me.zoemartin.rubie.core.Job;
 import java.util.UUID;
 import java.util.function.Consumer;
 
-public interface JobProcessor {
+public interface JobProcessorInterface {
     default UUID job() {
         return UUID.fromString(uuid());
     }

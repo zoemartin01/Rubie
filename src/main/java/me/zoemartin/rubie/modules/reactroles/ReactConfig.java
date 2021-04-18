@@ -1,15 +1,13 @@
 package me.zoemartin.rubie.modules.reactroles;
 
-import com.google.auto.service.AutoService;
-import me.zoemartin.rubie.core.annotations.Getter;
-import me.zoemartin.rubie.core.annotations.Setter;
+import me.zoemartin.rubie.core.annotations.*;
 import me.zoemartin.rubie.core.interfaces.DatabaseEntry;
 
 import javax.persistence.*;
 
 @Entity
 @Table(name = "reactrole_configs")
-@AutoService(DatabaseEntry.class)
+@DatabaseEntity
 public class ReactConfig implements DatabaseEntry {
 
     @Id

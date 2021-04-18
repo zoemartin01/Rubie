@@ -1,21 +1,19 @@
 package me.zoemartin.rubie.modules.gatekeeper;
 
 import me.zoemartin.rubie.core.*;
-import me.zoemartin.rubie.core.AutoConfig;
 import me.zoemartin.rubie.core.annotations.*;
 import me.zoemartin.rubie.core.exceptions.CommandArgumentException;
 import me.zoemartin.rubie.core.exceptions.ReplyError;
 import me.zoemartin.rubie.core.interfaces.GuildCommand;
 import me.zoemartin.rubie.core.util.*;
-import me.zoemartin.rubie.modules.levels.*;
 import net.dv8tion.jda.api.Permission;
-import net.dv8tion.jda.api.entities.*;
-import net.dv8tion.jda.internal.utils.tuple.Pair;
+import net.dv8tion.jda.api.entities.Member;
+import net.dv8tion.jda.api.entities.Role;
 import org.hibernate.Session;
 
 import javax.persistence.criteria.*;
-import java.util.*;
-import java.util.function.*;
+import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Command

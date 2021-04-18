@@ -4,10 +4,9 @@ import me.zoemartin.rubie.core.CommandPerm;
 import me.zoemartin.rubie.core.GuildCommandEvent;
 import me.zoemartin.rubie.core.annotations.Command;
 import me.zoemartin.rubie.core.annotations.CommandOptions;
-import me.zoemartin.rubie.core.exceptions.ReplyError;
 import me.zoemartin.rubie.core.interfaces.GuildCommand;
-import me.zoemartin.rubie.core.util.*;
 import me.zoemartin.rubie.core.util.Parser;
+import me.zoemartin.rubie.core.util.*;
 import me.zoemartin.rubie.modules.pagedEmbeds.PageListener;
 import me.zoemartin.rubie.modules.pagedEmbeds.PagedEmbed;
 import net.dv8tion.jda.api.EmbedBuilder;
@@ -144,7 +143,7 @@ public class Members extends GuildCommand {
             event.getChannel().sendFile(String.join("\n", output).getBytes(), "members.txt").queue();
         } else if (command.hasOption("c")) {
             event.reply("Member Count", "%d members", mem.size()).queue();
-        }else {
+        } else {
             var template = new EmbedBuilder()
                                .setTitle("Members")
                                .setColor(event.getGuild().getSelfMember().getColor()).build();
@@ -260,11 +259,11 @@ public class Members extends GuildCommand {
                       .build();
 
         var count = Option.builder("c")
-                      .longOpt("count")
-                      .desc("The result will be a filtered member count")
-                      .hasArg(false)
-                      .required(false)
-                      .build();
+                        .longOpt("count")
+                        .desc("The result will be a filtered member count")
+                        .hasArg(false)
+                        .required(false)
+                        .build();
 
         options.addOptionGroup(new OptionGroup().addOption(out).addOption(count));
 

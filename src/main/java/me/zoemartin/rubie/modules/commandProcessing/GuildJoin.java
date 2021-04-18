@@ -7,8 +7,6 @@ import net.dv8tion.jda.api.events.guild.GuildJoinEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import org.jetbrains.annotations.NotNull;
 
-import javax.management.relation.Role;
-
 public class GuildJoin extends ListenerAdapter {
     private static final String DEFAULT_PREFIX = "r;";
 

@@ -1,10 +1,8 @@
 package me.zoemartin.rubie.modules.logging;
 
-import com.google.auto.service.AutoService;
 import me.zoemartin.rubie.core.CommandPerm;
 import me.zoemartin.rubie.core.GuildCommandEvent;
-import me.zoemartin.rubie.core.annotations.Command;
-import me.zoemartin.rubie.core.annotations.CommandOptions;
+import me.zoemartin.rubie.core.annotations.*;
 import me.zoemartin.rubie.core.exceptions.CommandArgumentException;
 import me.zoemartin.rubie.core.exceptions.ReplyError;
 import me.zoemartin.rubie.core.interfaces.DatabaseEntry;
@@ -24,7 +22,7 @@ import java.time.Instant;
 import java.util.*;
 import java.util.stream.Collectors;
 
-@AutoService(DatabaseEntry.class)
+@DatabaseEntity
 @Entity
 @Table(name = "nicknames")
 public class Nickname implements DatabaseEntry {

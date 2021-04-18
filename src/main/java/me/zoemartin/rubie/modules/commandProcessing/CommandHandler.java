@@ -1,18 +1,19 @@
 package me.zoemartin.rubie.modules.commandProcessing;
 
-import me.zoemartin.rubie.Bot;
-import me.zoemartin.rubie.core.*;
+import me.zoemartin.rubie.core.CommandEvent;
+import me.zoemartin.rubie.core.GuildCommandEvent;
 import me.zoemartin.rubie.core.exceptions.*;
 import me.zoemartin.rubie.core.interfaces.*;
 import me.zoemartin.rubie.core.managers.CommandManager;
-import me.zoemartin.rubie.core.util.*;
-import net.dv8tion.jda.api.entities.*;
+import me.zoemartin.rubie.core.util.Check;
+import me.zoemartin.rubie.core.util.Help;
+import net.dv8tion.jda.api.entities.MessageChannel;
+import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.*;
-import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;

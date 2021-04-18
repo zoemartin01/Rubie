@@ -11,7 +11,7 @@ import me.zoemartin.rubie.core.util.Check;
 import me.zoemartin.rubie.core.util.DatabaseUtil;
 import me.zoemartin.rubie.modules.commandProcessing.LoggedError;
 import net.dv8tion.jda.api.EmbedBuilder;
-import net.dv8tion.jda.api.entities.*;
+import net.dv8tion.jda.api.entities.Guild;
 import org.hibernate.Session;
 
 import javax.persistence.criteria.*;

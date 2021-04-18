@@ -1,8 +1,8 @@
 package me.zoemartin.rubie.modules.misc;
 
-import com.google.auto.service.AutoService;
-import me.zoemartin.rubie.core.interfaces.Module;
+import me.zoemartin.rubie.core.annotations.Module;
+import me.zoemartin.rubie.core.interfaces.ModuleInterface;
 
-@AutoService(Module.class)
-public class Misc implements Module {
+@Module
+public class Misc implements ModuleInterface {
 }

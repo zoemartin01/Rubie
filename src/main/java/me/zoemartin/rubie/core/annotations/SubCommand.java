@@ -13,6 +13,7 @@ public @interface SubCommand {
     @Retention(RetentionPolicy.RUNTIME)
     @interface AsBase {
         String name();
+
         String[] alias() default {};
     }
 }

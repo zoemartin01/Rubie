@@ -1,13 +1,13 @@
 package me.zoemartin.rubie.modules.moderation;
 
-import com.google.auto.service.AutoService;
+import me.zoemartin.rubie.core.annotations.DatabaseEntity;
 import me.zoemartin.rubie.core.interfaces.DatabaseEntry;
 import org.hibernate.annotations.GenericGenerator;
 
 import javax.persistence.*;
 import java.util.*;
 
-@AutoService(DatabaseEntry.class)
+@DatabaseEntity
 @Table(name = "subscriptions")
 @Entity
 public class Subscription implements DatabaseEntry {
@@ -167,7 +167,7 @@ public class Subscription implements DatabaseEntry {
             if (name == null) return null;
 
             return EnumSet.allOf(Event.class).stream().filter(event -> name.equalsIgnoreCase(event.name)
-                                                                            || name.equalsIgnoreCase(event.name())).findAny()
+                                                                           || name.equalsIgnoreCase(event.name())).findAny()
                        .orElse(null);
         }
 

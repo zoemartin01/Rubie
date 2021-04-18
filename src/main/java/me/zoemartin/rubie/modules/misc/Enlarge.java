@@ -1,7 +1,7 @@
 package me.zoemartin.rubie.modules.misc;
 
 import de.androidpit.colorthief.ColorThief;
-import me.zoemartin.rubie.core.*;
+import me.zoemartin.rubie.core.CommandEvent;
 import me.zoemartin.rubie.core.annotations.Command;
 import me.zoemartin.rubie.core.annotations.CommandOptions;
 import me.zoemartin.rubie.core.exceptions.*;
@@ -14,7 +14,8 @@ import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
-import java.net.*;
+import java.net.HttpURLConnection;
+import java.net.URL;
 
 @Command
 @CommandOptions(

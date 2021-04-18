@@ -1,6 +1,5 @@
 package me.zoemartin.rubie.modules.gatekeeper;
 
-import com.google.auto.service.AutoService;
 import me.zoemartin.rubie.core.annotations.*;
 import me.zoemartin.rubie.core.interfaces.DatabaseEntry;
 import me.zoemartin.rubie.core.util.DatabaseConverter;
@@ -11,7 +10,7 @@ import javax.persistence.*;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
-@AutoService(DatabaseEntry.class)
+@DatabaseEntity
 @Table(name = "gatekeeper_configs")
 @Entity
 public class GatekeeperConfig implements DatabaseEntry {

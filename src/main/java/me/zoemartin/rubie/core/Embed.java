@@ -6,13 +6,10 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.MessageEmbed;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import org.joda.time.DateTime;
 
 import java.io.Serializable;
 import java.time.OffsetDateTime;
-import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 

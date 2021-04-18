@@ -2,19 +2,25 @@ package me.zoemartin.rubie.core.managers;
 
 import me.zoemartin.rubie.core.Job;
 import me.zoemartin.rubie.core.annotations.Disabled;
-import me.zoemartin.rubie.core.interfaces.JobProcessor;
+import me.zoemartin.rubie.core.annotations.JobProcessor;
+import me.zoemartin.rubie.core.interfaces.JobProcessorInterface;
 import me.zoemartin.rubie.core.util.CollectorsUtil;
 import me.zoemartin.rubie.core.util.DatabaseUtil;
 import org.joda.time.DateTime;
+import org.reflections8.Reflections;
+import org.reflections8.scanners.SubTypesScanner;
+import org.reflections8.scanners.TypeAnnotationsScanner;
+import org.reflections8.util.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.lang.reflect.InvocationTargetException;
 import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.function.Consumer;
 import java.util.function.Function;
-import java.util.stream.StreamSupport;
+import java.util.stream.Collectors;
 
 public class JobManager {
     private static final int poolSize = 10;
@@ -24,14 +30,12 @@ public class JobManager {
     private static final Map<UUID, Consumer<Job>> consumers = new ConcurrentHashMap<>();
 
     public static void init() {
-        var loader = ServiceLoader.load(JobProcessor.class);
-
         var jobs = new ConcurrentHashMap<UUID, Collection<Job>>(
             DatabaseUtil.loadGroupedCollection("from Job", Job.class,
                 Job::getJobId, Function.identity(), CollectorsUtil.toConcurrentSet()));
+        var load = loadProcessors();
 
-        StreamSupport.stream(loader.spliterator(), true)
-            .filter(c -> c.getClass().getAnnotationsByType(Disabled.class).length == 0)
+        load
             .forEach(c -> {
                 consumers.put(c.job(), c.process());
                 log.info("Loaded Job Processor '{}':'{}' (ID '{}') with {} jobs",
@@ -39,9 +43,37 @@ public class JobManager {
                     jobs.getOrDefault(c.job(), Collections.emptySet()).size());
             });
 
-        log.info("Loaded {} Job Processors", loader.stream().count());
+        log.info("Loaded {} Job Processors", load.size());
         consumers.forEach((uuid, jobConsumer) ->
                               jobs.getOrDefault(uuid, Collections.emptySet()).forEach(JobManager::schedule));
+    }
+
+    private static Collection<JobProcessorInterface> loadProcessors() {
+        var reflections = new Reflections(new ConfigurationBuilder()
+                                              .setUrls(ClasspathHelper.forPackage("me.zoemartin.rubie"))
+                                              .setScanners(new SubTypesScanner(), new TypeAnnotationsScanner())
+                                              .filterInputsBy(new FilterBuilder().includePackage("me.zoemartin.rubie"))
+                                              .setExecutorService(Executors.newFixedThreadPool(4)));
+
+        var processors = reflections.getTypesAnnotatedWith(JobProcessor.class);
+
+        return processors.parallelStream()
+                   .filter(c -> c.getAnnotationsByType(Disabled.class).length == 0)
+                   .map(aClass -> {
+                       try {
+                           if (Arrays.stream(aClass.getInterfaces()).noneMatch(clazz -> clazz == JobProcessorInterface.class)) {
+                               log.error("Trying to load a class {} that doesn't implement the job processor interface", aClass.getSimpleName());
+                               return null;
+                           }
+                           var constructor = aClass.getDeclaredConstructor();
+                           return (JobProcessorInterface) constructor.newInstance();
+                       } catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
+                           log.error("Error getting default constructor for module", e);
+                           return null;
+                       }
+                   })
+                   .filter(Objects::nonNull)
+                   .collect(Collectors.toList());
     }
 
     private static void schedule(Job job) {
@@ -62,7 +94,7 @@ public class JobManager {
         }, delay, TimeUnit.MILLISECONDS);
     }
 
-    public static void newJob(JobProcessor processor, long end, Map<String, String> settings) {
+    public static void newJob(JobProcessorInterface processor, long end, Map<String, String> settings) {
         var job = new Job(processor.job(), end, settings);
         DatabaseUtil.saveObject(job);
         log.info("Scheduling a job ({}) for {}", job.getJobId(), new DateTime(job.getEnd()));

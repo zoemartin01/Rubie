@@ -3,9 +3,9 @@ package me.zoemartin.rubie.core.util;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 
-import java.util.*;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 public class EmbedUtil {
     public static List<MessageEmbed> pagedFieldEmbed(MessageEmbed eb, List<MessageEmbed.Field> fields) {

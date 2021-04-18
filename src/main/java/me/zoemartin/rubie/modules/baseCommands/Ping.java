@@ -5,7 +5,7 @@ import me.zoemartin.rubie.core.CommandEvent;
 import me.zoemartin.rubie.core.annotations.Command;
 import me.zoemartin.rubie.core.annotations.CommandOptions;
 import me.zoemartin.rubie.core.interfaces.AbstractCommand;
-import net.dv8tion.jda.api.entities.*;
+import net.dv8tion.jda.api.entities.Message;
 
 @Command
 @CommandOptions(name = "ping", description = "Shows the Bot's Latency")

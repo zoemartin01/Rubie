@@ -1,9 +1,9 @@
 package me.zoemartin.rubie.modules.gatekeeper;
 
-import com.google.auto.service.AutoService;
 import me.zoemartin.rubie.Bot;
 import me.zoemartin.rubie.core.AutoConfig;
-import me.zoemartin.rubie.core.interfaces.Module;
+import me.zoemartin.rubie.core.annotations.Module;
+import me.zoemartin.rubie.core.interfaces.ModuleInterface;
 import me.zoemartin.rubie.core.util.DatabaseUtil;
 import net.dv8tion.jda.api.entities.*;
 import net.dv8tion.jda.api.events.guild.member.GuildMemberJoinEvent;
@@ -17,8 +17,8 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 
-@AutoService(Module.class)
-public class Gatekeeper extends ListenerAdapter implements Module {
+@Module
+public class Gatekeeper extends ListenerAdapter implements ModuleInterface {
     private static String URI;
     private static final Map<String, GatekeeperConfig> configs = new ConcurrentHashMap<>();
     private static final Logger log = LoggerFactory.getLogger(Gatekeeper.class);

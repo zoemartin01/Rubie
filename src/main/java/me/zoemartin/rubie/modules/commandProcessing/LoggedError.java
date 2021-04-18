@@ -1,13 +1,13 @@
 package me.zoemartin.rubie.modules.commandProcessing;
 
-import com.google.auto.service.AutoService;
+import me.zoemartin.rubie.core.annotations.DatabaseEntity;
 import me.zoemartin.rubie.core.interfaces.DatabaseEntry;
 
 import javax.persistence.*;
 import java.util.Arrays;
 import java.util.UUID;
 
-@AutoService(DatabaseEntry.class)
+@DatabaseEntity
 @Entity
 @Table(name = "errors")
 public class LoggedError implements DatabaseEntry {
@@ -28,13 +28,13 @@ public class LoggedError implements DatabaseEntry {
     @Column
     private String message_id;
 
-    @Column(columnDefinition="TEXT")
+    @Column(columnDefinition = "TEXT")
     private String invoked_message;
 
-    @Column(columnDefinition="TEXT")
+    @Column(columnDefinition = "TEXT")
     private String error_message;
 
-    @Column(columnDefinition="TEXT")
+    @Column(columnDefinition = "TEXT")
     private String error_stacktrace;
 
     @Column

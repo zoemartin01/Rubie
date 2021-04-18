@@ -26,14 +26,14 @@ public class ReactManager {
                               .collect(Collectors.groupingBy(ReactRole::getGuildId,
                                   Collectors.groupingBy(ReactRole::getMessageId, CollectorsUtil.toConcurrentSet()))));
 
-        log.info("Loaded {} react roles",  reactRoles.values().stream()
-                                               .flatMap(stringSetMap -> stringSetMap.values().stream())
-                                               .mapToLong(Collection::size).sum());
+        log.info("Loaded {} react roles", reactRoles.values().stream()
+                                              .flatMap(stringSetMap -> stringSetMap.values().stream())
+                                              .mapToLong(Collection::size).sum());
 
         configs.putAll(DatabaseUtil.loadMap("from ReactConfig", ReactConfig.class,
             ReactConfig::getGuildId, Function.identity()));
 
-        log.info("Loaded {} react configs",  configs.size());
+        log.info("Loaded {} react configs", configs.size());
     }
 
     public static ReactConfig getConfig(Guild g) {
@@ -62,8 +62,8 @@ public class ReactManager {
 
     public static void addReactRole(ReactRole reactRole) {
         if (reactRoles.computeIfAbsent(reactRole.getGuildId(), k -> new ConcurrentHashMap<>())
-            .computeIfAbsent(reactRole.getMessageId(), v -> Collections.newSetFromMap(new ConcurrentHashMap<>()))
-            .add(reactRole)) DatabaseUtil.saveObject(reactRole);
+                .computeIfAbsent(reactRole.getMessageId(), v -> Collections.newSetFromMap(new ConcurrentHashMap<>()))
+                .add(reactRole)) DatabaseUtil.saveObject(reactRole);
     }
 
     public static void removeReactRole(ReactRole reactRole) {

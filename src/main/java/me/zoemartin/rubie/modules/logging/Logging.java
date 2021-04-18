@@ -1,11 +1,11 @@
 package me.zoemartin.rubie.modules.logging;
 
-import com.google.auto.service.AutoService;
 import me.zoemartin.rubie.Bot;
-import me.zoemartin.rubie.core.interfaces.Module;
+import me.zoemartin.rubie.core.annotations.Module;
+import me.zoemartin.rubie.core.interfaces.ModuleInterface;
 
-@AutoService(Module.class)
-public class Logging implements Module {
+@Module
+public class Logging implements ModuleInterface {
     @Override
     public void init() {
         Bot.addListener(new Nickname.NicknameListener());

@@ -167,30 +167,31 @@ public class Subscribe extends GuildCommand {
         @Override
         public void run(GuildCommandEvent event) {
             Subscription.Event[] events = event.getArgs().stream()
-                .map(s -> s.matches("\\d+") ? Subscription.Event.fromNum(Parser.Int.parse(s))
-                                                  : Subscription.Event.fromString(s))
-                .filter(Objects::nonNull)
-                .toArray(Subscription.Event[]::new);
+                                              .map(s -> s.matches("\\d+") ? Subscription.Event.fromNum(Parser.Int.parse(s))
+                                                            : Subscription.Event.fromString(s))
+                                              .filter(Objects::nonNull)
+                                              .toArray(Subscription.Event[]::new);
             var jda = event.getJDA();
 
             var subs = SubscriptionManager.getMemberSubscriptions(event.getMember(), events)
-                .stream().sorted(Comparator.comparing(Subscription::getId)).collect(Collectors.toList());
+                           .stream().sorted(Comparator.comparing(Subscription::getId)).collect(Collectors.toList());
             var paged = new PagedEmbed(
                 EmbedUtil.pagedDescription(
                     new EmbedBuilder().setDescription("Your Subscriptions").setColor(event.getMember().getColor()).build(),
                     subs.stream()
                         .map(sub -> {
                             var target = jda.getUserById(sub.getTargetId());
-                            if (target == null) return String.format("%d. - `[%d] %s` - ~~User: %s~~ - Parameters: %s\n\n",
-                                subs.indexOf(sub) + 1, sub.getEvent().id(), sub.getEvent().toString(), sub.getTargetId(),
-                                sub.getSettings().entrySet().stream()
-                                    .map(entry -> entry.getKey() + " " + entry.getValue())
-                                    .collect(Collectors.joining(", ")));
+                            if (target == null)
+                                return String.format("%d. - `[%d] %s` - ~~User: %s~~ - Parameters: %s\n\n",
+                                    subs.indexOf(sub) + 1, sub.getEvent().id(), sub.getEvent().toString(), sub.getTargetId(),
+                                    sub.getSettings().entrySet().stream()
+                                        .map(entry -> entry.getKey() + " " + entry.getValue())
+                                        .collect(Collectors.joining(", ")));
                             return String.format("%d. - `[%d] %s` - User: %s (%s) - Parameters: %s\n\n",
                                 subs.indexOf(sub) + 1, sub.getEvent().id(), sub.getEvent().toString(), target.getAsMention(), target.getId(),
                                 sub.getSettings().entrySet().stream()
-                                                      .map(entry -> entry.getKey() + " " + entry.getValue())
-                                                      .collect(Collectors.joining(", ")));
+                                    .map(entry -> entry.getKey() + " " + entry.getValue())
+                                    .collect(Collectors.joining(", ")));
                         }).collect(Collectors.toList())
                 ), event);
 
@@ -245,7 +246,7 @@ public class Subscribe extends GuildCommand {
                                               .toArray(Subscription.Event[]::new);
 
             SubscriptionManager.getMemberSubscriptions(event.getMember(), events)
-                           .forEach(SubscriptionManager::removeSubscription);
+                .forEach(SubscriptionManager::removeSubscription);
             event.addCheckmark();
         }
     }

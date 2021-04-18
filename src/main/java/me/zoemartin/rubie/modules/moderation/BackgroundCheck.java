@@ -2,7 +2,8 @@ package me.zoemartin.rubie.modules.moderation;
 
 import me.zoemartin.rubie.core.CommandPerm;
 import me.zoemartin.rubie.core.GuildCommandEvent;
-import me.zoemartin.rubie.core.annotations.*;
+import me.zoemartin.rubie.core.annotations.Command;
+import me.zoemartin.rubie.core.annotations.CommandOptions;
 import me.zoemartin.rubie.core.exceptions.CommandArgumentException;
 import me.zoemartin.rubie.core.interfaces.AbstractCommand;
 import me.zoemartin.rubie.core.interfaces.GuildCommand;
@@ -26,8 +27,8 @@ public class BackgroundCheck extends GuildCommand {
     public void run(GuildCommandEvent event) {
         Check.check(!event.getArgs().isEmpty(), CommandArgumentException::new);
         if (USERINFO == null) USERINFO = CommandManager.getCommands().stream()
-                                  .filter(command -> command.name().equals("userinfo")).findAny()
-                                  .orElse(null);
+                                             .filter(command -> command.name().equals("userinfo")).findAny()
+                                             .orElse(null);
         if (USERINFO != null) USERINFO.run(event);
         NOTE.run(event);
         MODLOGS.run(event);

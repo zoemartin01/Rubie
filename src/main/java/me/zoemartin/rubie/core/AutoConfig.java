@@ -1,6 +1,7 @@
 package me.zoemartin.rubie.core;
 
-import me.zoemartin.rubie.core.annotations.*;
+import me.zoemartin.rubie.core.annotations.Getter;
+import me.zoemartin.rubie.core.annotations.Setter;
 import me.zoemartin.rubie.core.exceptions.ReplyError;
 import me.zoemartin.rubie.core.exceptions.UnexpectedError;
 import me.zoemartin.rubie.core.interfaces.GuildCommand;
@@ -24,6 +25,8 @@ public abstract class AutoConfig<T> extends GuildCommand {
         converters.put(clazz, converter);
     }
 
+    // good idea, bad impl. has to do so much stuff every time autoconfig is run even to the things it reads don't change on runtime
+    // TODO: fix that
     @Override
     public void run(GuildCommandEvent event) {
         T t = supply(event);

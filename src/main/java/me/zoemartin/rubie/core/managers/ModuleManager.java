@@ -1,9 +1,9 @@
 package me.zoemartin.rubie.core.managers;
 
 import me.zoemartin.rubie.core.*;
+import me.zoemartin.rubie.core.annotations.Module;
 import me.zoemartin.rubie.core.annotations.*;
 import me.zoemartin.rubie.core.interfaces.*;
-import me.zoemartin.rubie.core.interfaces.Module;
 import me.zoemartin.rubie.core.util.DatabaseUtil;
 import org.reflections8.Reflections;
 import org.reflections8.scanners.SubTypesScanner;
@@ -16,19 +16,18 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.*;
 import java.util.concurrent.*;
-import java.util.stream.*;
+import java.util.stream.Collectors;
 
 public class ModuleManager {
     private static final Logger log = LoggerFactory.getLogger(ModuleManager.class);
-    private static final Collection<Module> modules = Collections.newSetFromMap(new ConcurrentHashMap<>());
+    private static final Collection<ModuleInterface> modules = Collections.newSetFromMap(new ConcurrentHashMap<>());
 
     public static void init() {
         loadDatabaseMappings();
 
-        ServiceLoader<Module> loader = ServiceLoader.load(Module.class);
-
         ExecutorService es = Executors.newCachedThreadPool();
-        StreamSupport.stream(loader.spliterator(), true).forEach(module -> es.execute(() -> loadModule(module)));
+        loadModules().parallelStream().forEach(module -> es.execute(() -> initModules(module)));
+
         es.shutdown();
         try {
             es.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
@@ -37,7 +36,39 @@ public class ModuleManager {
         }
     }
 
-    private static void loadModule(Module m) {
+    public static Collection<ModuleInterface> getModules() {
+        return Collections.unmodifiableCollection(modules);
+    }
+
+    private static Collection<ModuleInterface> loadModules() {
+        var reflections = new Reflections(new ConfigurationBuilder()
+                                              .setUrls(ClasspathHelper.forPackage("me.zoemartin.rubie.modules"))
+                                              .setScanners(new SubTypesScanner(), new TypeAnnotationsScanner())
+                                              .filterInputsBy(new FilterBuilder().includePackage("me.zoemartin.rubie.modules"))
+                                              .setExecutorService(Executors.newFixedThreadPool(4)));
+
+        var classes = reflections.getTypesAnnotatedWith(Module.class);
+
+        return classes.stream()
+                   .filter(c -> c.getAnnotationsByType(Disabled.class).length == 0)
+                   .map(aClass -> {
+                       try {
+                           if (Arrays.stream(aClass.getInterfaces()).noneMatch(clazz -> clazz == ModuleInterface.class)) {
+                               log.error("Trying to load a class {} that doesn't implement the module interface", aClass.getSimpleName());
+                               return null;
+                           }
+                           var constructor = aClass.getDeclaredConstructor();
+                           return (ModuleInterface) constructor.newInstance();
+                       } catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
+                           log.error("Error getting default constructor for module", e);
+                           return null;
+                       }
+                   })
+                   .filter(Objects::nonNull)
+                   .collect(Collectors.toList());
+    }
+
+    private static void initModules(ModuleInterface m) {
         m.init();
         loadModuleCommands(m);
         ModuleManager.modules.add(m);
@@ -45,7 +76,7 @@ public class ModuleManager {
     }
 
     @SuppressWarnings("unchecked")
-    private static void loadModuleCommands(Module m) {
+    private static void loadModuleCommands(ModuleInterface m) {
         Reflections reflections = new Reflections(new ConfigurationBuilder()
                                                       .setUrls(ClasspathHelper.forPackage(m.getClass().getPackageName()))
                                                       .setScanners(new SubTypesScanner(), new TypeAnnotationsScanner())
@@ -77,11 +108,22 @@ public class ModuleManager {
     }
 
     private static void loadDatabaseMappings() {
-        ServiceLoader<DatabaseEntry> loader = ServiceLoader.load(DatabaseEntry.class);
+        var reflections = new Reflections(new ConfigurationBuilder()
+                                              .setUrls(ClasspathHelper.forPackage("me.zoemartin.rubie"))
+                                              .setScanners(new SubTypesScanner(), new TypeAnnotationsScanner())
+                                              .filterInputsBy(new FilterBuilder().includePackage("me.zoemartin.rubie"))
+                                              .setExecutorService(Executors.newFixedThreadPool(4)));
 
-        StreamSupport.stream(loader.spliterator(), true)
-            .map(Object::getClass)
+        var dbm = reflections.getTypesAnnotatedWith(DatabaseEntity.class);
+
+        dbm.stream()
             .filter(c -> c.getAnnotationsByType(Disabled.class).length == 0)
+            .filter(aClass -> {
+                if (Arrays.stream(aClass.getInterfaces()).anyMatch(clazz -> clazz == DatabaseEntry.class))
+                    return true;
+                log.error("Trying to load a class {} that doesn't implement the database entry interface", aClass.getSimpleName());
+                return false;
+            })
             .forEach(c -> {
                 DatabaseUtil.setMapped(c);
                 log.info("Mapped '{}':'{}'", c.getPackageName(), c.getSimpleName());
@@ -125,6 +167,6 @@ public class ModuleManager {
     }
 
     public static void initLate() {
-        modules.forEach(Module::initLate);
+        modules.forEach(ModuleInterface::initLate);
     }
 }

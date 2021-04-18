@@ -1,10 +1,10 @@
 package me.zoemartin.rubie.modules.baseCommands;
 
-import com.google.auto.service.AutoService;
-import me.zoemartin.rubie.core.interfaces.Module;
+import me.zoemartin.rubie.core.annotations.Module;
+import me.zoemartin.rubie.core.interfaces.ModuleInterface;
 
-@AutoService(Module.class)
-public class BaseCommands implements Module {
+@Module
+public class BaseCommands implements ModuleInterface {
     @Override
     public void init() {
         Help.helper();

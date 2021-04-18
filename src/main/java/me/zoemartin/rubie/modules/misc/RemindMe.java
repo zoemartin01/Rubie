@@ -5,7 +5,7 @@ import me.zoemartin.rubie.core.annotations.Command;
 import me.zoemartin.rubie.core.annotations.CommandOptions;
 import me.zoemartin.rubie.core.exceptions.CommandArgumentException;
 import me.zoemartin.rubie.core.interfaces.GuildCommand;
-import me.zoemartin.rubie.core.interfaces.JobProcessor;
+import me.zoemartin.rubie.core.interfaces.JobProcessorInterface;
 import me.zoemartin.rubie.core.managers.JobManager;
 import me.zoemartin.rubie.core.util.Check;
 import org.joda.time.DateTime;
@@ -27,7 +27,7 @@ import static me.zoemartin.rubie.core.Job.CommonKeys.*;
 public class RemindMe extends GuildCommand {
     static final String MSG_KEY = "reminder";
 
-    private static final JobProcessor processor = new RemindMeJob();
+    private static final JobProcessorInterface processor = new RemindMeJob();
     private static final PeriodFormatter formatter = new PeriodFormatterBuilder()
                                                          .appendYears()
                                                          .appendSuffix("y")

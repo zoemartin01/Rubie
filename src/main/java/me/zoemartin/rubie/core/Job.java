@@ -1,15 +1,16 @@
 package me.zoemartin.rubie.core;
 
-import com.google.auto.service.AutoService;
+import me.zoemartin.rubie.core.annotations.DatabaseEntity;
 import me.zoemartin.rubie.core.interfaces.DatabaseEntry;
 import org.hibernate.annotations.GenericGenerator;
 
 import javax.persistence.*;
-import java.util.*;
+import java.util.Map;
+import java.util.UUID;
 
 @Table(name = "jobs")
 @Entity
-@AutoService(DatabaseEntry.class)
+@DatabaseEntity
 public class Job implements DatabaseEntry {
 
     @Id

@@ -1,8 +1,8 @@
 package me.zoemartin.rubie.modules.hatchery;
 
-import com.google.auto.service.AutoService;
-import me.zoemartin.rubie.core.interfaces.Module;
+import me.zoemartin.rubie.core.annotations.Module;
+import me.zoemartin.rubie.core.interfaces.ModuleInterface;
 
-@AutoService(Module.class)
-public class Hatchery implements Module {
+@Module
+public class Hatchery implements ModuleInterface {
 }

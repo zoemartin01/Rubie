@@ -1,8 +1,9 @@
 package me.zoemartin.rubie.modules.trigger;
 
 import me.zoemartin.rubie.Bot;
-import me.zoemartin.rubie.core.interfaces.Module;
-import me.zoemartin.rubie.core.managers.CommandManager;
+import me.zoemartin.rubie.core.annotations.Disabled;
+import me.zoemartin.rubie.core.annotations.Module;
+import me.zoemartin.rubie.core.interfaces.ModuleInterface;
 import me.zoemartin.rubie.core.util.DatabaseUtil;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent;
@@ -13,7 +14,9 @@ import javax.annotation.Nonnull;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class Triggers extends ListenerAdapter implements Module {
+@Module
+@Disabled
+public class Triggers extends ListenerAdapter implements ModuleInterface {
     private static final Map<String, Set<Trigger>> triggers = new ConcurrentHashMap<>();
 
     @Override

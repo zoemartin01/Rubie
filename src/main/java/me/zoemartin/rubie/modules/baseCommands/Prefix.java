@@ -6,8 +6,8 @@ import me.zoemartin.rubie.core.annotations.*;
 import me.zoemartin.rubie.core.exceptions.CommandArgumentException;
 import me.zoemartin.rubie.core.exceptions.ReplyError;
 import me.zoemartin.rubie.core.interfaces.GuildCommand;
-import me.zoemartin.rubie.modules.commandProcessing.Prefixes;
 import me.zoemartin.rubie.core.util.Check;
+import me.zoemartin.rubie.modules.commandProcessing.Prefixes;
 import net.dv8tion.jda.api.EmbedBuilder;
 
 import java.util.stream.Collectors;

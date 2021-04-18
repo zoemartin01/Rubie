@@ -1,19 +1,19 @@
 package me.zoemartin.rubie.modules.owner;
 
-import com.google.auto.service.AutoService;
 import me.zoemartin.rubie.Bot;
 import me.zoemartin.rubie.core.*;
+import me.zoemartin.rubie.core.annotations.Module;
 import me.zoemartin.rubie.core.annotations.*;
 import me.zoemartin.rubie.core.exceptions.CommandArgumentException;
 import me.zoemartin.rubie.core.interfaces.AbstractCommand;
-import me.zoemartin.rubie.core.interfaces.Module;
+import me.zoemartin.rubie.core.interfaces.ModuleInterface;
 import me.zoemartin.rubie.core.util.Check;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.*;
 
 import java.time.Instant;
 
-@AutoService(Module.class)
+@Module
 @Command
 @CommandOptions(
     name = "todo",
@@ -21,7 +21,7 @@ import java.time.Instant;
     perm = CommandPerm.OWNER,
     usage = "<message>"
 )
-public class Todo extends AbstractCommand implements Module {
+public class Todo extends AbstractCommand implements ModuleInterface {
     static final String DEV_SERVER_ID = "771750212200562749";
     static final String CHANNEL_ID = "779770625329070171";
 

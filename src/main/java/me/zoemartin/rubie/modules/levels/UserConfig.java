@@ -1,8 +1,6 @@
 package me.zoemartin.rubie.modules.levels;
 
-import com.google.auto.service.AutoService;
-import me.zoemartin.rubie.core.annotations.Getter;
-import me.zoemartin.rubie.core.annotations.Setter;
+import me.zoemartin.rubie.core.annotations.*;
 import me.zoemartin.rubie.core.interfaces.DatabaseEntry;
 import net.dv8tion.jda.api.entities.Member;
 import org.hibernate.annotations.GenericGenerator;
@@ -11,7 +9,7 @@ import org.jetbrains.annotations.Nullable;
 import javax.persistence.*;
 import java.util.UUID;
 
-@AutoService(DatabaseEntry.class)
+@DatabaseEntity
 @Entity
 @Table(name = "level_userconfigs")
 public class UserConfig implements DatabaseEntry {

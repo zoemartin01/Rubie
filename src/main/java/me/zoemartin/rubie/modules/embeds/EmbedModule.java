@@ -1,13 +1,13 @@
 package me.zoemartin.rubie.modules.embeds;
 
-import com.google.auto.service.AutoService;
 import me.zoemartin.rubie.Bot;
-import me.zoemartin.rubie.core.interfaces.Module;
+import me.zoemartin.rubie.core.annotations.Module;
+import me.zoemartin.rubie.core.interfaces.ModuleInterface;
 import me.zoemartin.rubie.modules.embeds.pinnedEmbeds.PineController;
 import me.zoemartin.rubie.modules.embeds.triggerEmbeds.TeeController;
 
-@AutoService(Module.class)
-public class EmbedModule implements Module {
+@Module
+public class EmbedModule implements ModuleInterface {
     @Override
     public void init() {
         Bot.addListener(new TeeController());

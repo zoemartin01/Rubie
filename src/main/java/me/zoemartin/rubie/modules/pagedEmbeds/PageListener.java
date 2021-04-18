@@ -1,8 +1,8 @@
 package me.zoemartin.rubie.modules.pagedEmbeds;
 
-import com.google.auto.service.AutoService;
 import me.zoemartin.rubie.Bot;
-import me.zoemartin.rubie.core.interfaces.Module;
+import me.zoemartin.rubie.core.annotations.Module;
+import me.zoemartin.rubie.core.interfaces.ModuleInterface;
 import net.dv8tion.jda.api.events.message.guild.react.GuildMessageReactionAddEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 
@@ -10,8 +10,8 @@ import javax.annotation.Nonnull;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
-@AutoService(Module.class)
-public class PageListener extends ListenerAdapter implements Module {
+@Module
+public class PageListener extends ListenerAdapter implements ModuleInterface {
     private static final Map<String, Set<PagedEmbed>> pages = new ConcurrentHashMap<>();
 
     @Override
@@ -51,5 +51,6 @@ public class PageListener extends ListenerAdapter implements Module {
     @Override
     public void init() {
         Bot.addListener(this);
+        Bot.addListener(new Confirmation());
     }
 }

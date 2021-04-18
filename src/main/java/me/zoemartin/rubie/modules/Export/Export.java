@@ -1,8 +1,8 @@
 package me.zoemartin.rubie.modules.Export;
 
-import com.google.auto.service.AutoService;
-import me.zoemartin.rubie.core.interfaces.Module;
+import me.zoemartin.rubie.core.annotations.Module;
+import me.zoemartin.rubie.core.interfaces.ModuleInterface;
 
-@AutoService(Module.class)
-public class Export implements Module {
+@Module
+public class Export implements ModuleInterface {
 }
