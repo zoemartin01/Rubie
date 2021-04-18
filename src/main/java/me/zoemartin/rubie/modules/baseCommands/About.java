@@ -37,6 +37,7 @@ public class About extends AbstractCommand {
         eb.setTitle("About").setColor(0xdf136c);
 
         String version = getClass().getPackage().getImplementationVersion();
+        var prop = Bot.getProperties();
 
         if (JDA_VERSION == null) findVersion();
 
@@ -47,9 +48,12 @@ public class About extends AbstractCommand {
         Runtime rt = Runtime.getRuntime();
         long usedMB = (rt.totalMemory() - rt.freeMemory()) / 1024 / 1024;
         eb.addField("Memory Usage", usedMB + " MB", true);
-        eb.addField("Author", "<@!212591138945630213> / zowee#0001", false);
-        eb.addField("Source Code", "https://github.com/zoemartin01/Rubie", false);
-        eb.addField("Invite", "https://zoe.pm/invrubie", false);
+        if (Boolean.parseBoolean(prop.getProperty("about.author.show")))
+            eb.addField("Author", prop.getProperty("about.author.text"), false);
+        if (Boolean.parseBoolean(prop.getProperty("about.repo.show")))
+            eb.addField("Source Code", prop.getProperty("about.repo.url"), false);
+        if (Boolean.parseBoolean(prop.getProperty("about.invite.show")))
+            eb.addField("Invite", prop.getProperty("about.invite.url"), false);
         eb.setThumbnail(Bot.getJDA().getSelfUser().getAvatarUrl());
         eb.setFooter("Made with JDA",
             "https://raw.githubusercontent.com/DV8FromTheWorld/JDA/assets/assets/readme/logo.png");
