@@ -5,6 +5,7 @@ import me.zoemartin.rubie.core.GuildCommandEvent;
 import me.zoemartin.rubie.core.annotations.Checks;
 import me.zoemartin.rubie.core.annotations.Command;
 import me.zoemartin.rubie.core.annotations.CommandOptions;
+import me.zoemartin.rubie.core.exceptions.CommandArgumentException;
 import me.zoemartin.rubie.core.exceptions.CommandPermissionException;
 import me.zoemartin.rubie.core.exceptions.UnexpectedError;
 import me.zoemartin.rubie.core.interfaces.GuildCommand;
@@ -23,6 +24,7 @@ import java.util.stream.Collectors;
         name = "simpletranscript",
         description = "Create a simple transcript of a channel and upload it as a txt",
         alias = "st",
+        usage = "<channel>",
         perm = CommandPerm.BOT_MANAGER,
         botPerms = Permission.MESSAGE_READ
 )
@@ -31,9 +33,10 @@ public class SimpleTranscript extends GuildCommand {
     @Override
     public void run(GuildCommandEvent event) {
         event.addCheckmark();
-        TextChannel c = null;
-        if (!event.getArgs().isEmpty()) c = Parser.Channel.getTextChannel(event.getGuild(), event.getArgs().get(0));
-        if (c == null) c = event.getTextChannel();
+        Check.check(!event.getArgs().isEmpty(), CommandArgumentException::new);
+        var cRef = event.getArgs().get(0);
+        var c = Parser.Channel.getTextChannel(event.getGuild(), cRef);
+        Check.entityReferenceNotNull(c, TextChannel.class, cRef);
 
         Check.check(this.checkChannelPerms(event, c),
                 () -> new CommandPermissionException(
