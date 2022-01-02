@@ -1,6 +1,7 @@
 package me.zoemartin.rubie.modules.levels;
 
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.google.gson.annotations.SerializedName;
 import com.google.gson.reflect.TypeToken;
 import me.zoemartin.rubie.Bot;
@@ -19,6 +20,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.io.*;
 import java.lang.reflect.Type;
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.*;
@@ -160,6 +162,65 @@ class Config extends GuildCommand {
             public int getExp() {
                 return exp;
             }
+        }
+    }
+
+    @SubCommand(Config.class)
+    @CommandOptions(
+            name = "export",
+            description = "Export all levels as a JSON file",
+            perm = CommandPerm.BOT_ADMIN
+    )
+    private static class Export extends GuildCommand {
+
+        private static class ExportLevel implements Serializable {
+            @SerializedName(value = "user_id")
+            private final String userId;
+
+            @SerializedName(value = "exp")
+            private final int exp;
+
+            @SerializedName(value = "card_color")
+            private final String color;
+
+            public ExportLevel(String userid, int exp, String color) {
+                this.userId = userid;
+                this.exp = exp;
+                this.color = color;
+            }
+
+            public String getUserId() {
+                return userId;
+            }
+
+            public int getExp() {
+                return exp;
+            }
+
+            public String getColor() {
+                return color;
+            }
+        }
+
+        @Override
+        public void run(GuildCommandEvent event) {
+            var guild = event.getGuild();
+            var levels = Levels.getLevels(guild);
+            var gson = new GsonBuilder().setPrettyPrinting().create();
+            var exportLevels = levels.stream().map(
+                    userLevel -> {
+                        var m = CacheUtils.getMember(guild, userLevel.getUser_id());
+                        if (m == null) return new ExportLevel(userLevel.getUser_id(), userLevel.getExp(), null);
+
+                        var c = Levels.getUserConfig(m);
+                        var col = c.getColor();
+                        return new ExportLevel(userLevel.getUser_id(), userLevel.getExp(), col != null ? Integer.toHexString(col) : null);
+                    }
+            ).collect(Collectors.toList());
+
+            var json = gson.toJson(exportLevels);
+            event.getChannel().sendFile(json.getBytes(StandardCharsets.UTF_8), "export.json").complete();
+            event.addCheckmark();
         }
     }
 
