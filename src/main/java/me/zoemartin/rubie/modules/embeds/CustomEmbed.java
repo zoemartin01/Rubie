@@ -81,7 +81,7 @@ public class CustomEmbed extends GuildCommand {
             throw new ReplyError("Sorry, I cannot parse your input json!");
         }
 
-        c.sendMessage(e.toDiscordEmbed()).queue();
+        c.sendMessageEmbeds(e.toDiscordEmbed()).queue();
         event.addCheckmark();
     }
 
@@ -126,7 +126,7 @@ public class CustomEmbed extends GuildCommand {
                 throw new ReplyError("An error occurred while parsing a json file!");
             }
 
-            embeds.forEach(embed -> c.sendMessage(embed.toDiscordEmbed()).queue());
+            embeds.forEach(embed -> c.sendMessageEmbeds(embed.toDiscordEmbed()).queue());
             event.addCheckmark();
         }
     }

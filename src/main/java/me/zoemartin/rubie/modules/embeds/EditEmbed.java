@@ -80,7 +80,7 @@ public class EditEmbed extends GuildCommand {
             throw new ReplyError("Sorry, I cannot parse your input json!");
         }
 
-        message.editMessage(e.toDiscordEmbed()).queue();
+        message.editMessageEmbeds(e.toDiscordEmbed()).queue();
         event.addCheckmark();
     }
 }

@@ -82,7 +82,7 @@ public class Note extends GuildCommand {
                                       u == null ? userId : u.getAsMention(),
                                       noteEntity.getNote()));
 
-            event.getChannel().sendMessage(eb.build()).queue();
+            event.getChannel().sendMessageEmbeds(eb.build()).queue();
         }
     }
 
@@ -181,7 +181,7 @@ public class Note extends GuildCommand {
             if (u != null)
                 eb.setAuthor(String.format("%s / %s", u.getAsTag(), u.getId()), null, u.getEffectiveAvatarUrl());
 
-            event.getChannel().sendMessage(eb.build()).queue();
+            event.getChannel().sendMessageEmbeds(eb.build()).queue();
         }
     }
 

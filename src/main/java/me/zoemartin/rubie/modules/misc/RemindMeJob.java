@@ -39,7 +39,7 @@ public class RemindMeJob implements JobProcessor {
             var embed = new EmbedBuilder().setTitle("Reminder").setTimestamp(Instant.now())
                 .setDescription("You asked me to remind you about\n\n" + (message.isBlank() ? DEFAULT : message))
                             .build();
-            c.sendMessage(u.getAsMention()).embed(embed).queue();
+            c.sendMessage(u.getAsMention()).setEmbeds(embed).queue();
         };
     }
 }

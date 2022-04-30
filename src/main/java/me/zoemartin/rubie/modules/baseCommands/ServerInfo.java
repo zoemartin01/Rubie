@@ -72,7 +72,6 @@ public class ServerInfo extends GuildCommand {
                 guild.getMembers().stream().filter(member -> member.getUser().isBot()).count()), true)
 
             .addField("Roles", guild.getRoles().size() + "", true)
-            .addField("Region", guild.getRegionRaw(), true)
             .addField("Categories", guild.getCategories().size() + "", true)
 
             .addField("Features", features.isEmpty() ? "`n/a`" :
@@ -81,6 +80,6 @@ public class ServerInfo extends GuildCommand {
             .setFooter("ID: " + guild.getId() + " | Created")
             .setTimestamp(guild.getTimeCreated());
 
-        event.getChannel().sendMessage(eb.build()).queue();
+        event.getChannel().sendMessageEmbeds(eb.build()).queue();
     }
 }

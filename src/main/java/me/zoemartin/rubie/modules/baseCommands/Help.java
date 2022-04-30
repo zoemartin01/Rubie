@@ -109,7 +109,7 @@ public class Help extends GuildCommand {
         if (sub.length() > 0)
             eb.addField("Subcommand(s)", sub.toString(), false);
 
-        event.getChannel().sendMessage(eb.build()).queue();
+        event.getChannel().sendMessageEmbeds(eb.build()).queue();
     }
 
     public static void helper() {

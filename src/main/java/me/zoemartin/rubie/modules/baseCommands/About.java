@@ -7,6 +7,7 @@ import me.zoemartin.rubie.core.annotations.CommandOptions;
 import me.zoemartin.rubie.core.interfaces.AbstractCommand;
 import me.zoemartin.rubie.core.util.TimeUtils;
 import net.dv8tion.jda.api.EmbedBuilder;
+import net.dv8tion.jda.api.JDAInfo;
 import org.joda.time.*;
 import org.joda.time.format.PeriodFormatter;
 import org.joda.time.format.PeriodFormatterBuilder;
@@ -25,7 +26,6 @@ import java.util.jar.Manifest;
     alias = "botinfo"
 )
 public class About extends AbstractCommand {
-    private static String JDA_VERSION = null;
     private static DateTime STARTUP;
     private static String OWNER_TAG = null;
 
@@ -40,11 +40,10 @@ public class About extends AbstractCommand {
 
         String version = getClass().getPackage().getImplementationVersion();
 
-        if (JDA_VERSION == null) findVersion();
-
         eb.addField("Bot Version", version == null ? "DEV BUILD" : version, true);
         eb.addField("Java Version", System.getProperty("java.version"), true);
-        eb.addField("JDA Version", JDA_VERSION, true);
+        eb.addField("JDA Version", JDAInfo.VERSION, true);
+        eb.addField("Gateway Version", String.valueOf(JDAInfo.DISCORD_GATEWAY_VERSION), true);
         eb.addField("Uptime", format(STARTUP, DateTime.now()), true);
         Runtime rt = Runtime.getRuntime();
         long usedMB = (rt.totalMemory() - rt.freeMemory()) / 1024 / 1024;
@@ -56,7 +55,7 @@ public class About extends AbstractCommand {
         eb.setFooter("Made with JDA",
             "https://raw.githubusercontent.com/DV8FromTheWorld/JDA/assets/assets/readme/logo.png");
 
-        event.getChannel().sendMessage(eb.build()).queue();
+        event.getChannel().sendMessageEmbeds(eb.build()).queue();
     }
 
     private static String format(DateTime s, DateTime e) {
@@ -92,20 +91,5 @@ public class About extends AbstractCommand {
 
         if (d.getMillis() >= TimeUnit.DAYS.toMillis(7)) return f1.print(p);
         else return f2.print(p);
-    }
-
-    private static void findVersion() {
-        Enumeration<URL> resources;
-        try {
-            resources = About.class.getClassLoader()
-                            .getResources("META-INF/MANIFEST.MF");
-            while (resources.hasMoreElements()) {
-                Manifest manifest = new Manifest(resources.nextElement().openStream());
-                JDA_VERSION = manifest.getMainAttributes().getValue("jda-version");
-                if (JDA_VERSION == null) JDA_VERSION = "UNKNOWN";
-            }
-        } catch (IOException e) {
-            JDA_VERSION = "UNKNOWN";
-        }
     }
 }

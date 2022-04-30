@@ -62,7 +62,7 @@ public class TeeController extends ListenerAdapter {
             return;
         }
 
-        event.getChannel().sendMessage(e.toDiscordEmbed()).queue();
+        event.getChannel().sendMessageEmbeds(e.toDiscordEmbed()).queue();
     }
 
     public static Collection<Tee> getTriggerEmbeds(Guild g) {

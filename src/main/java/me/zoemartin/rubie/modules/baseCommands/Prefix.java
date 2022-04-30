@@ -85,7 +85,7 @@ public class Prefix extends GuildCommand {
                                   .collect(Collectors.joining(", "));
 
             eb.setDescription(prefixes);
-            event.getChannel().sendMessage(eb.build()).queue();
+            event.getChannel().sendMessageEmbeds(eb.build()).queue();
         }
     }
 }

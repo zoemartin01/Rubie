@@ -103,6 +103,6 @@ public class UserInfo extends GuildCommand {
                 roles.length() <= 1024 ? roles : "Too many to list", false);
 
         }
-        event.getChannel().sendMessage(eb.build()).queue();
+        event.getChannel().sendMessageEmbeds(eb.build()).queue();
     }
 }

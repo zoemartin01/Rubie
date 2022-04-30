@@ -64,7 +64,7 @@ public class PineCommand extends GuildCommand {
                 throw new ReplyError("Sorry, I cannot parse the json from that url!");
             }
 
-            Message m = c.sendMessage(e.toDiscordEmbed()).complete();
+            Message m = c.sendMessageEmbeds(e.toDiscordEmbed()).complete();
 
             PineEntity pine = new PineEntity(event.getGuild().getId(), c.getId(), m.getId(), args.get(0));
             PineController.addPine(pine);
@@ -116,7 +116,7 @@ public class PineCommand extends GuildCommand {
                 throw new ReplyError("Sorry, I cannot parse the json from that url!");
             }
 
-            message.editMessage(e.toDiscordEmbed()).complete();
+            message.editMessageEmbeds(e.toDiscordEmbed()).complete();
             event.reply("Pine Updates",
                 "Updated Pine [%s](%s) in %s", mRef, message.getJumpUrl(), c.getAsMention()).queue();
         }

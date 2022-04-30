@@ -54,6 +54,6 @@ public class Usage extends GuildCommand {
                                                   .collect(Collectors.joining(" or\n")))
                               .setColor(0xdf136c);
 
-        event.getChannel().sendMessage(eb.build()).queue();
+        event.getChannel().sendMessageEmbeds(eb.build()).queue();
     }
 }

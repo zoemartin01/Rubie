@@ -84,6 +84,6 @@ public class Purge extends GuildCommand {
         sb.append("\nTime: ").append(Duration.between(start, end).toMillis()).append("ms");
         eb.setDescription(sb.toString());
 
-        event.getChannel().sendMessage(eb.build()).complete().delete().queueAfter(5, TimeUnit.SECONDS);
+        event.getChannel().sendMessageEmbeds(eb.build()).complete().delete().queueAfter(5, TimeUnit.SECONDS);
     }
 }

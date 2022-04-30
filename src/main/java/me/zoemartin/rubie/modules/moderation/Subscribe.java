@@ -332,7 +332,7 @@ public class Subscribe extends GuildCommand {
                                  target.getAsMention(), event.getOldValue(), event.getNewValue()))
                              .build();
 
-                ch.sendMessage(eb).queue();
+                ch.sendMessageEmbeds(eb).queue();
 
                 if (sub.isOneTime()) SubscriptionManager.removeSubscription(sub);
             });
@@ -370,7 +370,7 @@ public class Subscribe extends GuildCommand {
                                  target.getAsMention(), event.getOldValue(), event.getNewValue()))
                              .build();
 
-                ch.sendMessage(eb).queue();
+                ch.sendMessageEmbeds(eb).queue();
 
                 if (sub.isOneTime()) SubscriptionManager.removeSubscription(sub);
             });
@@ -401,7 +401,7 @@ public class Subscribe extends GuildCommand {
                                  target.getAsMention(), guild.getName(), event.getOldValue(), event.getNewValue()))
                              .build();
 
-                ch.sendMessage(eb).queue();
+                ch.sendMessageEmbeds(eb).queue();
 
                 if (sub.isOneTime()) SubscriptionManager.removeSubscription(sub);
             });
@@ -440,7 +440,7 @@ public class Subscribe extends GuildCommand {
                                  target.getAsMention(), event.getOldValue(), event.getNewValue()))
                              .build();
 
-                ch.sendMessage(eb).queue();
+                ch.sendMessageEmbeds(eb).queue();
 
                 if (sub.isOneTime()) SubscriptionManager.removeSubscription(sub);
             });
@@ -471,7 +471,7 @@ public class Subscribe extends GuildCommand {
                                  target.getAsMention(), guild.getName()))
                              .build();
 
-                ch.sendMessage(eb).queue();
+                ch.sendMessageEmbeds(eb).queue();
 
                 if (sub.isOneTime()) SubscriptionManager.removeSubscription(sub);
             });
@@ -501,7 +501,7 @@ public class Subscribe extends GuildCommand {
                                  target.getAsMention(), guild.getName()))
                              .build();
 
-                ch.sendMessage(eb).queue();
+                ch.sendMessageEmbeds(eb).queue();
 
                 if (sub.isOneTime()) SubscriptionManager.removeSubscription(sub);
             });
@@ -542,7 +542,7 @@ public class Subscribe extends GuildCommand {
                 else eb.setDescription(String.format("%s just had a role added on *%s*",
                     target.getAsMention(), guild.getName()));
 
-                ch.sendMessage(eb.build()).queue();
+                ch.sendMessageEmbeds(eb.build()).queue();
 
                 if (sub.isOneTime()) SubscriptionManager.removeSubscription(sub);
             });
@@ -581,7 +581,7 @@ public class Subscribe extends GuildCommand {
                 else eb.setDescription(String.format("%s just had a role removed on *%s*",
                     target.getAsMention(), guild.getName()));
 
-                ch.sendMessage(eb.build()).queue();
+                ch.sendMessageEmbeds(eb.build()).queue();
 
                 if (sub.isOneTime()) SubscriptionManager.removeSubscription(sub);
             });
@@ -623,7 +623,7 @@ public class Subscribe extends GuildCommand {
                 else eb.setDescription(String.format("%s just sent a message on *%s*\n\n[Jump](%s)",
                     target.getAsMention(), guild.getName(), event.getMessage().getJumpUrl()));
 
-                ch.sendMessage(eb.build()).queue();
+                ch.sendMessageEmbeds(eb.build()).queue();
 
                 if (sub.isOneTime()) SubscriptionManager.removeSubscription(sub);
             });
@@ -663,7 +663,7 @@ public class Subscribe extends GuildCommand {
                 else eb.setDescription(String.format("%s just edited a message on *%s*\n\n[Jump](%s)",
                     target.getAsMention(), guild.getName(), event.getMessage().getJumpUrl()));
 
-                ch.sendMessage(eb.build()).queue();
+                ch.sendMessageEmbeds(eb.build()).queue();
 
                 if (sub.isOneTime()) SubscriptionManager.removeSubscription(sub);
             });
@@ -702,7 +702,7 @@ public class Subscribe extends GuildCommand {
                                  target.getAsMention(), guild.getName(), msg.getJumpUrl()))
                              .build();
 
-                ch.sendMessage(eb).queue();
+                ch.sendMessageEmbeds(eb).queue();
 
                 if (sub.isOneTime()) SubscriptionManager.removeSubscription(sub);
             });
@@ -736,7 +736,7 @@ public class Subscribe extends GuildCommand {
                                  target.getAsMention(), guild.getName(), msg.getJumpUrl()))
                              .build();
 
-                ch.sendMessage(eb).queue();
+                ch.sendMessageEmbeds(eb).queue();
 
                 if (sub.isOneTime()) SubscriptionManager.removeSubscription(sub);
             });
@@ -778,7 +778,7 @@ public class Subscribe extends GuildCommand {
                 else eb.setDescription(String.format("\"%s just joined a voice chat on *%s*\"",
                     target.getAsMention(), guild.getName()));
 
-                ch.sendMessage(eb.build()).queue();
+                ch.sendMessageEmbeds(eb.build()).queue();
 
                 if (sub.isOneTime()) SubscriptionManager.removeSubscription(sub);
             });
@@ -818,7 +818,7 @@ public class Subscribe extends GuildCommand {
                 else eb.setDescription(String.format("\"%s just left a voice chat on *%s*\"",
                     target.getAsMention(), guild.getName()));
 
-                ch.sendMessage(eb.build()).queue();
+                ch.sendMessageEmbeds(eb.build()).queue();
 
                 if (sub.isOneTime()) SubscriptionManager.removeSubscription(sub);
             });
@@ -859,7 +859,7 @@ public class Subscribe extends GuildCommand {
                 else eb.setDescription(String.format("\"%s just muted themselves in a voice chat on *%s*\"",
                     target.getAsMention(), guild.getName()));
 
-                ch.sendMessage(eb.build()).queue();
+                ch.sendMessageEmbeds(eb.build()).queue();
 
                 if (sub.isOneTime()) SubscriptionManager.removeSubscription(sub);
             });
@@ -900,7 +900,7 @@ public class Subscribe extends GuildCommand {
                 else eb.setDescription(String.format("\"%s just deafened themselves in a voice chat on *%s*\"",
                     target.getAsMention(), guild.getName()));
 
-                ch.sendMessage(eb.build()).queue();
+                ch.sendMessageEmbeds(eb.build()).queue();
 
                 if (sub.isOneTime()) SubscriptionManager.removeSubscription(sub);
             });
@@ -941,7 +941,7 @@ public class Subscribe extends GuildCommand {
                 else eb.setDescription(String.format("\"%s just started/stopped streaming in a voice chat on *%s*\"",
                     target.getAsMention(), guild.getName()));
 
-                ch.sendMessage(eb.build()).queue();
+                ch.sendMessageEmbeds(eb.build()).queue();
 
                 if (sub.isOneTime()) SubscriptionManager.removeSubscription(sub);
             });

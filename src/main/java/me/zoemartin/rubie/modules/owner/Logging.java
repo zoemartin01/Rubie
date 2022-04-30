@@ -31,7 +31,7 @@ public class Logging extends ListenerAdapter {
                 owner.getId()), false);
             eb.addField("Members", String.valueOf(g.loadMembers().get().size()), false);
 
-            event.getJDA().getGuildById(Todo.DEV_SERVER_ID).getTextChannelById(JOIN_LOGS).sendMessage(eb.build()).queue();
+            event.getJDA().getGuildById(Todo.DEV_SERVER_ID).getTextChannelById(JOIN_LOGS).sendMessageEmbeds(eb.build()).queue();
         };
     }
 }

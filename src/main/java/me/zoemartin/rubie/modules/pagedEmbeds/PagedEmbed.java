@@ -22,7 +22,7 @@ public class PagedEmbed {
         this.pages = pages;
         this.guildId = channel.getGuild().getId();
         this.userId = user.getId();
-        this.message = channel.sendMessage(this.pages.get(current = 0)).complete();
+        this.message = channel.sendMessageEmbeds(this.pages.get(current = 0)).complete();
         if (pages.size() > 1) {
             message.addReaction(BACK).queue();
             message.addReaction(FORWARD).queue();
@@ -34,7 +34,7 @@ public class PagedEmbed {
         this.pages = pages;
         this.guildId = event.getGuild().getId();
         this.userId = event.getUser().getId();
-        this.message = event.getChannel().sendMessage(this.pages.get(current = 0)).complete();
+        this.message = event.getChannel().sendMessageEmbeds(this.pages.get(current = 0)).complete();
         if (pages.size() > 1) {
             message.addReaction(BACK).queue();
             message.addReaction(FORWARD).queue();
@@ -47,7 +47,7 @@ public class PagedEmbed {
         this.guildId = channel.getGuild().getId();
         this.userId = user.getId();
         this.current = start > pages.size() || start < 1 ? 0 : start - 1;
-        this.message = channel.sendMessage(this.pages.get(this.current)).complete();
+        this.message = channel.sendMessageEmbeds(this.pages.get(this.current)).complete();
         if (pages.size() > 1) {
             message.addReaction(BACK).queue();
             message.addReaction(FORWARD).queue();
@@ -60,7 +60,7 @@ public class PagedEmbed {
         this.guildId = event.getGuild().getId();
         this.userId = event.getUser().getId();
         this.current = start > pages.size() || start < 1 ? 0 : start - 1;
-        this.message = event.getChannel().sendMessage(this.pages.get(current = 0)).complete();
+        this.message = event.getChannel().sendMessageEmbeds(this.pages.get(current = 0)).complete();
         if (pages.size() > 1) {
             message.addReaction(BACK).queue();
             message.addReaction(FORWARD).queue();
@@ -82,12 +82,12 @@ public class PagedEmbed {
 
     public void next() {
         if (current == pages.size() - 1) return;
-        message.editMessage(pages.get(++current)).queue();
+        message.editMessageEmbeds(pages.get(++current)).queue();
     }
 
     public void last() {
         if (current == 0) return;
-        message.editMessage(pages.get(--current)).queue();
+        message.editMessageEmbeds(pages.get(--current)).queue();
     }
 
     public void stop() {

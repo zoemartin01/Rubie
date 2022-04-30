@@ -117,7 +117,7 @@ public class Level extends GuildCommand {
             eb.addField((int) ((exp - Levels.calcExp(lvl)) / (expToNext - Levels.calcExp(lvl)) * 100) + "%",
                 String.format("%d/%dxp", exp, Levels.calcExp(lvl + 1)), true);
 
-            event.getChannel().sendMessage(eb.build()).queue();
+            event.getChannel().sendMessageEmbeds(eb.build()).queue();
 
         }
     }

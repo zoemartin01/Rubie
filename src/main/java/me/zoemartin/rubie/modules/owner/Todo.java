@@ -45,9 +45,9 @@ public class Todo extends AbstractCommand implements Module {
 
         TextChannel channel = dest.getTextChannelById(CHANNEL_ID);
         Check.entityReferenceNotNull(channel, TextChannel.class, "TODO Channel");
-        Message m = channel.sendMessage(eb.build()).complete();
+        Message m = channel.sendMessageEmbeds(eb.build()).complete();
         Message orig = event.reply("Todo added", "**Message:** \n%s\n\n[Jump](%s)",
             event.getArgString(), m.getJumpUrl()).complete();
-        m.editMessage(eb.addField("Original", String.format("[Jump](%s)", orig.getJumpUrl()), false).build()).queue();
+        m.editMessageEmbeds(eb.addField("Original", String.format("[Jump](%s)", orig.getJumpUrl()), false).build()).queue();
     }
 }

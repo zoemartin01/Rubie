@@ -58,7 +58,7 @@ public class Enlarge extends AbstractCommand {
             eb.setImage(png.toString());
         }
 
-        event.getChannel().sendMessage(eb.build()).queue();
+        event.getChannel().sendMessageEmbeds(eb.build()).queue();
     }
 
     // Unused at the moment

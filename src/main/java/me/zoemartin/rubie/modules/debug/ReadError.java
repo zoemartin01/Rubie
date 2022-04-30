@@ -56,6 +56,6 @@ public class ReadError extends AbstractCommand {
                               .addField("Guild", g == null ? "n/a" : g.toString(), true)
                               .addField("Invoked by", error.getInvoked_message(), true);
 
-        event.getChannel().sendMessage(eb.build()).queue();
+        event.getChannel().sendMessageEmbeds(eb.build()).queue();
     }
 }

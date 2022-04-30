@@ -38,12 +38,12 @@ public class Members extends GuildCommand {
         try {
             command = parser.parse(options, event.getArgs().toArray(String[]::new));
         } catch (ParseException e) {
-            event.getChannel().sendMessage(helpEmbed(event)).queue();
+            event.getChannel().sendMessageEmbeds(helpEmbed(event)).queue();
             return;
         }
 
         if (command.hasOption("H")) {
-            event.getChannel().sendMessage(helpEmbed(event)).queue();
+            event.getChannel().sendMessageEmbeds(helpEmbed(event)).queue();
             return;
         }
 

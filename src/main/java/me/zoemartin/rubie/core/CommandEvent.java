@@ -116,6 +116,6 @@ public class CommandEvent {
         EmbedBuilder eb = new EmbedBuilder();
         if (title != null) eb.setTitle(title);
         eb.setDescription(String.format(replyFormat, args));
-        return getChannel().sendMessage(eb.build());
+        return getChannel().sendMessageEmbeds(eb.build());
     }
 }

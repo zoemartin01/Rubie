@@ -73,6 +73,6 @@ public class GuildCommandEvent extends CommandEvent {
         if (title != null) eb.setTitle(title);
         eb.setColor(this.getGuild().getSelfMember().getColor());
         eb.setDescription(String.format(replyFormat, args));
-        return getChannel().sendMessage(eb.build());
+        return getChannel().sendMessageEmbeds(eb.build());
     }
 }

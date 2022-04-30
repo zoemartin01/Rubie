@@ -139,7 +139,7 @@ public class Permission extends GuildCommand {
                 eb.setDescription(list);
                 Check.check(!list.isEmpty(), () -> new ReplyError("No bot member permission overrides"));
 
-                event.getChannel().sendMessage(eb.build()).queue();
+                event.getChannel().sendMessageEmbeds(eb.build()).queue();
             }
         }
     }
@@ -251,7 +251,7 @@ public class Permission extends GuildCommand {
                 eb.setDescription(list);
                 Check.check(!list.isEmpty(), () -> new ReplyError("No bot role permission overrides"));
 
-                event.getChannel().sendMessage(eb.build()).queue();
+                event.getChannel().sendMessageEmbeds(eb.build()).queue();
             }
         }
     }

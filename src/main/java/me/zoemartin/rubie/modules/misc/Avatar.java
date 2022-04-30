@@ -54,6 +54,6 @@ public class Avatar extends GuildCommand {
         } catch (IOException ignored) {
         }
 
-        event.getChannel().sendMessage(eb.build()).queue();
+        event.getChannel().sendMessageEmbeds(eb.build()).queue();
     }
 }

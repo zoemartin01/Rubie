@@ -63,7 +63,7 @@ public class Warn extends GuildCommand {
                 .sendMessageFormat("You have received a warning from a Moderator on `%s`. \n**Reason**:\n\n%s",
                     event.getGuild().getName(), warnEntity.getReason()).queue();
 
-        event.getChannel().sendMessage(eb.build()).queue();
+        event.getChannel().sendMessageEmbeds(eb.build()).queue();
     }
 
     @SubCommand(Warn.class)
@@ -151,7 +151,7 @@ public class Warn extends GuildCommand {
             if (u != null)
                 eb.setAuthor(String.format("%s / %s", u.getAsTag(), u.getId()), null, u.getEffectiveAvatarUrl());
 
-            event.getChannel().sendMessage(eb.build()).queue();
+            event.getChannel().sendMessageEmbeds(eb.build()).queue();
         }
     }
 
@@ -207,7 +207,7 @@ public class Warn extends GuildCommand {
             EmbedBuilder eb = new EmbedBuilder().setTitle("Bulk Warn Import");
             eb.setDescription("Imported warns:\n" + String.join("\n", users));
             m.delete().complete();
-            event.getChannel().sendMessage(eb.build()).queue();
+            event.getChannel().sendMessageEmbeds(eb.build()).queue();
         }
     }
 }
