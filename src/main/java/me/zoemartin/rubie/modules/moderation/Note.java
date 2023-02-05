@@ -1,6 +1,7 @@
 package me.zoemartin.rubie.modules.moderation;
 
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
 import me.zoemartin.rubie.Bot;
 import me.zoemartin.rubie.core.CommandPerm;
@@ -23,9 +24,11 @@ import javax.persistence.criteria.*;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.lang.reflect.Type;
+import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Command
@@ -274,6 +277,31 @@ public class Note extends GuildCommand {
                                                                                   .collect(Collectors.toList())), event);
             PageListener.add(paged);
             m.delete().complete();
+        }
+    }
+
+    @SubCommand(Note.class)
+    @CommandOptions(
+        name = "export",
+        description = "Export all notes to a file",
+        perm = CommandPerm.BOT_ADMIN
+    )
+    private static class Export extends GuildCommand {
+        @Override
+        public void run(GuildCommandEvent event) {
+            var guild = event.getGuild();
+            var notes = DatabaseUtil.loadCollection("from NoteEntity", NoteEntity.class, Function.identity()).stream()
+                    .filter(e -> e.getGuild_id().equals(guild.getId()))
+                    .collect(Collectors.toList());
+
+            var gson = new GsonBuilder().setPrettyPrinting().create();
+            var export = notes.stream().map(e -> new Notes.NoteEntry(
+                    e.getUser_id(), e.getModerator_id(), e.getNote(),
+                    new DateTime(e.getTimestamp()).toString(ISODateTimeFormat.dateTime()))).collect(Collectors.toList());
+
+            var json = gson.toJson(export);
+            event.getChannel().sendFile(json.getBytes(StandardCharsets.UTF_8), "export.json").complete();
+            event.addCheckmark();
         }
     }
 }
